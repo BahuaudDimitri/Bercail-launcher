@@ -1,0 +1,8 @@
+#!/bin/sh
+# Before each commit: formatting (ktlint) and static analysis (detekt), in a few seconds.
+. "$(dirname "$0")/java-home.sh"
+if ! ./gradlew --quiet spotlessCheck detekt; then
+    echo "Commit refusé : formatage ou analyse statique en échec."
+    echo "Formatage automatique : ./gradlew spotlessApply"
+    exit 1
+fi

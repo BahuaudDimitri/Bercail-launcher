@@ -1,0 +1,7 @@
+#!/bin/sh
+# Before each push: every check (tests, coverage, architecture, screenshots, lint). No push while red.
+. "$(dirname "$0")/java-home.sh"
+if ! ./gradlew --quiet check; then
+    echo "Push refusé : ./gradlew check est rouge."
+    exit 1
+fi

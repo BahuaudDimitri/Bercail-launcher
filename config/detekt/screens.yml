@@ -1,0 +1,14 @@
+# "Design system only" rule, applied to every module except :app and :core:designsystem.
+# The same rule is checked by the Konsist tests in :architecture; detekt gives the feedback inside the editor.
+style:
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - value: 'androidx.compose.material.*'
+        reason: 'Screens use the Bercail design system (core:designsystem), never Material directly.'
+      - value: 'androidx.compose.material3.*'
+        reason: 'Screens use the Bercail design system (core:designsystem), never Material directly.'
+      - value: 'androidx.compose.foundation.text.BasicText'
+        reason: 'Use BcText from the design system.'
+      - value: 'androidx.compose.foundation.text.BasicTextField'
+        reason: 'Use the design system text field.'
