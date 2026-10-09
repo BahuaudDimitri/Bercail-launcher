@@ -11,4 +11,6 @@ dependencies {
     // Screens build their layouts with Compose UI and Foundation, and get every visual from this module.
     api(libs.androidx.compose.ui)
     api(libs.androidx.compose.foundation)
+    // Sheets close with the system back gesture.
+    implementation(libs.androidx.activity.compose)
 }

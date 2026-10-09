@@ -24,6 +24,9 @@ object BcColors {
     val glassSheet = glassTint.copy(alpha = 0.62f)
     val glassSearch = glassTint.copy(alpha = 0.8f)
 
+    /** Veil behind an open sheet. */
+    val scrim = Color(0xFF08080E).copy(alpha = 0.4f)
+
     /** Light edge on top of glass surfaces. */
     val glassEdge = Color.White.copy(alpha = 0.1f)
 
