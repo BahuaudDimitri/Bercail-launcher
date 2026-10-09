@@ -109,7 +109,9 @@ jobs:
         id: crash
         if: steps.first.outcome == 'failure'
         run: |
-          if find . -path '*/build/outputs/androidTest-results/*' -name '*.xml' | grep -q .; then
+          reports=$(find . -path '*/build/outputs/androidTest-results/*' -name '*.xml')
+          # An emulator that is not ready yet also leaves a report: "No compatible devices connected".
+          if [ -n "$reports" ] && ! grep -qiE "compatible devices|no connected devices" $reports; then
             echo "::error title=Tests instrumentés::The tests ran and failed: no second attempt."
             exit 1
           fi
