@@ -96,6 +96,11 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
+          # Android 17 images boot slowly on GitHub runners.
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 1500
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: ./gradlew connectedDebugAndroidTest
       - name: Annotate the failures (public, unlike the logs)
         if: failure()
