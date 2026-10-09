@@ -52,6 +52,9 @@ jobs:
         run: ./gradlew test -Pbercail.suite=screenshots
       - name: "7 · Couverture (Kover : 90 % domaine, 80 % global)"
         run: ./gradlew koverVerify koverHtmlReport
+      - name: Annotate the failures (public, unlike the logs)
+        if: failure()
+        run: .github/scripts/annotate-failures.sh
       - name: Publish the reports
         if: always()
         uses: actions/upload-artifact@v7
@@ -94,6 +97,9 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: ./gradlew connectedDebugAndroidTest
+      - name: Annotate the failures (public, unlike the logs)
+        if: failure()
+        run: .github/scripts/annotate-failures.sh
       - name: Publish the reports
         if: always()
         uses: actions/upload-artifact@v7
