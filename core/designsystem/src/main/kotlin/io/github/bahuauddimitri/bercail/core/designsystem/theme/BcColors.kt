@@ -48,6 +48,9 @@ object BcColors {
     /** Text and icons drawn on the light primary surface (my bubbles, the send button). */
     val onLight = Color(0xFF1B1B24)
 
+    /** Placeholder tile behind an app or result without its own icon. */
+    val appTile = Color(0xFFD9D4E6)
+
     /** A home control that is switched off. */
     val off = Color(0xFF4A4A5C)
 

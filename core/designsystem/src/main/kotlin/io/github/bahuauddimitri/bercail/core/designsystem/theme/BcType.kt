@@ -50,6 +50,15 @@ object BcType {
     val labelStrong = style(size = 12.sp, weight = FontWeight.SemiBold)
     val labelSmall = style(size = 11.sp, weight = FontWeight.Medium)
 
+    /** Initials on a person tile. */
+    val initials = style(size = 17.sp, weight = FontWeight.SemiBold)
+
+    /** Unread count. The smallest text allowed. */
+    val badge = style(size = 10.5.sp, weight = FontWeight.Bold)
+
+    /** State under a home control. The smallest text allowed. */
+    val micro = style(size = 10.5.sp, weight = FontWeight.Normal)
+
     val all: Map<String, TextStyle> = mapOf(
         "agendaTitle" to agendaTitle,
         "display" to display,
@@ -63,7 +72,10 @@ object BcType {
         "caption" to caption,
         "label" to label,
         "labelStrong" to labelStrong,
-        "labelSmall" to labelSmall
+        "labelSmall" to labelSmall,
+        "initials" to initials,
+        "badge" to badge,
+        "micro" to micro
     )
 
     private fun style(

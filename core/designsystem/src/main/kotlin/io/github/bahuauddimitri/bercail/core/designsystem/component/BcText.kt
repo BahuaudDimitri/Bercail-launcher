@@ -25,7 +25,10 @@ enum class BcTextStyle(internal val style: TextStyle) {
     Caption(BcType.caption),
     Label(BcType.label),
     LabelStrong(BcType.labelStrong),
-    LabelSmall(BcType.labelSmall)
+    LabelSmall(BcType.labelSmall),
+    Initials(BcType.initials),
+    Badge(BcType.badge),
+    Micro(BcType.micro)
 }
 
 /** The text colors a screen can use. */
