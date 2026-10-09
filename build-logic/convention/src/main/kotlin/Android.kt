@@ -39,4 +39,16 @@ internal fun Project.configureCompose(android: CommonExtension) {
     dependencies.add("implementation", bom)
     dependencies.add("testImplementation", bom)
     dependencies.add("androidTestImplementation", bom)
+
+    // Every Android module tests the same way: JUnit + AssertK, Robolectric and Compose UI tests on the JVM.
+    listOf(
+        "junit4",
+        "assertk",
+        "robolectric",
+        "androidx-test-core",
+        "androidx-test-ext-junit",
+        "androidx-test-espresso-core",
+        "androidx-compose-ui-test-junit4"
+    ).forEach { dependencies.add("testImplementation", libs.findLibrary(it).get()) }
+    dependencies.add("debugImplementation", libs.findLibrary("androidx-compose-ui-test-manifest").get())
 }
