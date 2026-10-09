@@ -1,0 +1,445 @@
+<title>Fil Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: long scrolling dossier, one column ~720px, with the phone prototype as the centrepiece. Dark-first (Pixel OLED). */
+:root{
+  --bg:#111315; --surface:#191c1f; --line:#2a2f33; --fg:#e8ebe7; --muted:#8d958f;
+  --signal:#f2b544; --signal-ink:#1a1405; --good:#7fc79a;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#f3f4f2; --surface:#ffffff; --line:#d9ddd9; --fg:#16191b; --muted:#5d6560;
+  --signal:#b97a00; --signal-ink:#fff8e8; --good:#2f8a55; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f3f4f2; --surface:#ffffff; --line:#d9ddd9; --fg:#16191b; --muted:#5d6560;
+  --signal:#b97a00; --signal-ink:#fff8e8; --good:#2f8a55; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:20px;padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:clamp(2.6rem,8vw,4.2rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.75rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0;max-width:65ch}
+.eyebrow{font:600 .72rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.15rem;color:var(--muted)}
+section{display:grid;gap:18px;padding-block:44px;border-top:1px solid var(--line)}
+header{display:grid;gap:16px;padding-bottom:36px}
+.hl{color:var(--signal)}
+a{color:var(--signal)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+
+/* Article techniques */
+.tech{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tech div{display:grid;grid-template-columns:2.2rem 1fr;gap:4px 12px;padding:14px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.tech div:first-child{border-top:0}
+.tech b{font-family:var(--mono);color:var(--signal);font-size:.85rem;padding-top:2px}
+.tech span{min-width:0}
+.tech em{font-style:normal;color:var(--muted);display:block;font-size:.92rem}
+
+/* Benchmark table */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
+thead th{border-top:0;font:600 .7rem/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--surface)}
+td.n{font-family:var(--mono);white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{font-weight:700;white-space:nowrap}
+.dead{color:var(--muted);text-decoration:line-through}
+
+/* Seed directions */
+.seeds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.seed{border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start}
+.seed .s{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.seed.win{border-color:var(--signal);background:color-mix(in srgb,var(--signal) 7%,transparent)}
+.verdict{font-size:.85rem;color:var(--muted)}
+.seed.win .verdict{color:var(--signal)}
+
+/* Prototype stage */
+.stage{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:720px){.stage{grid-template-columns:1fr;justify-items:center}}
+.ctx{display:flex;flex-wrap:wrap;gap:6px}
+.ctx button{font:600 .82rem var(--body);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.ctx button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+.notes{display:grid;gap:14px;min-width:0}
+.notes ul{margin:0;padding-left:1.1rem;display:grid;gap:8px}
+.notes li{max-width:60ch}
+button:focus-visible,input:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* ---------- PHONE (fixed dark world, independent of page theme) ---------- */
+.phone{
+  --p-bg:#0b0c0d; --p-card:#17191b; --p-card2:#202326; --p-fg:#eef0ec; --p-mut:#8b928d; --p-sig:#f2b544; --p-good:#7fc79a;
+  width:100%;max-width:360px;aspect-ratio:9/19.5;border-radius:38px;border:8px solid #2b2e31;background:var(--p-bg);color:var(--p-fg);
+  position:relative;overflow:hidden;font-family:var(--body);box-shadow:0 30px 60px -30px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;
+}
+.p-status{display:flex;justify-content:space-between;padding:12px 22px 4px;font:600 .72rem var(--mono);color:var(--p-mut)}
+.p-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 12px 8px;scrollbar-width:none}
+.p-scroll::-webkit-scrollbar{display:none}
+.blk{background:var(--p-card);border-radius:20px;padding:12px 14px;transition:order .3s}
+.blk .lab{font:600 .62rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--p-mut);display:flex;justify-content:space-between;margin-bottom:8px}
+.blk.focus{background:var(--p-card2);box-shadow:inset 0 0 0 1px rgba(242,181,68,.35)}
+
+/* agenda */
+.now-big{font:700 2.6rem/1 var(--display);letter-spacing:-.03em}
+.next{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px}
+.next b{font-size:.98rem}
+.next span{font:600 .75rem var(--mono);color:var(--p-sig);white-space:nowrap}
+.rail{position:relative;height:22px;margin-top:10px;border-radius:6px;background:#101113;overflow:hidden;cursor:pointer;border:0;width:100%;padding:0;display:block}
+.rail i{position:absolute;top:4px;bottom:4px;border-radius:3px;background:#3a3f44}
+.rail i.past{background:#25292c}
+.rail .needle{position:absolute;top:0;bottom:0;width:2px;background:var(--p-sig)}
+.rail-ticks{display:flex;justify-content:space-between;font:.58rem var(--mono);color:var(--p-mut);margin-top:3px}
+.daylist{display:grid;gap:6px;margin-top:10px}
+.daylist div{display:grid;grid-template-columns:3.2rem 1fr;font-size:.84rem}
+.daylist div span{font-family:var(--mono);color:var(--p-mut);font-size:.76rem;padding-top:1px}
+.daylist div.done{opacity:.4}
+
+/* people */
+.ppl{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.ppl button{border:0;background:none;color:inherit;display:grid;justify-items:center;gap:4px;cursor:pointer;padding:0;min-width:52px}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 .95rem var(--display);position:relative}
+.av .dot{position:absolute;top:-1px;right:-1px;min-width:17px;height:17px;border-radius:9px;background:var(--p-sig);color:#1a1405;font:700 .62rem/17px var(--mono);text-align:center;padding:0 4px}
+.ppl small{font-size:.66rem;color:var(--p-mut)}
+.preview{margin-top:10px;font-size:.84rem;color:var(--p-mut);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+
+/* home */
+.home{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.home button{border:0;border-radius:14px;background:#24282b;color:var(--p-fg);text-align:left;padding:10px 11px;cursor:pointer;display:grid;gap:2px;font-family:var(--body)}
+.home button b{font-size:.84rem}
+.home button small{font:.7rem var(--mono);color:var(--p-mut)}
+.home button.on{background:var(--p-sig);color:#1a1405}
+.home button.on small{color:#4a3a10}
+.home .wide{grid-column:span 2}
+.away{font-size:.8rem;color:var(--p-mut)}
+
+/* dock: fixed thumb zone */
+.dock{padding:8px 12px 14px;display:grid;gap:8px;background:linear-gradient(to top,var(--p-bg) 80%,transparent)}
+.player{background:var(--p-card);border-radius:22px;padding:10px 12px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;touch-action:pan-y;user-select:none}
+.art{width:44px;height:44px;border-radius:10px}
+.trk{min-width:0}
+.trk b{display:block;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trk small{display:flex;gap:6px;align-items:center;font-size:.72rem;color:var(--p-mut);white-space:nowrap;overflow:hidden}
+.src{font:600 .58rem var(--mono);letter-spacing:.08em;padding:2px 5px;border-radius:4px;border:1px solid #3a3f44;cursor:pointer;background:none;color:var(--p-mut)}
+.ctl{display:flex;gap:2px}
+.ctl button{width:34px;height:34px;border-radius:50%;border:0;background:none;color:var(--p-fg);cursor:pointer;display:grid;place-items:center}
+.ctl button.pp{background:var(--p-fg);color:var(--p-bg)}
+.prog{grid-column:1/-1;height:3px;border-radius:2px;background:#2b2f33;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--p-fg);width:30%}
+.search{display:flex;align-items:center;gap:8px;border:0;width:100%;background:var(--p-card);color:var(--p-mut);border-radius:999px;padding:12px 16px;font:.86rem var(--body);cursor:pointer;text-align:left}
+
+/* sheets */
+.sheet{position:absolute;inset:auto 0 0 0;background:#1d2023;border-radius:24px 24px 0 0;padding:14px 14px 18px;display:grid;gap:10px;max-height:82%;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:5}
+.sheet.open{transform:none}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:4}
+.scrim.open{opacity:1;pointer-events:auto}
+.grab{width:36px;height:4px;border-radius:2px;background:#3a3f44;justify-self:center}
+.msgs{display:grid;gap:6px;overflow-y:auto}
+.bub{background:#2a2e32;border-radius:14px 14px 14px 4px;padding:7px 11px;font-size:.84rem;justify-self:start;max-width:85%}
+.bub.me{background:var(--p-sig);color:#1a1405;border-radius:14px 14px 4px 14px;justify-self:end}
+.reply{display:flex;gap:6px}
+.reply input,.drawer input{flex:1;min-width:0;background:#2a2e32;border:0;border-radius:999px;padding:10px 14px;color:var(--p-fg);font:.86rem var(--body)}
+.reply button{border:0;border-radius:999px;background:var(--p-sig);color:#1a1405;font:700 .8rem var(--body);padding:0 14px;cursor:pointer}
+.via{font:.68rem var(--mono);color:var(--p-mut)}
+.drawer{max-height:88%}
+.res{display:grid;gap:2px;overflow-y:auto}
+.res div{display:flex;justify-content:space-between;align-items:center;padding:9px 6px;border-radius:10px;font-size:.88rem}
+.res div small{font:.64rem var(--mono);color:var(--p-mut);letter-spacing:.06em;text-transform:uppercase}
+.res .grp{font:600 .6rem var(--mono);letter-spacing:.14em;color:var(--p-sig);padding:10px 6px 2px}
+.toast{position:absolute;left:50%;top:44px;transform:translate(-50%,-20px);background:var(--p-fg);color:var(--p-bg);font:600 .74rem var(--body);padding:6px 12px;border-radius:999px;opacity:0;transition:.25s;z-index:9;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* critic */
+.scores{display:grid;gap:10px}
+.sc{display:grid;grid-template-columns:minmax(0,11rem) 1fr auto;gap:12px;align-items:center;font-size:.92rem}
+.bar{height:8px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--muted);border-radius:4px}
+.bar i.v2{background:var(--signal);opacity:.9}
+.sc .mono{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:520px){.sc{grid-template-columns:1fr auto}.sc .bar{grid-column:1/-1;order:3}}
+.cut{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.cut li{display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:.95rem}
+.cut li::before{content:"−";font-family:var(--mono);color:var(--signal);font-weight:600}
+.cut li span{color:var(--muted)}
+
+.api{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.api div{display:grid;grid-template-columns:minmax(0,9rem) 1fr;gap:12px;padding:12px 16px;border-top:1px solid var(--line);font-size:.92rem}
+.api div:first-child{border-top:0}
+.api b{font-family:var(--display)}
+@media (max-width:520px){.api div{grid-template-columns:1fr;gap:2px}}
+.src-list{font-size:.85rem;color:var(--muted);display:grid;gap:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Concept · launcher Android pour Pixel · v2 après critique</span>
+  <h1>Fil<span class="hl">.</span></h1>
+  <p class="lede">Un launcher sans grille d'icônes. L'écran d'accueil montre le fil de ta journée : ce qui arrive (agenda), qui te parle (Beeper), ce qui joue (Spotify, YouTube) et l'état de la maison (Home Assistant). Le bas de l'écran ne bouge jamais, le haut s'adapte au moment.</p>
+</header>
+
+<section id="article">
+  <span class="eyebrow">01 · La méthode</span>
+  <h2>Ce que propose l'article</h2>
+  <p>Anshu Chimala (12 ans de design et d'ingénierie chez Apple) part d'un constat : un modèle livre par défaut le choix le plus probable, donc le plus fade. Il propose un processus en trois temps calqué sur le Double Diamond (Discover, Define, Deliver) et sept techniques. Voici comment chacune a été appliquée ici.</p>
+  <div class="tech">
+    <div><b>T1</b><span>Seed strings pour varier les pistes<em>Appliqué : 4 chaînes aléatoires, chacune interprétée en une direction différente (section 03).</em></span></div>
+    <div><b>T2</b><span>Briefs ambitieux et précis<em>Appliqué : chaque piste a un brief concret (« la journée comme un fil », « une console hi‑fi »…), pas « un launcher moderne ».</em></span></div>
+    <div><b>T3</b><span>Boucle avec un critique séparé<em>Appliqué : la v1 a été notée sur des critères de praticité, puis corrigée (section 05). Fait ici en auto‑critique ; on peut le refaire avec un vrai agent critique sur captures d'écran.</em></span></div>
+    <div><b>T4</b><span>Génération d'images<em>Pas utilisé : un launcher pratique n'en a pas besoin. Pochettes et avatars viennent des vraies apps.</em></span></div>
+    <div><b>T5</b><span>Vidéo pour le mouvement<em>Piste pour plus tard : transitions entre contextes (matin → soir) prototypées en vidéo avant de les coder.</em></span></div>
+    <div><b>T6</b><span>Retrait sans pitié<em>Appliqué : liste de ce qui a été enlevé entre v1 et v2 (section 05).</em></span></div>
+    <div><b>T7</b><span>Retirer les « tics IA »<em>Derrière le paywall. Interprété comme : pas de dégradés violets, pas d'emoji‑icônes, pas de cartes toutes identiques.</em></span></div>
+  </div>
+</section>
+
+<section id="bench">
+  <span class="eyebrow">02 · Benchmark</span>
+  <h2>Les launchers qui marchent, et ce qu'on leur prend</h2>
+  <p>Les deux mieux notés vont dans des directions opposées : Niagara supprime la grille, Smart Launcher l'organise automatiquement. Les deux sont gratuits sans pub dans leur version de base.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Launcher</th><th>Note / installs</th><th>Idée forte</th><th>À reprendre pour Fil</th></tr></thead>
+    <tbody>
+      <tr><td>Niagara</td><td class="n">4,8★ · 10M+</td><td>Liste verticale, alphabet en vague, notifs intégrées avec réponse directe</td><td>Réponse inline aux messages, contrôles média qui apparaissent seulement quand ça joue</td></tr>
+      <tr><td>Smart Launcher 6</td><td class="n">4,5★ · 50M+</td><td>Catégorisation auto des apps, « flower grid » à une main</td><td>Rien à classer à la main : l'ordre se déduit de l'usage</td></tr>
+      <tr><td>Kvaesitso</td><td class="n">F‑Droid</td><td>Recherche d'abord : apps, contacts, fichiers, widgets maison</td><td>Une barre de recherche unique qui trouve aussi contacts et pièces de la maison</td></tr>
+      <tr><td>Olauncher</td><td class="n">Play Store</td><td>Texte seul, pas de tiroir, anti‑distraction</td><td>Zéro icône d'app sur l'accueil</td></tr>
+      <tr><td>Lawnchair</td><td class="n">Open source</td><td>Pixel Launcher amélioré, At a Glance, Material You</td><td>Rester natif Pixel : gestes système, couleurs du fond d'écran</td></tr>
+      <tr><td>Octopi</td><td class="n">Récent</td><td>Tags plutôt que dossiers, widgets flottants</td><td>Grouper par intention (parler, écouter, maison), pas par app</td></tr>
+      <tr><td class="dead">Nova</td><td class="n">Arrêté 2025</td><td>Personnalisation infinie</td><td>À éviter : trop de réglages tue l'usage quotidien</td></tr>
+    </tbody>
+  </table></div>
+  <p class="verdict">Le manque commun : tous restent organisés autour des <em>apps</em>. Ton usage est organisé autour de quatre <em>activités</em>. C'est l'ouverture.</p>
+</section>
+
+<section id="discover">
+  <span class="eyebrow">03 · Discover · seed strings</span>
+  <h2>Quatre pistes, une retenue</h2>
+  <div class="seeds">
+    <div class="seed"><span class="s">seed k7Qv‑29xm</span><h3>Console</h3><p>L'écran comme une platine hi‑fi : gros bouton rotatif pour le volume, interrupteurs physiques pour les lumières.</p><span class="verdict">Écartée : superbe pour la musique, inutile pour l'agenda et les messages.</span></div>
+    <div class="seed"><span class="s">seed Rb4t‑T0zq</span><h3>Pièces</h3><p>L'accueil est un plan de l'appartement ; on touche une pièce pour ses lumières, sa musique, ses écrans.</p><span class="verdict">Écartée : ne sert à rien hors de chez toi.</span></div>
+    <div class="seed"><span class="s">seed 8hLw‑pqE3</span><h3>Arc du pouce</h3><p>Tout sur un arc en bas à droite, à la manière d'une roue. Rien au-dessus de la mi‑hauteur.</p><span class="verdict">Gardée en partie : la zone basse devient fixe et atteignable.</span></div>
+    <div class="seed win"><span class="s">seed zN3c‑yV1k</span><h3>Fil</h3><p>La journée comme une ligne : un repère « maintenant » sur l'agenda, et sous ce repère ce qui est actif (gens, son, maison).</p><span class="verdict">Retenue : elle couvre tes quatre usages sans ouvrir d'app.</span></div>
+  </div>
+</section>
+
+<section id="proto">
+  <span class="eyebrow">04 · Define · prototype</span>
+  <h2>Essaie‑le</h2>
+  <p>Change le contexte pour voir le haut de l'écran se réorganiser. Le lecteur et la recherche, en bas, restent au même endroit. Tout est cliquable ; glisse le lecteur à gauche ou à droite pour changer de morceau.</p>
+  <div class="ctx" role="group" aria-label="Contexte simulé">
+    <button id="c-matin" data-ctx="matin" aria-pressed="true">Matin · 08:10</button>
+    <button id="c-trajet" data-ctx="trajet" aria-pressed="false">Trajet, casque · 13:35</button>
+    <button id="c-soir" data-ctx="soir" aria-pressed="false">Soir, à la maison · 20:40</button>
+  </div>
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="p-status"><span id="clock">08:10</span><span>5G · 82%</span></div>
+      <div class="p-scroll" id="feed">
+        <div class="blk" id="b-agenda">
+          <div class="lab"><span>Agenda</span><span id="ag-day">ven. 3 oct.</span></div>
+          <div class="now-big" id="ag-time">08:10</div>
+          <div class="next"><b id="ag-next">Stand‑up</b><span id="ag-in">dans 1 h 20</span></div>
+          <button class="rail" id="rail" aria-label="Afficher la journée"></button>
+          <div class="rail-ticks"><span>8h</span><span>12h</span><span>16h</span><span>20h</span><span>23h</span></div>
+          <div class="daylist" id="daylist" hidden></div>
+        </div>
+        <div class="blk" id="b-gens">
+          <div class="lab"><span>Gens · via Beeper</span><span id="unread">4 non lus</span></div>
+          <div class="ppl" id="ppl"></div>
+          <div class="preview" id="preview"></div>
+        </div>
+        <div class="blk" id="b-maison">
+          <div class="lab"><span>Maison</span><span id="ha-state">21,0 °C</span></div>
+          <div class="home" id="home"></div>
+        </div>
+      </div>
+      <div class="dock">
+        <div class="player" id="player">
+          <canvas class="art" id="art" width="88" height="88"></canvas>
+          <div class="trk"><b id="t-title">Looped</b><small><button class="src" id="src" title="Basculer la source">SPOTIFY</button><span id="t-sub">Kiasmos</span></small></div>
+          <div class="ctl">
+            <button id="prev" aria-label="Précédent"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 3v10M13 3 6 8l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.6"/></svg></button>
+            <button id="pp" class="pp" aria-label="Lecture"><svg width="14" height="14" viewBox="0 0 14 14" id="pp-i"><path d="M3 2v10l9-5z" fill="currentColor"/></svg></button>
+            <button id="next" aria-label="Suivant"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M12 3v10M3 3l7 5-7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.6"/></svg></button>
+          </div>
+          <div class="prog"><i id="prog"></i></div>
+        </div>
+        <button class="search" id="open-search"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m11 11 3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg>Apps, contacts, pièces…</button>
+      </div>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="chat">
+        <div class="grab"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 id="chat-name" style="font-family:var(--display)">Léa</h3><span class="via" id="chat-via">WhatsApp via Beeper</span></div>
+        <div class="msgs" id="msgs"></div>
+        <form class="reply" id="reply"><input id="reply-in" placeholder="Répondre sans ouvrir Beeper" autocomplete="off"><button>Envoyer</button></form>
+      </div>
+      <div class="sheet drawer" id="drawer">
+        <div class="grab"></div>
+        <input id="q" placeholder="Chercher…" autocomplete="off">
+        <div class="res" id="res"></div>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="notes">
+      <h3>Ce qui le rend pratique</h3>
+      <ul>
+        <li><b>Zone du pouce figée.</b> Lecteur et recherche sont toujours en bas, au même pixel. La mémoire musculaire n'est jamais cassée.</li>
+        <li><b>Un seul bloc bouge.</b> Le contexte (heure, Wi‑Fi de la maison, casque branché) choisit le bloc mis en avant en haut. Les autres gardent leur ordre.</li>
+        <li><b>Des gens, pas des apps.</b> Beeper fusionne déjà les messageries ; Fil affiche les personnes et permet de répondre dans une feuille, sans ouvrir l'app.</li>
+        <li><b>Un lecteur pour deux sources.</b> Spotify et YouTube passent par la même session média Android ; le lecteur suit celle qui joue.</li>
+        <li><b>La maison en scènes.</b> 5 boutons maximum, choisis dans Home Assistant. Hors de la maison, le bloc se réduit à l'essentiel.</li>
+        <li><b>L'agenda comme une règle.</b> Une barre de la journée avec un repère « maintenant ». Un tap déplie la liste.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="critic">
+  <span class="eyebrow">05 · Deliver · boucle critique</span>
+  <h2>v1 notée, v2 corrigée</h2>
+  <p>Grille notée sur 10, avec une règle : ne juger que l'écran, pas l'intention. Gris pour la v1, ambre pour la v2.</p>
+  <div class="scores" id="scores"></div>
+  <h3>Retiré entre v1 et v2</h3>
+  <ul class="cut">
+    <li><div>Réordonner tout l'écran selon le contexte. <span>Cassait la mémoire musculaire. Seul le bloc du haut bouge maintenant.</span></div></li>
+    <li><div>Météo animée en fond. <span>Joli, mais n'aide à aucune des quatre tâches. La météo reste accessible via la recherche.</span></div></li>
+    <li><div>Icônes d'apps dans un dock. <span>Doublon avec la recherche, qui ouvre n'importe quelle app en deux lettres.</span></div></li>
+    <li><div>Badge de notifications par app. <span>Remplacé par un compteur par personne.</span></div></li>
+    <li><div>Deuxième couleur d'accent pour la maison. <span>Une seule couleur signal : « actif » ou « maintenant ».</span></div></li>
+    <li><div>Libellés sous chaque bouton du lecteur. <span>Les symboles suffisent.</span></div></li>
+  </ul>
+</section>
+
+<section id="build">
+  <span class="eyebrow">06 · Faisabilité sur Pixel</span>
+  <h2>Comment le construire</h2>
+  <p>Une app Kotlin + Jetpack Compose déclarée comme écran d'accueil. Pas besoin de root. Chaque bloc s'appuie sur une API Android standard.</p>
+  <div class="api">
+    <div><b>Gens</b><span><code>NotificationListenerService</code> lit les notifications de Beeper (expéditeur, réseau, texte) et leur action <code>RemoteInput</code> permet de répondre sans ouvrir l'app, comme Niagara.</span></div>
+    <div><b>Son</b><span><code>MediaSessionManager</code> donne titre, pochette et contrôles de Spotify et YouTube (même permission d'accès aux notifications).</span></div>
+    <div><b>Agenda</b><span><code>CalendarContract</code> lit les événements Google Agenda localement, sans réseau.</span></div>
+    <div><b>Maison</b><span>API WebSocket ou REST de Home Assistant avec un jeton longue durée, ou les « Device Controls » Android que l'app HA expose déjà.</span></div>
+    <div><b>Contexte</b><span>Heure, SSID Wi‑Fi (maison ou non) et casque Bluetooth connecté. Aucune localisation GPS nécessaire.</span></div>
+    <div><b>Limite</b><span>Le volet Google Discover et « At a Glance » natif ne sont pas disponibles pour les launchers tiers sur Pixel. Les gestes de navigation système fonctionnent.</span></div>
+  </div>
+  <h3>Étapes suivantes</h3>
+  <ul class="notes" style="margin:0;padding-left:1.1rem;display:grid;gap:6px">
+    <li>Valider le prototype ici, ajuster les blocs et les scènes.</li>
+    <li>Lancer une vraie boucle critique (T3) avec un agent qui ne voit que des captures.</li>
+    <li>Coder un MVP Compose : bloc Son + recherche d'abord, puis Gens, Agenda, Maison.</li>
+  </ul>
+  <div class="src-list">
+    <span class="eyebrow" style="margin-top:12px">Sources</span>
+    <a href="https://www.lennysnewsletter.com/p/how-to-turn-your-ai-into-a-world">Lenny's Newsletter · How to turn your AI into a world-class designer</a>
+    <a href="https://www.slashgear.com/2237061/best-android-launchers-must-try-2026/">SlashGear · Best Android launchers 2026</a>
+    <a href="https://www.digitalcitizen.life/android-launchers/">Digital Citizen · Android launchers</a>
+    <a href="https://www.bgr.com/2216046/google-pixel-launcher-alternatives-users-swear-by/">BGR · Pixel launcher alternatives</a>
+    <a href="https://www.androidpolice.com/2021/02/02/hands-on-the-minimalist-niagara-launcher-is-officially-out-of-beta/">Android Police · Niagara hands‑on</a>
+    <a href="https://maketecheasier.com/nova-launcher-alternatives-android/">Make Tech Easier · Nova alternatives</a>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const EV=[{s:9.5,e:10,t:"Stand‑up",h:"09:30"},{s:12.5,e:13.5,t:"Déjeuner avec Léa",h:"12:30"},{s:14,e:15,t:"Point design",h:"14:00"},{s:18.5,e:19,t:"Courses",h:"18:30"},{s:21,e:23,t:"Ciné à la maison",h:"21:00"}];
+const CTX={
+  matin:{now:8+10/60,clock:"08:10",focus:"b-agenda",media:0,home:true,temp:"19,5 °C"},
+  trajet:{now:13+35/60,clock:"13:35",focus:"b-gens",media:0,home:false,temp:"Absent"},
+  soir:{now:20+40/60,clock:"20:40",focus:"b-maison",media:1,home:true,temp:"21,0 °C"}
+};
+const PEOPLE=[
+  {n:"Léa",i:"L",c:"#c58b6a",net:"WhatsApp",u:2,m:[["Tu es où ?",0],["On se retrouve à 12h30 ?",0]]},
+  {n:"Tom",i:"T",c:"#6a8fc5",net:"Signal",u:1,m:[["Tu as vu le match hier ?",0]]},
+  {n:"Équipe",i:"É",c:"#7fae86",net:"Slack",u:1,m:[["Slides pour 14h dans le drive",0]]},
+  {n:"Maman",i:"M",c:"#b07fb8",net:"SMS",u:0,m:[["Bisous, à dimanche",0],["À dimanche !",1]]},
+  {n:"Julien",i:"J",c:"#c5b46a",net:"Instagram",u:0,m:[["😂",0]]}
+];
+const HOME_IN=[
+  {k:"salon",t:"Salon",s:["Éteint","Allumé · 60 %"],on:false},
+  {k:"chauf",t:"Chauffage",s:["Éco · 18 °C","Confort · 21 °C"],on:true},
+  {k:"volets",t:"Volets",s:["Fermés","Ouverts"],on:true},
+  {k:"cine",t:"Scène Cinéma",s:["Prête","Active · TV + lumière 10 %"],on:false},
+  {k:"off",t:"Tout éteindre et partir",s:["Lumières, prises, alarme"],wide:true,once:true}
+];
+const HOME_OUT=[
+  {k:"alarme",t:"Alarme",s:["Désactivée","Activée"],on:true},
+  {k:"chauf",t:"Chauffage",s:["Éco · 18 °C","Confort · 21 °C"],on:false},
+  {k:"arrive",t:"Préchauffer pour mon retour",s:["Confort à 18:30"],wide:true,once:true}
+];
+const MEDIA=[
+  {src:"SPOTIFY",list:[["Looped","Kiasmos",["#2d4a5a","#d9a441"]],["Says","Nils Frahm",["#3b2f4a","#c96f4a"]],["Avril 14th","Aphex Twin",["#1e3b2f","#e2e2c9"]]]},
+  {src:"YOUTUBE",list:[["Ramen maison en 20 minutes","Chaîne cuisine · 18 min",["#4a2020","#f2b544"]],["Pourquoi les Pixel prennent de belles photos","Chaîne tech · 14 min",["#20304a","#7fc79a"]]]}
+];
+let ctx="matin",mi=0,ti=0,playing=true,dayOpen=false,cur=0,homeState={};
+const fmt=h=>{const H=Math.floor(h),M=Math.round((h-H)*60);return String(H).padStart(2,"0")+":"+String(M).padStart(2,"0")};
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),1600)}
+
+function renderAgenda(){
+  const c=CTX[ctx],now=c.now;$("clock").textContent=c.clock;$("ag-time").textContent=c.clock;
+  const nx=EV.find(e=>e.s>now);
+  if(nx){const d=Math.round((nx.s-now)*60);$("ag-next").textContent=nx.t;$("ag-in").textContent=d>=60?`dans ${Math.floor(d/60)} h ${String(d%60).padStart(2,"0")}`:`dans ${d} min`}
+  const p=h=>((h-8)/15*100).toFixed(2)+"%";
+  $("rail").innerHTML=EV.map(e=>`<i class="${e.e<=now?"past":""}" style="left:${p(e.s)};width:calc(${p(e.e)} - ${p(e.s)})"></i>`).join("")+`<b class="needle" style="left:${p(now)}"></b>`;
+  $("daylist").innerHTML=EV.map(e=>`<div class="${e.e<=now?"done":""}"><span>${e.h}</span>${e.t}</div>`).join("");
+  $("daylist").hidden=!(dayOpen||ctx==="matin");
+}
+function renderPeople(){
+  $("ppl").innerHTML=PEOPLE.map((p,i)=>`<button data-i="${i}" aria-label="${p.n}"><span class="av" style="background:${p.c}">${p.i}${p.u?`<span class="dot">${p.u}</span>`:""}</span><small>${p.n}</small></button>`).join("");
+  const u=PEOPLE.reduce((a,p)=>a+p.u,0);$("unread").textContent=u?`${u} non lu${u>1?"s":""}`:"à jour";
+  const f=PEOPLE.find(p=>p.u);$("preview").textContent=f?`${f.n} · ${f.m[f.m.length-1][0]}`:"Rien de nouveau";
+}
+function renderHome(){
+  const c=CTX[ctx],list=c.home?HOME_IN:HOME_OUT;$("ha-state").textContent=c.temp;
+  $("home").innerHTML=list.map(h=>{const on=h.once?false:(homeState[ctx+h.k]??h.on);return `<button class="${h.wide?"wide ":""}${on?"on":""}" data-k="${h.k}"><b>${h.t}</b><small>${h.once?h.s[0]:h.s[on?1:0]}</small></button>`}).join("")+(c.home?"":`<span class="away wide">Hors de chez toi : seules les commandes utiles à distance.</span>`);
+}
+function drawArt(cols){const cv=$("art"),x=cv.getContext("2d");const g=x.createLinearGradient(0,0,88,88);g.addColorStop(0,cols[0]);g.addColorStop(1,cols[0]);x.fillStyle=g;x.fillRect(0,0,88,88);x.fillStyle=cols[1];x.beginPath();x.arc(58,34,18,0,7);x.fill();x.globalAlpha=.5;x.fillRect(10,60,68,6);x.globalAlpha=1}
+function renderMedia(){const m=MEDIA[mi],t=m.list[ti%m.list.length];$("t-title").textContent=t[0];$("t-sub").textContent=t[1];$("src").textContent=m.src;drawArt(t[2]);
+  $("pp-i").innerHTML=playing?'<path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/>':'<path d="M3 2v10l9-5z" fill="currentColor"/>';$("pp").setAttribute("aria-label",playing?"Pause":"Lecture")}
+function order(){const c=CTX[ctx];["b-agenda","b-gens","b-maison"].forEach((id,i)=>{const el=$(id);el.style.order=id===c.focus?0:i+1;el.classList.toggle("focus",id===c.focus)})}
+function setCtx(k){ctx=k;dayOpen=false;mi=CTX[k].media;ti=0;document.querySelectorAll(".ctx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ctx===k));order();renderAgenda();renderHome();renderMedia();$("feed").scrollTop=0}
+document.querySelectorAll(".ctx button").forEach(b=>b.onclick=()=>setCtx(b.dataset.ctx));
+
+$("rail").onclick=()=>{dayOpen=!dayOpen;$("daylist").hidden=!dayOpen};
+$("home").onclick=e=>{const b=e.target.closest("button");if(!b)return;const list=CTX[ctx].home?HOME_IN:HOME_OUT,h=list.find(x=>x.k===b.dataset.k);
+  if(h.once){toast(h.k==="off"?"Tout est éteint · alarme activée":"Chauffage programmé pour 18:30");return}
+  const key=ctx+h.k,v=!(homeState[key]??h.on);homeState[key]=v;renderHome();toast(`${h.t} · ${h.s[v?1:0]}`)};
+$("pp").onclick=()=>{playing=!playing;renderMedia()};
+const skip=d=>{const n=MEDIA[mi].list.length;ti=(ti+d+n)%n;playing=true;renderMedia();$("prog").style.width="2%"};
+$("next").onclick=()=>skip(1);$("prev").onclick=()=>skip(-1);
+$("src").onclick=()=>{mi=1-mi;ti=0;renderMedia();toast(`Lecteur suit ${MEDIA[mi].src==="SPOTIFY"?"Spotify":"YouTube"}`)};
+let sx=null;$("player").addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;sx=e.clientX});
+$("player").addEventListener("pointerup",e=>{if(sx==null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>40)skip(d<0?1:-1)});
+setInterval(()=>{if(!playing)return;const p=$("prog"),w=parseFloat(p.style.width)||30;p.style.width=(w>=99?0:w+.6)+"%"},500);
+
+function openSheet(id){$("scrim").classList.add("open");$(id).classList.add("open")}
+function closeSheets(){["chat","drawer","scrim"].forEach(i=>$(i).classList.remove("open"))}
+$("scrim").onclick=closeSheets;
+function renderChat(){const p=PEOPLE[cur];$("chat-name").textContent=p.n;$("chat-via").textContent=p.net+" via Beeper";$("msgs").innerHTML=p.m.map(m=>`<div class="bub${m[1]?" me":""}"></div>`).join("");[...$("msgs").children].forEach((d,i)=>d.textContent=p.m[i][0])}
+$("ppl").onclick=e=>{const b=e.target.closest("button");if(!b)return;cur=+b.dataset.i;PEOPLE[cur].u=0;renderPeople();renderChat();openSheet("chat");$("reply-in").value=""};
+$("reply").onsubmit=e=>{e.preventDefault();const v=$("reply-in").value.trim();if(!v)return;PEOPLE[cur].m.push([v,1]);$("reply-in").value="";renderChat();toast("Envoyé via "+PEOPLE[cur].net)};
+
+const APPS=["Agenda","Appareil photo","Beeper","Chrome","Gmail","Home Assistant","Horloge","Keep","Maps","Paramètres","Photos","Spotify","Téléphone","YouTube"];
+function search(q){q=q.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");const n=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(q);
+  const a=APPS.filter(n),p=PEOPLE.filter(x=>n(x.n)),h=[...HOME_IN,...HOME_OUT.filter(x=>!HOME_IN.some(y=>y.k===x.k))].filter(x=>n(x.t)),e=EV.filter(x=>n(x.t));
+  let out="";if(a.length)out+=`<div class="grp">APPS</div>`+a.map(x=>`<div>${x}<small>app</small></div>`).join("");
+  if(q&&p.length)out+=`<div class="grp">GENS</div>`+p.map(x=>`<div>${x.n}<small>${x.net}</small></div>`).join("");
+  if(q&&h.length)out+=`<div class="grp">MAISON</div>`+h.map(x=>`<div>${x.t}<small>home assistant</small></div>`).join("");
+  if(q&&e.length)out+=`<div class="grp">AGENDA</div>`+e.map(x=>`<div>${x.t}<small>${x.h}</small></div>`).join("");
+  $("res").innerHTML=out||`<div>Aucun résultat pour « ${q.replace(/[<>&]/g,"")} »</div>`}
+$("open-search").onclick=()=>{$("q").value="";search("");openSheet("drawer");setTimeout(()=>$("q").focus({preventScroll:true}),250)};
+$("q").oninput=e=>search(e.target.value);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheets()});
+
+const S=[["Pouce : tout l'usage quotidien atteignable",6,9],["Mémoire musculaire stable",4,9],["Tâches faites sans ouvrir d'app",7,8],["Lisible en un coup d'œil",6,8],["Rien d'inutile à l'écran",5,8],["Faisable sans root sur Pixel",8,8]];
+$("scores").innerHTML=S.map(s=>`<div class="sc"><span>${s[0]}</span><div class="bar"><i class="v2" style="width:${s[2]*10}%"></i><i style="width:${s[1]*10}%"></i></div><span class="mono">${s[1]} → ${s[2]}</span></div>`).join("");
+
+renderPeople();setCtx("matin");
+})();
+</script>

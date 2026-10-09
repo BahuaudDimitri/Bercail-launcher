@@ -1,0 +1,442 @@
+<title>Fil Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Doto:wght@600;800&display=swap">
+<style>
+/* Layout: the phone is the hero; the dossier follows in one column. Two materials: dark tracing paper (time, the thread) over a light anodised facade (the device). One deliberate world, single theme. */
+:root{
+  --paper:#0f0e0c; --rule:#2d2a24; --ink:#ece6db; --mute:#a69d8e; --faint:#8a8174;
+  --copper:#d0915e; --copper-d:#9c5626; --led:#ff5a1f;
+  --fac:#cdccc7; --fac-ink:#1b1b19; --fac-mute:#4a4945; --fac-rule:#acaba4; --key:#e6e5e1; --key-sh:#9a9993; --led-off:#b1b0aa;
+  --lcd:#0b0a09; --phos:#efe2c8;
+  --sans:"Archivo","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --dot:"Doto","Archivo",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink)}
+body{font:16px/1.55 var(--sans);margin:0;background-image:var(--grain,none)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:40px 80px}
+h1,h2,h3{font-family:var(--sans);text-wrap:balance;line-height:1.02;margin:0;font-stretch:72%}
+h1{font-size:clamp(3.6rem,10vw,6.5rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.9rem,4.5vw,2.6rem);font-weight:750}
+h3{font-size:1.15rem;font-weight:700;font-stretch:85%}
+p{margin:0;max-width:62ch}
+a{color:var(--copper)}
+.lede{font-size:1.12rem;color:var(--mute)}
+.tag{font-size:.8rem;font-weight:600;font-stretch:85%;color:var(--copper)}
+button{font-family:var(--sans)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:48px;align-items:start}
+.hero-txt{display:grid;gap:22px;align-content:start;padding-top:12px}
+@media (max-width:800px){.hero{grid-template-columns:1fr;justify-items:center;gap:28px}.hero-txt{order:-1;justify-self:stretch}}
+.ctx{display:flex;flex-wrap:wrap;border:1px solid var(--rule);width:max-content;max-width:100%}
+.ctx button{background:none;border:0;border-left:1px solid var(--rule);color:var(--mute);font-size:.86rem;font-weight:600;padding:10px 14px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.ctx button:first-child{border-left:0}
+.ctx button::before{content:"";width:6px;height:6px;border-radius:50%;background:#3b352d}
+.ctx button[aria-pressed="true"]{color:var(--ink)}
+.ctx button[aria-pressed="true"]::before{background:var(--led);box-shadow:0 0 6px var(--led)}
+.how{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.how li{font-size:.96rem;color:var(--mute);max-width:56ch}
+.how li b{color:var(--ink);font-weight:650;display:block}
+
+/* ======== PHONE ======== */
+.phone{width:100%;max-width:360px;aspect-ratio:9/19.5;border-radius:40px;border:7px solid #26231f;outline:1px solid #3a362f;background:var(--paper);background-image:var(--grain,none);position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 80px -40px #000}
+.st{display:flex;justify-content:space-between;padding:12px 24px 2px;font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mute)}
+.moment{flex:1;position:relative;min-height:0}
+.moment svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tk{stroke:#4a443b;stroke-width:1}
+.hr{fill:var(--faint);font:500 11px var(--sans);font-variant-numeric:tabular-nums;text-anchor:end}
+.sewn{stroke:var(--copper);stroke-width:1.6;fill:none}
+.loose{stroke:#7a7064;stroke-width:1;stroke-dasharray:1 3.5;fill:none}
+.bead{animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.5}}
+.lb{position:absolute;left:66px;right:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:18px;color:var(--mute);font-stretch:88%}
+.lb.past{color:var(--faint)}
+.lb .h{font-variant-numeric:tabular-nums;margin-right:6px}
+.lb.next{white-space:normal;line-height:1}
+.lb.next b{display:block;font-size:26px;font-weight:750;font-stretch:72%;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb.next span{display:block;font-size:13px;color:var(--copper);margin-top:5px;font-weight:600}
+button.lb{background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--sans)}
+button.lb b{color:var(--ink);font-weight:650;margin-right:5px}
+button.lb .x{color:var(--led);font-weight:700;margin-right:5px}
+button.lb.done{color:var(--faint)}
+button.lb.done b{color:var(--faint)}
+button.lb .r{color:var(--copper)}
+
+.panel{background:var(--fac);color:var(--fac-ink);box-shadow:0 -1px 0 #000,inset 0 1px 0 #f2eee6;padding:0 14px 12px;display:grid;background-image:var(--brushed)}
+.phone,.sheet,.sw.fac{--brushed:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 2px,rgba(0,0,0,.025) 2px 3px),linear-gradient(180deg,rgba(255,255,255,.22),rgba(0,0,0,.05))}
+.row{border-bottom:1px solid var(--fac-rule);padding-block:10px}
+.gens{display:flex;justify-content:space-between;gap:4px;padding-block:6px}
+.gens button{background:none;border:0;color:var(--fac-ink);font-size:17px;font-weight:650;font-stretch:80%;padding:6px 2px;cursor:pointer;display:flex;align-items:center;gap:2px;min-height:40px}
+.gens button sup{font-size:11px;color:var(--led);font-weight:800;align-self:flex-start;margin-top:5px}
+.gens button.quiet{color:var(--fac-mute);font-weight:500}
+.hint{font-size:12px;color:var(--fac-mute);height:18px;line-height:18px;margin-bottom:7px;font-stretch:88%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:8px}
+.hint em{font-style:normal;color:var(--copper-d);font-weight:600}
+.hint button{background:none;border:0;padding:0;color:var(--fac-ink);text-decoration:underline;font-size:12px;cursor:pointer}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.key,.tkeys button,.inrow button{background:var(--key);border:0;border-radius:3px;color:var(--fac-ink);cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 2px 0 var(--key-sh),0 3px 4px -2px rgba(0,0,0,.25);transition:transform .07s,box-shadow .07s}
+.key:active,.tkeys button:active,.inrow button:active{transform:translateY(1px);box-shadow:inset 0 1px 0 #fff,0 1px 0 var(--key-sh)}
+.key{position:relative;aspect-ratio:1/1.05;padding:8px 6px 6px;display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+.key i{width:6px;height:6px;border-radius:50%;background:var(--led-off);box-shadow:inset 0 1px 1px rgba(0,0,0,.25);transition:background .15s}
+.key.on i{background:var(--led);box-shadow:0 0 6px var(--led)}
+.key b{font-size:11.5px;font-weight:700;font-stretch:75%;line-height:1.1;display:block}
+.key small{font-size:11px;color:var(--fac-mute);font-variant-numeric:tabular-nums;display:block;font-stretch:82%}
+.key.sugg::after{content:"";position:absolute;left:6px;right:6px;top:-6px;height:2px;background:var(--copper-d)}
+
+.deck{padding-top:10px;display:grid;gap:8px}
+.lcd{background:var(--lcd);border-radius:3px;padding:9px 11px 8px;box-shadow:inset 0 2px 5px #000,0 1px 0 #f2eee6;display:grid;gap:6px;touch-action:pan-y;user-select:none;cursor:grab}
+.l1{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 17px/1.05 var(--dot);color:var(--phos);text-shadow:0 0 4px rgba(239,226,200,.3);text-transform:uppercase}
+.l2{display:flex;gap:10px;align-items:center;font:600 11px/1 var(--dot);color:#a99c86;text-transform:uppercase;white-space:nowrap}
+.l2 #art{max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
+.dots{flex:1;min-width:30px;height:5px;position:relative;background:radial-gradient(circle,#38322a 1.2px,transparent 1.4px) 0 0/5px 5px repeat-x}
+.dots b{position:absolute;inset:0 auto 0 0;background:radial-gradient(circle,var(--phos) 1.2px,transparent 1.4px) 0 0/5px 5px repeat-x}
+.tkeys{display:grid;grid-template-columns:1.5fr 1fr 1.4fr 1fr;gap:6px}
+.tkeys button{height:44px;display:grid;place-items:center}
+.tkeys .src{display:grid;gap:3px;padding:0 9px;justify-items:start;place-items:center start;font-size:11px;font-weight:650;font-stretch:80%}
+.tkeys .src span{display:flex;gap:6px;align-items:center;color:var(--fac-mute)}
+.tkeys .src span::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--led-off)}
+.tkeys .src span.on{color:var(--fac-ink)}
+.tkeys .src span.on::before{background:var(--led);box-shadow:0 0 5px var(--led)}
+.slot{margin-top:2px;height:44px;border:0;background:#c9c2b5;box-shadow:inset 0 1px 3px rgba(0,0,0,.25),0 1px 0 #f2eee6;border-radius:3px;color:var(--fac-mute);display:flex;align-items:center;gap:10px;padding:0 14px;font-size:14px;cursor:text;width:100%;text-align:left}
+
+/* sheets: the facade slides up; inputs stay under the thumb */
+.scrim{position:absolute;inset:0;background:rgba(5,4,3,.45);opacity:0;pointer-events:none;transition:opacity .15s;z-index:4}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:56%;background:var(--fac);background-image:var(--brushed);color:var(--fac-ink);box-shadow:0 -1px 0 #000,inset 0 1px 0 #f2eee6;transform:translateY(101%);transition:transform .18s ease-out;z-index:5;display:flex;flex-direction:column;padding:14px}
+.sheet.open{transform:none}
+#drawer{max-height:62%}
+.sh-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--fac-rule)}
+.sh-h h3{font-size:30px;font-stretch:70%;font-weight:750}
+.sh-h a{font-size:12.5px;color:var(--copper-d);text-decoration:none;font-weight:600}
+.via{font-size:12px;color:var(--fac-mute)}
+.tx{flex:0 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-block:12px}
+.ln{font-size:15px;line-height:1.35;max-width:88%}
+.ln small{display:block;font-size:11px;color:var(--fac-mute);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.ln.me{align-self:flex-end;text-align:right;color:var(--copper-d)}
+.quick{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;min-height:46px;align-items:center}
+.quick button{flex:none;background:none;border:1px solid var(--fac-rule);color:var(--fac-ink);font-size:13px;padding:8px 10px;border-radius:3px;cursor:pointer;font-stretch:88%}
+.ln .undo{background:none;border:0;padding:0;margin-left:8px;font:600 11px var(--sans);color:var(--fac-ink);text-decoration:underline;cursor:pointer}
+.quick:empty{display:none}
+.inrow{display:flex;gap:6px}
+.inrow input{flex:1;min-width:0;height:44px;background:#f2efe9;border:0;box-shadow:inset 0 1px 3px rgba(0,0,0,.22);border-radius:3px;color:var(--fac-ink);font:15px var(--sans);padding:0 12px}
+.inrow input::placeholder{color:#857e72}
+.inrow button{width:44px;height:44px;flex:none;display:grid;place-items:center}
+.inrow button.send{background:var(--fac-ink);color:var(--fac);box-shadow:none}
+.inrow button.mic.live{background:var(--led);color:#1a0800}
+.res{flex:0 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:10px}
+.res button{flex:none;background:none;border:0;border-bottom:1px solid var(--fac-rule);color:var(--fac-ink);text-align:left;font-size:19px;font-weight:650;font-stretch:78%;padding:10px 2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res button small{color:var(--fac-mute);font-size:14px;font-weight:500;margin-left:6px}
+.res .g{font-size:12px;color:var(--copper-d);padding:12px 2px 2px;font-weight:700}
+.res .none{color:var(--fac-mute);padding:10px 2px}
+
+/* dossier */
+section{display:grid;gap:20px;padding-block:56px;border-top:1px solid var(--rule)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+.cmp{display:grid;border-top:1px solid var(--rule);align-content:start}
+.cmp div{display:grid;grid-template-columns:minmax(0,1fr) 2.6rem 2.6rem 2.6rem;gap:8px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:.95rem;align-items:center}
+.cmp .n{font-variant-numeric:tabular-nums;text-align:right;color:var(--faint)}
+.cmp .n.up{color:var(--copper);font-weight:700}
+.cmp .hd{font-size:.78rem;color:var(--mute)}
+.fix{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.fix li b{font-weight:650;display:block}
+.fix li span{color:var(--mute);font-size:.94rem}
+.mat{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:28px 32px}
+.mat div{display:grid;gap:10px;align-content:start}
+.mat p{font-size:.92rem;color:var(--mute)}
+.sw{height:56px;border-radius:2px;display:flex;align-items:center;padding:0 14px}
+.tbl{overflow-x:auto;border-top:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
+th,td{text-align:left;padding:10px 10px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:.78rem;color:var(--mute);font-weight:600}
+td:first-child{font-weight:650;white-space:nowrap}
+td.n{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--mute)}
+.dead{text-decoration:line-through;color:var(--mute)}
+.method{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.method li{font-size:.94rem;color:var(--mute)}
+.method li b{color:var(--ink);font-weight:650;margin-right:6px}
+.api{display:grid;border-top:1px solid var(--rule)}
+.api div{display:grid;grid-template-columns:7rem 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:.93rem;color:var(--mute)}
+.api b{color:var(--ink);font-weight:650}
+@media (max-width:520px){.api div{grid-template-columns:1fr;gap:2px}}
+code{font-size:.88em;color:var(--ink)}
+.src-list{display:grid;gap:4px;font-size:.86rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<div class="hero">
+  <div class="phone" id="phone">
+    <div class="st"><span id="clock">08:10</span><span>5G · 82 %</span></div>
+    <div class="moment" id="moment"><svg id="thread" aria-hidden="true"></svg><div id="labels"></div></div>
+    <div class="panel">
+      <div class="row gens" id="gens"></div>
+      <div class="row">
+        <div class="hint" id="hint"></div>
+        <div class="keys" id="keys"></div>
+      </div>
+      <div class="deck">
+        <div class="lcd" id="lcd" title="Glisser pour changer de morceau">
+          <div class="l1" id="l1">Looped</div>
+          <div class="l2"><span id="art">Kiasmos</span><span id="tm">1:12</span><i class="dots"><b id="dp"></b></i><span id="dur">4:05</span></div>
+        </div>
+        <div class="tkeys">
+          <button class="src" id="src" aria-label="Changer de source"><span id="s0" class="on">Spotify</span><span id="s1">YouTube</span></button>
+          <button id="prev" aria-label="Précédent"><svg width="16" height="14" viewBox="0 0 16 14"><path d="M2 1v12M14 1 5 7l9 6z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+          <button id="pp" aria-label="Pause"><svg width="16" height="16" viewBox="0 0 16 16" id="ppi"></svg></button>
+          <button id="next" aria-label="Suivant"><svg width="16" height="14" viewBox="0 0 16 14"><path d="M14 1v12M2 1l9 6-9 6z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+        </div>
+        <button class="slot" id="open-search"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m11 11 3.5 3.5" stroke="currentColor" stroke-width="1.5"/></svg>Chercher</button>
+      </div>
+    </div>
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="chat" role="dialog" aria-label="Conversation">
+      <div class="sh-h"><div><h3 id="cn">Léa</h3><span class="via" id="cv">WhatsApp via Beeper</span></div><a href="https://www.beeper.com" id="ob">Ouvrir dans Beeper</a></div>
+      <div class="tx" id="tx"></div>
+      <div class="quick" id="quick"></div>
+      <form class="inrow" id="reply"><button type="button" class="mic" id="mic" aria-label="Dicter"><svg width="14" height="18" viewBox="0 0 14 18"><rect x="4" y="1" width="6" height="10" rx="3" fill="currentColor"/><path d="M1.5 8a5.5 5.5 0 0 0 11 0M7 13.5V17" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button><input id="ri" placeholder="Répondre" autocomplete="off"><button class="send" aria-label="Envoyer"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button></form>
+    </div>
+    <div class="sheet" id="drawer" role="dialog" aria-label="Recherche">
+      <div class="res" id="res"></div>
+      <div class="inrow"><input id="q" placeholder="Apps, gens, messages, pièces" autocomplete="off"></div>
+    </div>
+  </div>
+
+  <div class="hero-txt">
+    <span class="tag">Launcher pour Pixel · v4, après deux tours de critique</span>
+    <h1>Fil</h1>
+    <p class="lede">En haut, ta journée est un fil de cuivre sur du papier sombre : le passé est cousu, la suite pend encore, une perle marque l'instant. En bas, une façade d'aluminium clair qui ne bouge jamais, avec les gens, la maison, le son et la recherche.</p>
+    <div class="ctx" role="group" aria-label="Moment simulé">
+      <button data-ctx="matin" aria-pressed="true">Matin 08:10</button>
+      <button data-ctx="trajet" aria-pressed="false">Trajet 13:35</button>
+      <button data-ctx="soir" aria-pressed="false">Soir 20:40</button>
+    </div>
+    <ul class="how">
+      <li><b>Le fil change, la façade non.</b>Le moment de la journée modifie le fil, la suggestion et la source du lecteur. Aucun bouton ne se déplace, et l'état de la maison reste le même d'un moment à l'autre.</li>
+      <li><b>Le temps se dilate autour de maintenant.</b>Les heures proches prennent plus de place que la matinée passée, avec un repère par heure et un chiffre toutes les deux heures. Le prochain rendez‑vous s'affiche en grand.</li>
+      <li><b>Un nœud orange par personne qui t'a écrit.</b>Il est posé à l'heure de son dernier message. Il est plein tant que le message n'est pas lu, cerclé d'orange une fois lu, et creux en cuivre quand tu as répondu. Touche le nom pour répondre au pouce, avec des réponses rapides ou la dictée. Pendant 3 secondes, « Annuler l'envoi » s'affiche sur la ligne envoyée.</li>
+      <li><b>Cinq touches maison à témoin LED.</b>Le trait cuivre au‑dessus d'une touche indique la suggestion du moment. Une fois la suggestion appliquée, elle propose « Annuler ».</li>
+      <li><b>Un afficheur pour Spotify et YouTube.</b>Glisse dessus pour changer de morceau. Le sélecteur à deux positions indique la source.</li>
+    </ul>
+  </div>
+</div>
+
+<section>
+  <span class="tag">Boucle critique</span>
+  <h2>Trois tours d'un critique qui ne voit que l'écran</h2>
+  <p>Un agent séparé a manipulé le prototype dans un navigateur, sans lire le code, et l'a noté sur sept critères à chaque tour. Il a jugé la v2 générique et trouvé un bug de sens dans la v3. Pour la v4, il a confirmé que les bugs graves étaient corrigés et relevé un piège : le lien « Annuler » laissait sa place à une réponse rapide. Ce piège et les petits défauts du troisième tour sont corrigés sur cette page.</p>
+  <div class="split">
+    <div class="cmp" id="cmp"></div>
+    <ul class="fix">
+      <li><b>Tes réponses étaient attribuées au contact sur le fil.</b><span>Elles restent dans la conversation. Le nœud du contact devient creux et indique « répondu ».</span></li>
+      <li><b>Les étiquettes repoussaient les événements hors de leur heure.</b><span>Un seul nœud par personne, une graduation à chaque heure, et l'heure de la perle supprimée (la barre d'état la donne déjà).</span></li>
+      <li><b>Gris sur noir illisible, sous‑libellés de 9 px.</b><span>Contraste du passé et de l'échelle relevé, 11 px minimum partout.</span></li>
+      <li><b>Suggestion figée, réponses rapides réutilisables.</b><span>« Cinéma actif · Annuler » après usage. Une réponse rapide envoyée disparaît de la liste.</span></li>
+      <li><b>Un tap tardif sur « Annuler » envoyait un message (tour 3).</b><span>L'annulation s'affiche désormais sur la ligne envoyée, loin des réponses rapides.</span></li>
+      <li><b>Palette « sombre + accent chaud » par défaut, afficheur cliché.</b><span>La façade passe en aluminium clair. L'afficheur est plus sobre, sans texte défilant ni halo orange.</span></li>
+      <li><b>Feuille de conversation à moitié vide.</b><span>Hauteur ajustée au contenu : le fil reste visible au‑dessus.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <span class="tag">Langage graphique</span>
+  <h2>Papier sombre, aluminium clair</h2>
+  <div class="mat">
+    <div><div class="sw" style="background:var(--paper);border:1px solid var(--rule)"><svg width="100%" height="10" viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M0 5H110" stroke="#d0915e" stroke-width="1.6"/><path d="M110 5H200" stroke="#7a7064" stroke-dasharray="1 3.5"/><circle cx="110" cy="5" r="4" fill="#d0915e"/></svg></div><h3>Le fil</h3><p>Cuivre plein pour le passé, pointillé pour la suite. Les rendez‑vous sont des points épais, les messages des nœuds.</p></div>
+    <div><div class="sw fac" style="background-color:var(--fac);background-image:var(--brushed);color:var(--fac-ink);gap:10px;font-size:.85rem"><i style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 5px var(--led)"></i>allumé · non lu<i style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--led-off);margin-left:6px"></i>éteint</div><h3>La façade</h3><p>Aluminium clair, touches en relief, un seul orange vif réservé aux témoins. Le seul endroit où l'on touche.</p></div>
+    <div><div class="sw" style="background:var(--lcd);font:800 22px var(--dot);color:var(--phos)">LOOPED</div><h3>L'afficheur</h3><p>Une matrice de points encastrée dans la façade. Une ligne pour le titre, une pour l'artiste et la progression.</p></div>
+    <div><div class="sw" style="padding:0;font-size:40px;font-weight:750;font-stretch:70%">Point design</div><h3>Archivo étroit</h3><p>Une seule famille en largeur variable, étroite pour les titres. Chiffres tabulaires pour les heures.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="tag">Méthode et benchmark</span>
+  <h2>Comment on est arrivé là</h2>
+  <div class="split">
+    <ul class="method">
+      <li><b>L'article.</b>« How to turn your AI into a world-class designer » (Anshu Chimala, Lenny's Newsletter) explique comment sortir l'IA de ses choix par défaut.</li>
+      <li><b>Seed strings.</b>Quatre chaînes aléatoires ont donné quatre pistes : Console, Pièces, Arc du pouce, Fil.</li>
+      <li><b>Brief précis.</b>« La journée comme un fil », plutôt que « un launcher moderne ».</li>
+      <li><b>Critique séparée.</b>Deux tours, sept critères. Le critique a proposé lui‑même le fil littéral et la façade hi‑fi.</li>
+      <li><b>Retrait.</b>Ont été supprimés : l'horloge géante, les cartes, les avatars, les toasts, les étiquettes de bloc, la liste d'agenda, l'heure de la perle et le texte défilant.</li>
+    </ul>
+    <div class="tbl"><table>
+      <thead><tr><th>Launcher</th><th>Note</th><th>Ce que Fil en garde</th></tr></thead>
+      <tbody>
+        <tr><td>Niagara</td><td class="n">4,8★ · 10M+</td><td>Réponse aux messages sans ouvrir l'app</td></tr>
+        <tr><td>Smart Launcher 6</td><td class="n">4,5★ · 50M+</td><td>Rien à ranger à la main</td></tr>
+        <tr><td>Kvaesitso</td><td class="n">F‑Droid</td><td>Une recherche qui trouve gens, messages et pièces</td></tr>
+        <tr><td>Olauncher</td><td class="n">Play Store</td><td>Zéro icône sur l'accueil</td></tr>
+        <tr><td>Lawnchair</td><td class="n">Open source</td><td>Rester natif Pixel</td></tr>
+        <tr><td class="dead">Nova</td><td class="n">Arrêté 2025</td><td>Contre‑exemple : trop de réglages</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section>
+  <span class="tag">Faisabilité</span>
+  <h2>Sur un Pixel, sans root</h2>
+  <div class="api">
+    <div><b>Gens</b><span><code>NotificationListenerService</code> sur Beeper : expéditeur, réseau, texte, et réponse via l'action <code>RemoteInput</code>.</span></div>
+    <div><b>Son</b><span><code>MediaSessionManager</code> : titre, durée et contrôles de Spotify et YouTube.</span></div>
+    <div><b>Fil</b><span><code>CalendarContract</code> pour l'agenda, horodatage des notifications pour les nœuds.</span></div>
+    <div><b>Maison</b><span>WebSocket Home Assistant avec un jeton longue durée. L'état des LED est poussé en temps réel.</span></div>
+    <div><b>Moment</b><span>Heure, Wi‑Fi de la maison, casque Bluetooth. Pas de GPS.</span></div>
+    <div><b>Rendu</b><span>Jetpack Compose : le fil est un <code>Canvas</code>, l'afficheur une police matricielle, le grain un shader.</span></div>
+  </div>
+  <div class="src-list">
+    <span class="tag">Sources</span>
+    <a href="https://www.lennysnewsletter.com/p/how-to-turn-your-ai-into-a-world">Lenny's Newsletter · How to turn your AI into a world-class designer</a>
+    <a href="https://www.slashgear.com/2237061/best-android-launchers-must-try-2026/">SlashGear · Best Android launchers 2026</a>
+    <a href="https://www.bgr.com/2216046/google-pixel-launcher-alternatives-users-swear-by/">BGR · Pixel launcher alternatives</a>
+    <a href="https://www.androidpolice.com/2021/02/02/hands-on-the-minimalist-niagara-launcher-is-officially-out-of-beta/">Android Police · Niagara hands‑on</a>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=h=>{let H=Math.floor(h),M=Math.round((h-H)*60);if(M===60){H++;M=0}return String(H%24).padStart(2,"0")+":"+String(M).padStart(2,"0")};
+
+try{const c=document.createElement("canvas");c.width=c.height=140;const x=c.getContext("2d"),d=x.createImageData(140,140);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=10}x.putImageData(d,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`)}catch(e){}
+
+const EV=[{s:9.5,e:10,t:"Stand‑up"},{s:12.5,e:13.5,t:"Déjeuner avec Léa"},{s:14,e:15,t:"Point design"},{s:18.5,e:19,t:"Courses"},{s:21,e:23,t:"Ciné à la maison"}];
+const PEOPLE=[{n:"Léa",net:"WhatsApp",q:["Oui, parfait","J'arrive dans 10 min","Je te rappelle"]},{n:"Tom",net:"Signal",q:["Oui, quel match !","Pas vu, raconte","Ce soir ?"]},{n:"Équipe",net:"Slack",q:["Merci, je regarde","J'arrive","OK"]},{n:"Maman",net:"SMS",q:["Bisous","À dimanche !","Je t'appelle demain"]},{n:"Julien",net:"Instagram",q:["Carrément","Pas demain","Quelle heure ?"]}];
+const KEYS=[{k:"salon",t:"Salon",v:["éteint","60 %"]},{k:"cine",t:"Cinéma",v:["prête","active"]},{k:"volets",t:"Volets",v:["fermés","ouverts"]},{k:"chauf",t:"Chauffage",v:["18 °C","21 °C"]},{k:"alarme",t:"Alarme",v:["off","armée"]}];
+const HOME={salon:1,cine:0,volets:1,chauf:0,alarme:0};
+const BASE={
+  matin:{now:8+10/60,media:0,sugg:"alarme",hint:"Armer l'alarme en partant",done:"Alarme armée",away:false,
+    msgs:[{p:1,t:7+20/60,x:"Tu as vu le match hier ?",u:1},{p:0,t:7+52/60,x:"On se retrouve à 12h30 ?",u:1}]},
+  trajet:{now:13+35/60,media:0,sugg:"chauf",hint:"Chauffer pour ton retour à 18:30",done:"Chauffage programmé pour 18:30",away:true,
+    msgs:[{p:0,t:12+58/60,x:"Je suis en terrasse",u:0},{p:2,t:13+10/60,x:"Slides pour 14h dans le drive",u:1},{p:0,t:13+31/60,x:"Merci pour le déj !",u:1}]},
+  soir:{now:20+40/60,media:1,sugg:"cine",hint:"Lancer Cinéma avant 21:00",done:"Cinéma actif",away:false,
+    msgs:[{p:2,t:17+45/60,x:"Bonne soirée à tous",u:0},{p:3,t:19+55/60,x:"Bisous, à dimanche",u:1},{p:4,t:20+31/60,x:"On joue demain ?",u:1},{p:4,t:20+33/60,x:"Vers 15h ?",u:1}]}
+};
+const S=JSON.parse(JSON.stringify(BASE));
+const QUICK=PEOPLE.map(p=>p.q.slice());
+const MEDIA=[{src:"Spotify",list:[["Looped","Kiasmos",245],["Says","Nils Frahm",528],["Avril 14th","Aphex Twin",125]]},
+             {src:"YouTube",list:[["Ramen maison en 20 minutes","Cuisine",1080],["Comment marche un capteur photo","Tech",840]]}];
+let ctx="matin",mi=0,ti=0,playing=true,pos=72,cur=0,undoT=null;
+const st=()=>S[ctx];
+
+/* per person: last incoming message, unread count, replied? */
+function threadOf(p){const ms=st().msgs.filter(m=>m.p===p);const inc=ms.filter(m=>!m.me);if(!inc.length)return null;
+  const last=inc[inc.length-1],lastMe=ms.filter(m=>m.me).pop();return {last,count:inc.filter(m=>m.u).length,replied:!!lastMe&&lastMe.seq>last.seq}}
+let seq=0;Object.values(S).forEach(c=>c.msgs.forEach(m=>m.seq=seq++));
+
+/* ---- the thread ---- */
+function renderThread(){
+  const box=$("moment").getBoundingClientRect(),W=box.width,H=box.height;if(!W||!H)return;
+  const c=st(),now=c.now,T0=7,T1=24,top=16,bot=H-14,X=48,N=340,step=(T1-T0)/N,cum=[0];
+  for(let i=1;i<=N;i++){const t=T0+(i-.5)*step;cum.push(cum[i-1]+1+3.4*Math.exp(-(((t-now)/1.5)**2)))}
+  const y=t=>{const f=(Math.min(Math.max(t,T0),T1)-T0)/step,i=Math.min(Math.floor(f),N-1),r=f-i;return top+(bot-top)*(cum[i]+(cum[i+1]-cum[i])*r)/cum[N]};
+  const yn=y(now);let s=`<defs><radialGradient id="gl"><stop offset="0" stop-color="#d0915e" stop-opacity=".55"/><stop offset="1" stop-color="#d0915e" stop-opacity="0"/></radialGradient></defs>`;
+  for(let h=8;h<=24;h++){const yy=y(h);s+=`<line class="tk" x1="${X-6}" x2="${X-2}" y1="${yy}" y2="${yy}"/>`;
+    if(h%2===0&&Math.abs(yy-yn)>9)s+=`<text class="hr" x="${X-11}" y="${yy+4}">${h%24}h</text>`}
+  s+=`<path class="sewn" d="M${X} ${y(T0)}V${yn}"/><path class="loose" d="M${X} ${yn}V${y(T1)}"/>`;
+  const next=EV.find(e=>e.s>now),L=[];
+  EV.forEach(e=>{const y1=y(e.s),y2=y(e.e),past=e.e<=now;s+=`<rect x="${X-2.2}" y="${y1}" width="4.4" height="${Math.max(2,y2-y1)}" rx="1" fill="${past?"#8a6440":e===next?"#ece6db":"#a69d8e"}"/>`;
+    if(e===next){const d=Math.round((e.s-now)*60);L.push({y0:y1,h:46,off:9,html:`<div class="lb next"><b>${esc(e.t)}</b><span>dans ${d>=60?Math.floor(d/60)+" h "+String(d%60).padStart(2,"0"):d+" min"} · ${fmt(e.s)}</span></div>`})}
+    else L.push({y0:y1,h:18,off:9,html:`<div class="lb${past?" past":""}"><span class="h">${fmt(e.s)}</span>${esc(e.t)}</div>`})});
+  /* unread: filled LED · read, no reply yet: LED outline · replied: hollow copper */
+  PEOPLE.forEach((p,i)=>{const th=threadOf(i);if(!th)return;const yy=y(th.last.t),on=th.count>0,rep=th.replied&&!on;
+    s+=`<circle cx="${X}" cy="${yy}" r="3.6" fill="${on?"#ff5a1f":"#0f0e0c"}" stroke="${rep?"#d0915e":"#ff5a1f"}" stroke-width="1.3"${on?' style="filter:drop-shadow(0 0 3px #ff5a1f)"':""}/>`;
+    L.push({y0:yy,h:18,off:9,html:`<button class="lb${rep?" done":""}" data-p="${i}"><b>${esc(p.n)}</b>${th.count>1?`<span class="x">×${th.count}</span>`:""}${rep?`<span class="r">répondu</span>`:esc(th.last.x)}</button>`})});
+  s+=`<circle cx="${X}" cy="${yn}" r="15" fill="url(#gl)" class="bead"/><circle cx="${X}" cy="${yn}" r="5" fill="#d0915e"/>`;
+  L.sort((a,b)=>a.y0-b.y0);let pb=top-6;L.forEach(l=>{l.t=Math.max(l.y0-l.off,pb+3);pb=l.t+l.h});
+  let lim=H-4;for(let i=L.length-1;i>=0;i--){if(L[i].t+L[i].h>lim)L[i].t=lim-L[i].h;lim=L[i].t-3}
+  L.forEach(l=>{const ay=l.t+l.off;if(Math.abs(ay-l.y0)>3)s+=`<path d="M${X+5} ${l.y0}L${X+11} ${l.y0}L${X+16} ${ay}" stroke="#6b6357" fill="none" stroke-width=".8"/>`});
+  $("thread").setAttribute("viewBox",`0 0 ${W} ${H}`);$("thread").innerHTML=s;
+  $("labels").innerHTML=L.map(l=>l.html.replace(/^<(div|button) class="/,`<$1 style="top:${l.t}px" class="`)).join("");
+}
+$("labels").onclick=e=>{const b=e.target.closest("button[data-p]");if(b)openChat(+b.dataset.p)};
+
+/* ---- facade ---- */
+function renderGens(){$("gens").innerHTML=PEOPLE.map((p,i)=>{const th=threadOf(i),u=th?th.count:0;return `<button data-p="${i}" class="${u?"":"quiet"}" aria-label="${p.n}${u?", "+u+" non lu":""}">${p.n}${u?`<sup>${u}</sup>`:""}</button>`}).join("")}
+$("gens").onclick=e=>{const b=e.target.closest("button");if(b)openChat(+b.dataset.p)};
+function keyVal(k){const on=!!HOME[k.k];return k.k==="salon"&&HOME.cine&&on?"10 %":k.v[on?1:0]}
+function renderKeys(){const c=st(),done=!!HOME[c.sugg];
+  $("hint").innerHTML=done?`<em>${esc(c.done)}</em><button type="button" id="undo-h">Annuler</button>`:`<em>${esc(c.hint)}</em>${c.away?"<span>à distance</span>":""}`;
+  $("keys").innerHTML=KEYS.map(k=>{const on=!!HOME[k.k],v=keyVal(k);return `<button class="key${on?" on":""}${c.sugg===k.k&&!done?" sugg":""}" data-k="${k.k}" aria-pressed="${on}"><i></i><span><b>${k.t}</b><small>${v}</small></span></button>`}).join("")}
+let prevHome=null;
+function press(k){prevHome={...HOME};HOME[k]=HOME[k]?0:1;if(k==="cine"&&HOME.cine){HOME.salon=1;HOME.volets=0}renderKeys()}
+$("keys").onclick=e=>{const b=e.target.closest(".key");if(b)press(b.dataset.k)};
+$("hint").onclick=e=>{if(e.target.id!=="undo-h")return;const k=st().sugg;if(prevHome&&!prevHome[k])Object.assign(HOME,prevHome);else HOME[k]=0;prevHome=null;renderKeys()};
+
+/* ---- deck ---- */
+const ts=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+function renderDeck(){const m=MEDIA[mi],t=m.list[ti];$("l1").textContent=t[0];$("art").textContent=t[1];$("dur").textContent=ts(t[2]);
+  $("s0").classList.toggle("on",mi===0);$("s1").classList.toggle("on",mi===1);
+  $("ppi").innerHTML=playing?'<path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z" fill="currentColor"/>':'<path d="M3.5 2v12L14 8z" fill="currentColor"/>';$("pp").setAttribute("aria-label",playing?"Pause":"Lecture");tick()}
+function tick(){const t=MEDIA[mi].list[ti];$("tm").textContent=ts(pos);$("dp").style.width=(pos/t[2]*100)+"%"}
+setInterval(()=>{if(!playing)return;pos+=1;if(pos>=MEDIA[mi].list[ti][2]){skip(1);return}tick()},1000);
+function skip(d){const n=MEDIA[mi].list.length;ti=(ti+d+n)%n;pos=0;playing=true;renderDeck()}
+$("next").onclick=()=>skip(1);$("prev").onclick=()=>{if(pos>5){pos=0;tick()}else skip(-1)};
+$("pp").onclick=()=>{playing=!playing;renderDeck()};
+$("src").onclick=()=>{mi=1-mi;ti=0;pos=0;renderDeck()};
+let sx=null;$("lcd").addEventListener("pointerdown",e=>{sx=e.clientX});
+$("lcd").addEventListener("pointerup",e=>{if(sx==null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>36)skip(d<0?1:-1)});
+
+/* ---- sheets ---- */
+const closeAll=()=>{["chat","drawer","scrim"].forEach(i=>$(i).classList.remove("open"));stopMic()};
+$("scrim").onclick=closeAll;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
+function openSheet(id){$("scrim").classList.add("open");$(id).classList.add("open")}
+function renderChat(){const p=PEOPLE[cur],ms=st().msgs.filter(m=>m.p===cur);$("cn").textContent=p.n;$("cv").textContent=p.net+" via Beeper";
+  $("tx").innerHTML=ms.length?ms.map(m=>`<div class="ln${m.me?" me":""}"><small>${m.me?"Toi · ":""}${fmt(m.t)}${m.undo?`<button type="button" class="undo" data-seq="${m.seq}">Annuler l'envoi</button>`:""}</small>${esc(m.x)}</div>`).join(""):`<div class="ln"><small>Aujourd'hui</small>Pas encore de message.</div>`;
+  $("tx").scrollTop=1e5;renderQuick()}
+function renderQuick(){$("quick").innerHTML=QUICK[cur].map(q=>`<button type="button">${esc(q)}</button>`).join("")}
+function openChat(i){cur=i;clearTimeout(undoT);st().msgs.forEach(m=>{if(m.p===i)m.u=0});renderChat();renderGens();renderThread();$("ri").value="";openSheet("chat")}
+/* undo lives on the sent line itself, never where a quick reply can appear */
+function send(v,fromQuick){v=v.trim();if(!v)return;st().msgs.forEach(x=>x.undo=0);
+  const m={p:cur,t:st().now,x:v,u:0,me:1,seq:seq++,undo:1,quick:fromQuick};st().msgs.push(m);$("ri").value="";
+  if(fromQuick)QUICK[cur]=QUICK[cur].filter(q=>q!==v);renderChat();renderThread();
+  clearTimeout(undoT);undoT=setTimeout(()=>{m.undo=0;if($("chat").classList.contains("open"))renderChat()},3000)}
+$("tx").onclick=e=>{const b=e.target.closest(".undo");if(!b)return;clearTimeout(undoT);const a=st().msgs,i=a.findIndex(x=>x.seq===+b.dataset.seq);
+  if(i<0)return;const m=a.splice(i,1)[0];if(m.quick)QUICK[m.p].unshift(m.x);renderChat();renderThread()};
+$("reply").onsubmit=e=>{e.preventDefault();send($("ri").value,false)};
+$("quick").onclick=e=>{const b=e.target.closest("button");if(b)send(b.textContent,true)};
+let micT=null;function stopMic(){clearTimeout(micT);$("mic").classList.remove("live");$("ri").placeholder="Répondre"}
+$("mic").onclick=()=>{if($("mic").classList.contains("live")){stopMic();return}$("mic").classList.add("live");$("ri").value="";$("ri").placeholder="J'écoute…";
+  micT=setTimeout(()=>{$("ri").value="J'arrive dans dix minutes";stopMic();$("ri").focus({preventScroll:true})},1400)};
+$("ob").onclick=e=>{e.preventDefault();$("ob").textContent="S'ouvrirait dans Beeper"};
+
+const APPS=["YouTube","Spotify","Beeper","Agenda","Home Assistant","Appareil photo","Chrome","Gmail","Horloge","Keep","Maps","Paramètres","Photos","Téléphone"];
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+function search(q){const n=norm(q.trim());let out="";
+  if(!n){out=APPS.slice(0,5).map(a=>`<button data-a="1">${a}</button>`).join("")}
+  else{const has=s=>norm(s).includes(n),a=APPS.filter(has),p=PEOPLE.map((x,i)=>[x,i]).filter(([x])=>has(x.n)),
+    ms=st().msgs.filter(m=>!m.me&&(has(m.x)||has(PEOPLE[m.p].n))),k=KEYS.filter(x=>has(x.t)),e=EV.filter(x=>has(x.t));
+    if(a.length)out+=`<div class="g">Apps</div>`+a.map(x=>`<button data-a="1">${x}</button>`).join("");
+    if(p.length)out+=`<div class="g">Gens</div>`+p.map(([x,i])=>`<button data-p="${i}">${x.n}<small>${x.net}</small></button>`).join("");
+    if(ms.length)out+=`<div class="g">Messages</div>`+ms.map(m=>`<button data-p="${m.p}">${esc(PEOPLE[m.p].n)}<small>${esc(m.x)}</small></button>`).join("");
+    if(k.length)out+=`<div class="g">Maison</div>`+k.map(x=>`<button data-k="${x.k}">${x.t}<small>${keyVal(x)}</small></button>`).join("");
+    if(e.length)out+=`<div class="g">Agenda</div>`+e.map(x=>`<button data-a="1">${esc(x.t)}<small>${fmt(x.s)}</small></button>`).join("");
+    if(!out)out=`<div class="none">Rien pour « ${esc(q.trim())} »</div>`}
+  $("res").innerHTML=out;$("res").scrollTop=1e5}
+$("res").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.p){$("drawer").classList.remove("open");openChat(+b.dataset.p);return}
+  if(b.dataset.k){press(b.dataset.k);search($("q").value);return}
+  closeAll()};
+$("open-search").onclick=()=>{$("q").value="";search("");openSheet("drawer");setTimeout(()=>$("q").focus({preventScroll:true}),180)};
+$("q").oninput=e=>search(e.target.value);
+
+/* ---- moment ---- */
+function setCtx(k){ctx=k;closeAll();prevHome=null;$("clock").textContent=fmt(st().now);
+  document.querySelectorAll(".ctx button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ctx===k));
+  if(mi!==st().media){mi=st().media;ti=0;pos=40}renderThread();renderGens();renderKeys();renderDeck()}
+document.querySelectorAll(".ctx button").forEach(b=>b.onclick=()=>setCtx(b.dataset.ctx));
+new ResizeObserver(renderThread).observe($("moment"));
+if(document.fonts)document.fonts.ready.then(renderThread);
+
+const SC=[["Pouce",5,8,8],["Mémoire musculaire",4,8,8],["Tâches sans ouvrir d'app",7,8,9],["Lisible d'un coup d'œil",6,7,8],["Rien d'inutile",5,7,8],["Originalité graphique",3,7,8],["Qualité du détail",5,6,7]];
+$("cmp").innerHTML=`<div><span class="hd">Critère, noté sur 10</span><span class="n hd">v2</span><span class="n hd">v3</span><span class="n hd">v4</span></div>`+SC.map(s=>`<div><span>${s[0]}</span><span class="n">${s[1]}</span><span class="n">${s[2]}</span><span class="n up">${s[3]}</span></div>`).join("");
+
+setCtx("matin");
+})();
+</script>
