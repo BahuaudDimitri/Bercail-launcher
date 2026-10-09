@@ -23,10 +23,15 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 
 ## Design system
 
-Aucun composant pour l'instant : ils arrivent en vague 2 (`BcTheme`, `BcText`, `BcButton`…).
+Jetons et thème (vague 2). Police Outfit sous licence SIL OFL (`core/designsystem/OFL-Outfit.txt`).
 
 | Composant | Rôle | Fichier | Tests |
 |---|---|---|---|
+| `BcTheme` | Racine de chaque écran : vitesse des animations du téléphone, couleur et style de texte par défaut | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcTheme.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcThemeUiTest.kt` |
+| `BcColors` | Palette sombre unique : fond de nuit, textes, verres, tuiles, 5 pastels, éteint ; contraste WCAG | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcColors.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcColorsTest.kt` |
+| `BcType` | Police Outfit et styles nommés, jamais sous 10,5 sp | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcType.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcTypeTest.kt` |
+| `BcSizes`, `BcSpacing`, `BcShapes` | Cibles tactiles (≥ 40 dp), espacements, rayons | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcSizes.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcSizesTest.kt` |
+| `BcMotion` | Durées et courbe des animations, coupées si Android les supprime | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcMotion.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/theme/BcMotionTest.kt` |
 
 ## Sources de données
 
