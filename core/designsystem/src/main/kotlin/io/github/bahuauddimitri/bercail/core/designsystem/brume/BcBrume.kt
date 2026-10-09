@@ -24,6 +24,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.MAX_ANIMATION_FPS
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberAnimationSeconds
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberPowerSaveMode
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
@@ -108,20 +109,30 @@ fun BcBrume(
         }
     }
     DisposableEffect(state) { onDispose { state.isAnimating = false } }
-    val seconds by rememberAnimationSeconds(running = state.isAnimating, start = START_SECONDS)
+    SlowScreenWhileAlone(state)
+    val seconds by rememberAnimationSeconds(running = state.isAnimating, start = BRUME_START_SECONDS)
 
-    Canvas(modifier.clipToBounds().clearAndSetSemantics {}) {
-        drawSky(night)
-        if (night && (weather == BcWeather.Clear || weather == BcWeather.Wind)) drawStars(seconds)
-        drawBlobs(seconds, colors, wind = weather == BcWeather.Wind, night = night)
-        when (weather) {
-            BcWeather.Rain -> drawRain(seconds)
-            BcWeather.Wind -> drawGusts(seconds)
-            BcWeather.Snow -> drawSnow(seconds)
-            BcWeather.Clear -> Unit
-        }
-        drawTopVeil()
+    Canvas(modifier.clipToBounds().clearAndSetSemantics {}) { drawBrume(seconds, colors, weather, night) }
+}
+
+/** Where a still Brume rests: the same moment every time. */
+internal const val BRUME_START_SECONDS = 12f
+
+/**
+ * One picture of Brume at [seconds]: sky, blobs, weather, top veil.
+ * Pure drawing, also used by the screenshot tests.
+ */
+internal fun DrawScope.drawBrume(seconds: Float, colors: BcBrumeColors, weather: BcWeather, night: Boolean) {
+    drawSky(night)
+    if (night && (weather == BcWeather.Clear || weather == BcWeather.Wind)) drawStars(seconds)
+    drawBlobs(seconds, colors, wind = weather == BcWeather.Wind, night = night)
+    when (weather) {
+        BcWeather.Rain -> drawRain(seconds)
+        BcWeather.Wind -> drawGusts(seconds)
+        BcWeather.Snow -> drawSnow(seconds)
+        BcWeather.Clear -> Unit
     }
+    drawTopVeil()
 }
 
 private fun DrawScope.drawSky(night: Boolean) {
@@ -186,7 +197,6 @@ private val BLOBS = listOf(
 )
 
 private const val IDLE_FREEZE_MILLIS = 10_000L
-private const val START_SECONDS = 12f
 private const val CALM_SPEED = 0.12f
 private const val WIND_SPEED = 0.55f
 private const val CALM_REACH = 0.16f

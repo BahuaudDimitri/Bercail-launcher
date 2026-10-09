@@ -25,5 +25,8 @@ fun ComposeContentTestRule.captureComponent(name: String, content: @Composable (
             Box(Modifier.testTag(CAPTURE).background(BcColors.base).padding(BcSpacing.l)) { content() }
         }
     }
+    // One more frame before capturing: an image still being drawn sometimes comes out blank.
+    mainClock.advanceTimeByFrame()
+    waitForIdle()
     onNodeWithTag(CAPTURE).captureRoboImage("src/test/screenshots/$name.png")
 }

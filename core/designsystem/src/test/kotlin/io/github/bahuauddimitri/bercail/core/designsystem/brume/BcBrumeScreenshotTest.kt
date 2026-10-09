@@ -1,38 +1,39 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.brume
 
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
-import io.github.bahuauddimitri.bercail.core.designsystem.captureComponent
-import org.junit.Rule
+import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
+/**
+ * Brume is drawn straight into a picture, in software: a full-screen animated drawing captured through the
+ * simulated screen sometimes came out blank, depending on timing.
+ */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(qualifiers = PIXEL_9)
 class BcBrumeScreenshotTest {
-    @get:Rule
-    val compose = createComposeRule()
-
     private fun capture(
         name: String,
         colors: BcBrumeColors,
         weather: BcWeather = BcWeather.Clear,
         night: Boolean = false
-    ) = compose.captureComponent(name) {
-        BcBrume(
-            colors = colors,
-            playing = false,
-            weather = weather,
-            night = night,
-            modifier = Modifier.size(260.dp, 520.dp)
-        )
+    ) {
+        val picture = ImageBitmap(WIDTH_PX, HEIGHT_PX)
+        CanvasDrawScope().draw(
+            density = Density(PIXEL_9_DENSITY),
+            layoutDirection = LayoutDirection.Ltr,
+            canvas = Canvas(picture),
+            size = Size(WIDTH_PX.toFloat(), HEIGHT_PX.toFloat())
+        ) { drawBrume(BRUME_START_SECONDS, colors, weather, night) }
+        picture.asAndroidBitmap().captureRoboImage("src/test/screenshots/$name.png")
     }
 
     @Test
@@ -50,4 +51,11 @@ class BcBrumeScreenshotTest {
 
     @Test
     fun `Brume sous la neige correspond à sa capture`() = capture("brume_snow", BcBrumeColors.Morning, BcWeather.Snow)
+
+    private companion object {
+        /** 260 × 520 dp at the Pixel 9 density. */
+        const val PIXEL_9_DENSITY = 2.625f
+        const val WIDTH_PX = 683
+        const val HEIGHT_PX = 1365
+    }
 }

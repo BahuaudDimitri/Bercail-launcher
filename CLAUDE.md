@@ -38,6 +38,7 @@ Aucun secret dans le dépôt. La clé de signature vit dans les secrets GitHub (
 | Enregistrer de nouvelles captures de référence | `./gradlew recordRoborazziDebug` |
 | Tests sur le téléphone branché en USB | `./gradlew connectedCheck` |
 | Installer l'app de debug sur le téléphone | `./gradlew :app:installDebug` |
+| Mesurer l'énergie de Brume sur le Pixel 9 | `bash scripts/measure-brume.sh` (voir l'en-tête du script) |
 
 Noms des tests instrumentés (`androidTest/`) : apostrophe typographique `’` et non `'`, que le format DEX d'Android refuse (vérifié par `ModuleRulesTest`).
 

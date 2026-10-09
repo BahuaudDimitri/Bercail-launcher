@@ -91,8 +91,9 @@ fun BcGallery(modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                // Bars first, then scrolling: content never slides under the status bar.
                 .safeDrawingPadding()
+                .verticalScroll(rememberScrollState())
                 .padding(BcSpacing.l),
             verticalArrangement = Arrangement.spacedBy(BcSpacing.xl)
         ) {
