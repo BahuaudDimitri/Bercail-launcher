@@ -28,6 +28,22 @@ class CatalogTest {
     }
 
     @Test
+    fun `chaque composant public du design system figure dans la galerie`() {
+        val gallery = Repository.productionFilesOf(":core:designsystem")
+            .filter { it.relativePath.endsWith("/gallery/BcGallery.kt") }
+            .joinToString("\n") { it.text }
+        val components = Repository.productionFilesOf(":core:designsystem")
+            .functions()
+            .filter { it.hasAnnotationWithName("Composable") && it.hasPublicOrDefaultModifier }
+            .map { it.name }
+            .filter { it.startsWith("Bc") && it != "BcGallery" && it != "BcTheme" }
+
+        val missing = components.filterNot { Regex("""\b$it\(""").containsMatchIn(gallery) }
+
+        assertThat(missing).isEmpty()
+    }
+
+    @Test
     fun `chaque fichier cité au catalogue existe`() {
         val cited = Regex("""`([\w./-]+\.(kt|md|xml|kts))`""").findAll(Repository.catalog).map { it.groupValues[1] }
 
