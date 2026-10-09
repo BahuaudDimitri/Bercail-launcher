@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+    "group:allNonMajor"
+  ],
+  "timezone": "Europe/Paris",
+  "schedule": ["before 6am on monday"],
+  "automerge": true,
+  "automergeType": "branch",
+  "rebaseWhen": "behind-base-branch",
+  "dependencyDashboard": true
+}

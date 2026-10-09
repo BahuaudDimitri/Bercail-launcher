@@ -1,0 +1,158 @@
+name: CI
+
+# Every push on main replays the 8 gates, then publishes a signed release if a feat: or fix: commit landed.
+# Renovate's short-lived branches get the same gates before it merges them. Everything runs again every night.
+on:
+  push:
+    branches: [main, "renovate/**"]
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "25"
+
+jobs:
+  secrets:
+    name: "1 · Secrets (gitleaks)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Scan the whole history for secrets
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --verbose
+
+  checks:
+    name: "2 à 7 · Qualité, architecture, build, tests, captures, couverture"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v6
+      - name: "2 · Format et analyse statique (ktlint, detekt, lint Android)"
+        run: ./gradlew spotlessCheck detekt lint
+      - name: "3 · Architecture (Konsist, dépendances, catalogue)"
+        run: ./gradlew :architecture:test
+      - name: "4 · Compilation debug et release"
+        run: ./gradlew assembleDebug assembleRelease
+      - name: "5 · Tests unitaires et d'interface"
+        run: ./gradlew test -Pbercail.suite=unit && ./gradlew test -Pbercail.suite=ui
+      - name: "6 · Captures d'écran (Roborazzi)"
+        run: ./gradlew test -Pbercail.suite=screenshots
+      - name: "7 · Couverture (Kover : 90 % domaine, 80 % global)"
+        run: ./gradlew koverVerify koverHtmlReport
+      - name: Publish the reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            **/build/reports/
+            **/build/outputs/roborazzi/
+            **/src/test/screenshots/*_compare.png
+          if-no-files-found: ignore
+
+  devices:
+    name: "8 · Tests sur émulateur (Android ${{ matrix.android }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - android: 16
+            api-level: "36"
+          - android: 17
+            api-level: "37.0"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Enable hardware acceleration for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run the instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: ./gradlew connectedDebugAndroidTest
+      - name: Publish the reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: device-reports-android-${{ matrix.android }}
+          path: "**/build/reports/androidTests/"
+          if-no-files-found: ignore
+
+  release:
+    name: Publication
+    needs: [secrets, checks, devices]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Compute the next version from the Conventional Commits
+        id: version
+        uses: mathieudutour/github-tag-action@v7
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+          default_bump: false
+          dry_run: true
+      - uses: actions/setup-java@v6
+        if: steps.version.outputs.new_tag
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.version.outputs.new_tag
+      - name: Build the signed APK
+        if: steps.version.outputs.new_tag
+        env:
+          VERSION: ${{ steps.version.outputs.new_version }}
+          BERCAIL_KEYSTORE_BASE64: ${{ secrets.BERCAIL_KEYSTORE_BASE64 }}
+          BERCAIL_KEYSTORE_PASSWORD: ${{ secrets.BERCAIL_KEYSTORE_PASSWORD }}
+          BERCAIL_KEY_ALIAS: ${{ secrets.BERCAIL_KEY_ALIAS }}
+          BERCAIL_KEY_PASSWORD: ${{ secrets.BERCAIL_KEY_PASSWORD }}
+        run: |
+          export BERCAIL_KEYSTORE_FILE="$RUNNER_TEMP/bercail.jks"
+          echo "$BERCAIL_KEYSTORE_BASE64" | base64 -d > "$BERCAIL_KEYSTORE_FILE"
+          IFS=. read -r major minor patch <<< "$VERSION"
+          ./gradlew :app:assembleRelease \
+            -Pbercail.versionName="$VERSION" \
+            -Pbercail.versionCode=$(( major * 1000000 + minor * 1000 + patch ))
+          rm "$BERCAIL_KEYSTORE_FILE"
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk
+          cp app/build/outputs/apk/release/app-release.apk "bercail-$VERSION.apk"
+      - name: Publish the GitHub release
+        if: steps.version.outputs.new_tag
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.version.outputs.new_tag }}
+          target_commitish: ${{ github.sha }}
+          name: Bercail ${{ steps.version.outputs.new_version }}
+          body: ${{ steps.version.outputs.changelog }}
+          files: bercail-*.apk
