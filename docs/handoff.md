@@ -2,7 +2,7 @@
 
 Oct 3, 2026 · @Dimitri
 
-> Copie exportée le 9 octobre 2026 du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
+> Copie exportée le 9 octobre 2026 (fin de la vague 2) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
 
 ## Résumé
 
@@ -390,12 +390,31 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 - Une app Bercail minimale, déclarée comme launcher, qui affiche un écran sombre vide.
 - **Fini quand** : un push sur main déclenche les 8 contrôles, une release signée apparaît, et l'APK s'installe sur le Pixel.
 
+**Terminée le 9 octobre 2026** : release signée [v0.1.0](https://github.com/BahuaudDimitri/Bercail-launcher/releases/tag/v0.1.0) publiée par la CI et installée sur le Pixel. Module nommé `core:designsystem`. Écarts et leçons :
+
+- Instrumentés : l'apostrophe droite est interdite dans les noms de tests Android (format DEX) ; on écrit `’`, une règle d'architecture le vérifie.
+- Robolectric sur Android 17 : Espresso 3.7.0 imposé et accès aux internes du JDK ouvert.
+- L'émulateur Android 17 de la CI démarre lentement : 4 cœurs, 4 Go, 25 min de délai.
+- Les journaux de la CI demandent un compte GitHub connecté : les échecs de tests sont donc aussi publiés en annotations publiques.
+- detekt 2.0 (alpha) : la 1.23 ne suit pas Kotlin 2.4.
+- Reste : installer l'app Renovate sur le dépôt.
+
 ### Vague 2 — Design system
 
 - Jetons (couleurs, police Outfit, formes, mouvements), `BcTheme`, puis les composants du chapitre design system, un par un, chacun avec ses tests d'interface et ses captures Roborazzi.
 - Brume : shader AGSL et effets météo en composants, avec les règles batterie (20 Hz, figée après 10 s sans toucher, arrêt hors écran, image fixe en économie d'énergie), et mesure d'énergie de la variante portée par le fil de rendu.
 - Galerie de debug qui montre chaque composant dans tous ses états.
 - **Fini quand** : la galerie sur le Pixel ressemble au prototype, et la règle « seulement le design system » est active en CI.
+
+**Terminée le 9 octobre 2026** : jetons, `BcTheme` et 25 composants sur `main`, chacun avec ses tests et ses captures (≈ 95 tests), galerie vérifiée sur le Pixel, règle « seulement le design system » active en CI. **Brume mesurée sur le Pixel** (`scripts/measure-brume.sh`, 2 × 60 s, mi-luminosité) : immobile 765 mW, animée 837 mW, soit **+71 mW** (le prototype à 20 Hz : +100 à +120 mW), écran à 20 Hz, images ratées 0,4 à 0,7 %. Surcoût surtout GPU (+23 mW), CPU inchangé : la variante portée par le fil de rendu n'est pas nécessaire. Estimation : environ 1 mAh/jour (au pire 3,4 mAh), dans le budget. Écarts et leçons :
+
+- Brume est dessinée avec des dégradés, comme le prototype, plutôt qu'avec un shader AGSL : même rendu, testable en capture. Son coût réel se mesure sur le Pixel (mode « Brume plein écran » de l'app de debug) ; la variante portée par le fil de rendu ne sera essayée que si la mesure dépasse le budget.
+- Pas de flou derrière le verre du tiroir : le fond d'écran est dessiné par le système, hors de portée d'un flou Compose, et flouter Brume à chaque image coûterait de la batterie. Verre teint seul, à revoir en vague 10.
+- Le lint Android a attrapé deux coûts évitables (décalage recomposant à chaque image, largeur d'écran au lieu du conteneur) : corrigés.
+- Captures avec texte identiques sous Windows et Linux : pas de seuil de tolérance nécessaire.
+- L'émulateur Android 17 plante parfois sur GitHub (adb, code 224) : un second essai automatique, seulement si aucun test n'a tourné.
+- Fréquence de l'écran : sur le Pixel 9, l'écran ne descend à 20 Hz qu'avec la préférence de la fenêtre ET le vote de la vue ; l'un sans l'autre, ou le vote de calque Compose, laisse 60 Hz. Pendant un toucher et la seconde qui suit, la fréquence normale revient pour que le tiroir reste fluide (testé).
+- Les captures de Brume passées par l'écran simulé sortaient parfois blanches (rendu matériel simulé, dépendant du temps) : Brume est capturée en la dessinant directement dans une image.
 
 ### Vague 3 — Accueil avec données factices
 
