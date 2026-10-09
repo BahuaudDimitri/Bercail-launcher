@@ -3,3 +3,6 @@ naming:
   FunctionNaming:
     # Composables are named like types (BcButton); tests are French sentences in backticks.
     ignoreAnnotated: ['Composable']
+  MatchingDeclarationName:
+    # A component file (BcButton.kt) also holds its small enums (BcButtonVariant); it is named after the component.
+    active: false

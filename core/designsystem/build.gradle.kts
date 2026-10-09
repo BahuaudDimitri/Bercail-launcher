@@ -1,5 +1,6 @@
 plugins {
     id("bercail.android.library")
+    id("bercail.screenshots")
 }
 
 android {

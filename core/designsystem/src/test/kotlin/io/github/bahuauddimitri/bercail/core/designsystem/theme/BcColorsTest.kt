@@ -38,6 +38,11 @@ class BcColorsTest {
     }
 
     @Test
+    fun `le texte posé sur la surface claire est lisible`() {
+        assertThat(contrastRatio(BcColors.onLight, BcColors.text)).isGreaterThanOrEqualTo(WCAG_TEXT)
+    }
+
+    @Test
     fun `une commande éteinte reste discrète à côté des pastels`() {
         BcColors.pastels.forEach { pastel ->
             assertThat(BcColors.off.luminanceRatioTo(pastel)).isLessThan(1f)

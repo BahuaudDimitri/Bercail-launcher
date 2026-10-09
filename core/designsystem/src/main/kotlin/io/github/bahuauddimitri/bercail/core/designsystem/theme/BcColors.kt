@@ -43,7 +43,10 @@ object BcColors {
     val pastels = listOf(pastelCoral, pastelBlue, pastelMint, pastelLavender, pastelApricot)
 
     /** Text and icons drawn on a pastel. */
-    val onPastel = Color(0xFF1B1B24)
+    val onPastel = Color(0xFF2A2530)
+
+    /** Text and icons drawn on the light primary surface (my bubbles, the send button). */
+    val onLight = Color(0xFF1B1B24)
 
     /** A home control that is switched off. */
     val off = Color(0xFF4A4A5C)
