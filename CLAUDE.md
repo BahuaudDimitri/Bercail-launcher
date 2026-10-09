@@ -39,6 +39,8 @@ Aucun secret dans le dépôt. La clé de signature vit dans les secrets GitHub (
 | Tests sur le téléphone branché en USB | `./gradlew connectedCheck` |
 | Installer l'app de debug sur le téléphone | `./gradlew :app:installDebug` |
 
+Noms des tests instrumentés (`androidTest/`) : apostrophe typographique `’` et non `'`, que le format DEX d'Android refuse (vérifié par `ModuleRulesTest`).
+
 Suites : les classes `*UiTest` sont les tests d'interface (Robolectric), `*ScreenshotTest` les captures (Roborazzi), les autres les tests unitaires ; `androidTest/` contient les tests instrumentés.
 
 ## Modules

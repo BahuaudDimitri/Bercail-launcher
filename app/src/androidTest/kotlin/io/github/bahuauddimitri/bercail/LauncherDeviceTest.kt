@@ -18,7 +18,7 @@ class LauncherDeviceTest {
     val compose = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun `le téléphone propose Bercail comme écran d'accueil`() {
+    fun `le téléphone propose Bercail comme écran d’accueil`() {
         val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
         val packageManager = InstrumentationRegistry.getInstrumentation().targetContext.packageManager
 
@@ -28,7 +28,7 @@ class LauncherDeviceTest {
     }
 
     @Test
-    fun `l'accueil s'affiche au lancement`() {
+    fun `l’accueil s’affiche au lancement`() {
         compose.onNodeWithTag(HOME_TAG).assertExists()
     }
 }

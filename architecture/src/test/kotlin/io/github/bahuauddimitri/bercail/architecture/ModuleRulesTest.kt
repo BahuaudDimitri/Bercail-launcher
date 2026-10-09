@@ -15,6 +15,20 @@ class ModuleRulesTest {
     }
 
     @Test
+    fun `les noms des tests instrumentés utilisent l'apostrophe typographique`() {
+        // Android's DEX format rejects the straight apostrophe in method names, but accepts ’.
+        val straightApostrophe = Regex("""fun `[^`]*'[^`]*`""")
+        val offenders = Repository.root.walkTopDown()
+            .onEnter { it.name != "build" && it.name != ".gradle" }
+            .filter { it.extension == "kt" && "/src/androidTest/" in it.invariantSeparatorsPath }
+            .filter { straightApostrophe.containsMatchIn(it.readText()) }
+            .map { it.relativeTo(Repository.root).invariantSeparatorsPath }
+            .toList()
+
+        assertThat(offenders).isEmpty()
+    }
+
+    @Test
     fun `chaque module a son README`() {
         val missing = Repository.modules.filterNot { module ->
             Repository.buildFileOf(module).resolveSibling("README.md").exists()
