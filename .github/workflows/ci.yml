@@ -90,6 +90,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run the instrumented tests
+        id: first
+        # The emulator itself sometimes crashes on GitHub runners; a real test failure is caught below.
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
@@ -97,6 +100,28 @@ jobs:
           arch: x86_64
           disable-animations: true
           # Android 17 images boot slowly on GitHub runners.
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 1500
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: ./gradlew connectedDebugAndroidTest
+      - name: Tell an emulator crash from a test failure
+        id: crash
+        if: steps.first.outcome == 'failure'
+        run: |
+          if find . -path '*/build/outputs/androidTest-results/*' -name '*.xml' | grep -q .; then
+            echo "::error title=Tests instrumentés::The tests ran and failed: no second attempt."
+            exit 1
+          fi
+          echo "crashed=true" >> "$GITHUB_OUTPUT"
+      - name: Run the instrumented tests again on a fresh emulator
+        if: steps.crash.outputs.crashed == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
           cores: 4
           ram-size: 4096M
           emulator-boot-timeout: 1500
