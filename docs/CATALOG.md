@@ -12,6 +12,7 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 | `:core:domain` | Règles métier et interfaces des sources de données, en Kotlin pur | `core/domain/README.md` |
 | `:core:designsystem` | Design system : jetons et composants `Bc…`, seule porte vers Compose pour les écrans | `core/designsystem/README.md` |
 | `:core:testing` | Faux (fakes) des sources du domaine, pour les tests, les aperçus et, en attendant les vraies sources, pour l'app | `core/testing/README.md` |
+| `:feature:home` | L'accueil : ses deux écrans (Accueil, Écoute) et son tiroir, assemblés avec le design system | `feature/home/README.md` |
 | `:architecture` | Tests d'architecture : « seulement le design system », interdits batterie, catalogue | `architecture/README.md` |
 
 ## Écrans
@@ -19,6 +20,11 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 | Écran | Fichier | Tests |
 |---|---|---|
 | Accueil (vide, vague 1) | `app/src/main/kotlin/io/github/bahuauddimitri/bercail/HomeScreen.kt` | `app/src/test/kotlin/io/github/bahuauddimitri/bercail/LauncherUiTest.kt`, `app/src/test/kotlin/io/github/bahuauddimitri/bercail/HomeScreenshotTest.kt` |
+| Accueil : en-tête (météo, prochain rendez-vous), ligne du temps, pastille musique, points de pagination (`HomeScreen`, `HomeRoute`) | `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreen.kt`, `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeHeader.kt`, `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeMiddle.kt` | `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenUiTest.kt`, `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenshotTest.kt` |
+| Écoute : grande pochette, titre, artiste, « Ouvrir dans … » ; on y vient en glissant, par la pastille ou par les points | `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeMiddle.kt` | `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenUiTest.kt`, `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenshotTest.kt` |
+| Tiroir de l'accueil : résumé replié, favoris et maison ouvert, télécommande sur Écoute, barre Chercher (inactive jusqu'à la vague 4) | `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeDrawer.kt` | `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenUiTest.kt` |
+| Fond de l'accueil : Brume aux couleurs de la pochette ou du moment, en fondu sur l'image de l'utilisateur ; fond d'écran du système caché sous Brume | `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeBackdrop.kt`, `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeLooks.kt` | `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeScreenUiTest.kt`, `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeLooksTest.kt` |
+| État de l'accueil : ce que l'écran montre selon ses sources, écoutées seulement quand il est visible (`HomeViewModel`, `HomeUiState`) | `feature/home/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeViewModel.kt` | `feature/home/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/home/HomeViewModelTest.kt` |
 | Activité launcher (écran d'accueil d'Android, retour bloqué, fond d'écran visible) | `app/src/main/kotlin/io/github/bahuauddimitri/bercail/MainActivity.kt` | `app/src/test/kotlin/io/github/bahuauddimitri/bercail/LauncherUiTest.kt`, `app/src/androidTest/kotlin/io/github/bahuauddimitri/bercail/LauncherDeviceTest.kt` |
 
 ## Design system

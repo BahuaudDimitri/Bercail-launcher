@@ -14,9 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +36,7 @@ sealed interface BcSummaryLeading {
 /**
  * One line of the folded drawer: "2 non lus · Léa, Tom", "Salon 60 %, Volets ouverts".
  * [strong] is written first, brighter; the whole line is one touch target, at least 40 dp high.
+ * [onClickLabel] tells a screen reader what touching the line does.
  */
 @Composable
 fun BcSummaryRow(
@@ -47,22 +45,13 @@ fun BcSummaryRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     strong: String? = null,
-    description: String? = null
+    onClickLabel: String? = null
 ) {
-    val announced = if (description == null) {
-        Modifier
-    } else {
-        Modifier.clearAndSetSemantics {
-            contentDescription = description
-            role = Role.Button
-        }
-    }
     Row(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = BcSizes.minTouch)
-            .clickable(role = Role.Button, onClick = onClick)
-            .then(announced),
+            .clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TEXT_GAP)
     ) {

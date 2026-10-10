@@ -28,7 +28,6 @@ class MessagesSummaryTest {
         val summary = messagesSummary(listOf(lea, team))
 
         assertThat(summary.headline).isEqualTo("1 non lu")
-        assertThat(summary.description).isEqualTo("1 message non lu")
     }
 
     @Test
@@ -37,7 +36,6 @@ class MessagesSummaryTest {
 
         assertThat(summary.headline).isEqualTo("2 non lus")
         assertThat(summary.detail).isEqualTo("Julien")
-        assertThat(summary.description).isEqualTo("2 messages non lus")
     }
 
     @Test
@@ -46,7 +44,6 @@ class MessagesSummaryTest {
 
         assertThat(summary.headline).isNull()
         assertThat(summary.detail).isEqualTo("Aucun message")
-        assertThat(summary.description).isEqualTo("Aucun message")
         assertThat(summary.senders).isEmpty()
     }
 
@@ -76,6 +73,13 @@ class MessagesSummaryTest {
         val others = unreadOutsideFavorites(listOf(lea, tom, julien), favoriteIds = listOf("lea", "tom"))
 
         assertThat(others).isEqualTo(2)
+    }
+
+    @Test
+    fun `la tuile « Tous » s'annonce avec l'app qu'elle ouvre et ses non-lus`() {
+        assertThat(allMessagesDescription(otherUnread = 0)).isEqualTo("Tous les messages dans Beeper")
+        assertThat(allMessagesDescription(otherUnread = 1)).isEqualTo("Tous les messages dans Beeper, 1 non lu")
+        assertThat(allMessagesDescription(otherUnread = 2)).isEqualTo("Tous les messages dans Beeper, 2 non lus")
     }
 
     @Test

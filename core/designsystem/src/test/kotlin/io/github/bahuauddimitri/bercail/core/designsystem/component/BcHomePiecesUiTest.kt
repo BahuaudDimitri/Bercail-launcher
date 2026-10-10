@@ -11,6 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions.OnClick
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsNotSelected
@@ -75,21 +78,22 @@ class BcHomePiecesUiTest {
     }
 
     @Test
-    fun `une ligne de résumé se touche sur au moins 40 dp de haut`() {
+    fun `une ligne de résumé se touche sur au moins 40 dp de haut et dit ce qu'elle ouvre`() {
         compose.setContent {
             BcTheme {
                 BcSummaryRow(
                     text = "Aucun message",
                     leading = BcSummaryLeading.Dots(emptyList()),
                     onClick = { clicks++ },
-                    description = "Aucun message. Ouvrir le tiroir"
+                    onClickLabel = "Ouvrir le tiroir"
                 )
             }
         }
 
-        compose.onNodeWithContentDescription(
-            "Aucun message. Ouvrir le tiroir"
-        ).assertHeightIsAtLeast(40.dp).performClick()
+        compose.onNodeWithText("Aucun message")
+            .assertHeightIsAtLeast(40.dp)
+            .assert(SemanticsMatcher("dit « Ouvrir le tiroir »") { it.config[OnClick].label == "Ouvrir le tiroir" })
+            .performClick()
 
         assertThat(clicks).isEqualTo(1)
     }

@@ -20,15 +20,7 @@ data class MessagesSummary(val unread: Int, val senders: List<Conversation>) {
     /** The part written in strong text, absent when nothing is unread. */
     val headline: String? get() = if (unread > 0) unreadWording(unread) else null
 
-    val detail: String get() = if (unread > 0) senders.joinToString(", ") { it.name } else NO_MESSAGE
-
-    /** How the line is announced by a screen reader. */
-    val description: String
-        get() = when (unread) {
-            0 -> NO_MESSAGE
-            1 -> "1 message non lu"
-            else -> "$unread messages non lus"
-        }
+    val detail: String get() = if (unread > 0) senders.joinToString(", ") { it.name } else "Aucun message"
 }
 
 fun messagesSummary(conversations: List<Conversation>): MessagesSummary {
@@ -44,6 +36,10 @@ fun favoritesAmong(conversations: List<Conversation>, favoriteIds: List<String>)
 fun unreadOutsideFavorites(conversations: List<Conversation>, favoriteIds: List<String>): Int =
     conversations.filterNot { it.id in favoriteIds }.sumOf { it.unread }
 
-private fun unreadWording(count: Int) = if (count == 1) "1 non lu" else "$count non lus"
+/** How the "Tous" tile is announced: it opens the messaging app and counts what the favorites do not show. */
+fun allMessagesDescription(otherUnread: Int): String {
+    val all = "Tous les messages dans Beeper"
+    return if (otherUnread > 0) "$all, ${unreadWording(otherUnread)}" else all
+}
 
-private const val NO_MESSAGE = "Aucun message"
+private fun unreadWording(count: Int) = if (count == 1) "1 non lu" else "$count non lus"
