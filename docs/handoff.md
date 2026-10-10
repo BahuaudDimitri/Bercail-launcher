@@ -2,7 +2,7 @@
 
 Oct 3, 2026 · @Dimitri
 
-> Copie mise à jour le 10 octobre 2026 (fin de la vague 3) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
+> Copie mise à jour le 10 octobre 2026 (vague 4 développée) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
 
 ## Résumé
 
@@ -438,6 +438,18 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 
 - Apps installées (LauncherApps), favoris, recherche plein tiroir avec alphabet en vague, « Réglages de Bercail » (DataStore).
 - **Fini quand** : tu remplaces Niagara par Bercail au quotidien. Première vraie comparaison de batterie sur une journée.
+
+**Développée le 10 octobre 2026**, pas encore close : release [v0.8.0](https://github.com/BahuaudDimitri/Bercail-launcher/releases/tag/v0.8.0) publiée par la CI (émulateurs Android 16 et 17 verts, recherche et réglages compris), 430 tests au total. **Reste à faire pour la clore** : vérifier sur le Pixel (liste et icônes des vraies apps, clavier, lancement), installer la v0.8.0, choisir Bercail comme écran d'accueil, puis relever la batterie sur une journée face à Niagara. Écarts et leçons :
+
+- **Plus de fausses données dans la version publiée.** Les sources pas encore branchées (agenda, météo, messages, maison, musique) montrent leur état vide : « Plus rien aujourd'hui · Journée libre », « Aucun message », « Maison au repos », « Écouter… ». Les données du prototype restent dans la version de mise au point (debug), pour tout voir et tout essayer ; la version publiée n'embarque aucun faux.
+- **Vraies sources** : apps installées (`:data:apps`, écoutées seulement quand la recherche est ouverte, sans l'autorisation de voir tous les paquets) et réglages enregistrés (`:data:settings`, DataStore). La liste des apps passe par `PackageManager`, plus simple à tester ; `LauncherApps` ne sert qu'à être prévenu des installations.
+- **Vraies icônes des apps** dans la liste, dessinées une fois hors du fil principal et gardées (120 au plus) ; la tuile à initiale du prototype reste en secours.
+- **Recherche** (`:feature:search`) : la barre ouvre la recherche quand le doigt se lève, pas au focus (Android peut rendre le focus au champ après fermeture). Le haut de l'accueil garde sa mise en page sous le tiroir qui monte. La touche « rechercher » du clavier ouvre la première app trouvée (ajout). La section « Messages » des résultats viendra avec la vague 8.
+- **Réglages** (`:feature:settings`) : seulement ce qui marche déjà — fond sans musique, ligne du temps, tiroir au départ, apps favorites (liste à cocher, absente du prototype), liens vers l'écran d'accueil par défaut et les Paramètres. Favoris, commandes maison, app média et écoute automatique arriveront avec leurs vagues.
+- **Bouton Accueil** : il ramène toujours à l'accueil simple (réglages et recherche fermés, page Accueil).
+- **Voile sur le fond d'écran** (ajout) : sans Brume, un léger assombrissement et le même voile sombre en haut gardent l'agenda lisible sur n'importe quelle image, comme dans le prototype.
+- **« Journée libre » avant 18 h**, « Soirée libre » ensuite, quand il ne reste aucun rendez-vous.
+- **Leçons de test** : les captures d'un composant qui dépend du temps se font en dessinant directement dans une image (le voile sortait parfois blanc via l'écran simulé) ; les modules de données ont leur propre convention de build, sans Compose.
 
 ### Vague 5 — Mise à jour intégrée
 
