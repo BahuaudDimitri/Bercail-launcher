@@ -37,6 +37,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcAlphabetRa
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDrawer
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcHomeToggle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
@@ -45,6 +46,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
@@ -52,6 +54,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasi
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
@@ -60,6 +64,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineOrientation
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
@@ -70,6 +75,7 @@ internal val GALLERY_SECTIONS = listOf(
     "Texte",
     "Icônes",
     "Boutons",
+    "Accueil",
     "Personnes et maison",
     "Listes",
     "Réglages",
@@ -102,6 +108,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Texte") { BcTextStyle.entries.forEach { BcText(it.name, style = it) } }
             Section("Icônes") { Icons() }
             Section("Boutons") { Buttons() }
+            Section("Accueil") { Home() }
             Section("Personnes et maison") { PeopleAndHome() }
             Section("Listes") { Lists() }
             Section("Réglages") { Settings() }
@@ -233,11 +240,51 @@ private fun Conversation() {
 }
 
 @Composable
+private fun Home() {
+    var page by remember { mutableIntStateOf(0) }
+    BcWeatherLine("11° · Ciel dégagé ce matin", BcWeather.Clear)
+    BcWeatherLine("14° · Pluie cet après-midi", BcWeather.Rain)
+    BcSummaryRow(
+        text = "Léa, Tom",
+        strong = "2 non lus",
+        leading = BcSummaryLeading.Dots(listOf(BcPastel.Coral, BcPastel.Blue)),
+        onClick = {}
+    )
+    BcSummaryRow("Salon 60 %, Volets ouverts", leading = BcSummaryLeading.Icon(BcIcons.House), onClick = {})
+    BcPageDots(listOf("Accueil", "Écoute"), selected = page, onSelect = { page = it })
+}
+
+@Composable
 private fun Music() {
     var playing by remember { mutableStateOf(true) }
+    val colors = BcColors.pastelCoral to BcColors.pastelLavender
     BcMusicPill(title = "Nekketsu", artist = "Nekfeu", cover = null, playing = playing, onClick = {
         playing = !playing
     })
+    BcMusicPill("Looped", "Kiasmos", cover = null, playing = playing, onClick = {
+        playing = !playing
+    }, coverColors = colors)
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = BcSpacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(COVER_GAP)
+    ) {
+        BcCover(image = null, colors = colors, contentDescription = "Pochette de Looped")
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, variant = BcButtonVariant.Ghost, size = REMOTE)
+            BcIconButton(
+                icon = if (playing) BcIcons.Pause else BcIcons.Play,
+                contentDescription = if (playing) "Pause" else "Lecture",
+                onClick = { playing = !playing },
+                variant = BcButtonVariant.Light,
+                size = REMOTE_MAIN
+            )
+            BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = BcButtonVariant.Ghost, size = REMOTE)
+        }
+    }
 }
 
 @Composable
@@ -306,3 +353,6 @@ private val TALL = 260.dp
 private val TIMELINE_WIDTH = 64.dp
 private val LINE = 44.dp
 private val BRUME_HEIGHT = 420.dp
+private val COVER_GAP = 48.dp
+private val REMOTE = 52.dp
+private val REMOTE_MAIN = 66.dp

@@ -21,9 +21,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -39,7 +42,9 @@ import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
@@ -93,7 +98,7 @@ fun BcDrawer(
                     }
                 }
             }
-            .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = BcSpacing.l),
+            .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),
         verticalArrangement = Arrangement.spacedBy(BcSpacing.m),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -152,7 +157,7 @@ fun BcSheet(
                     .clip(BcShapes.drawer)
                     .background(BcColors.glassSheet)
                     .verticalSlide { up -> if (!up) dismiss() }
-                    .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = BcSpacing.l),
+                    .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(SHEET_GAP),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -165,6 +170,15 @@ fun BcSheet(
             }
         }
     }
+}
+
+/**
+ * The glass goes down to the edge of the screen; its content stays above the phone's navigation bar.
+ */
+@Composable
+private fun bottomPadding(): Dp {
+    val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    return max(BcSpacing.l, navigationBar + BcSpacing.s)
 }
 
 /** The grab bar: a short light line inside a 120 × 40 dp touch area. */

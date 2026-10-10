@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
@@ -32,7 +34,10 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import kotlin.math.PI
 import kotlin.math.sin
 
-/** The music pill on the home screen: round cover, "Title · Artist" and an equalizer, frozen when paused. */
+/**
+ * The music pill on the home screen: round cover, "Title · Artist" and an equalizer, frozen when paused.
+ * Without [cover] image, the disc is a blend of [coverColors], or a note when there are none.
+ */
 @Composable
 fun BcMusicPill(
     title: String,
@@ -40,7 +45,8 @@ fun BcMusicPill(
     cover: ImageBitmap?,
     playing: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    coverColors: Pair<Color, Color>? = null
 ) {
     Row(
         modifier = modifier
@@ -61,6 +67,8 @@ fun BcMusicPill(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(COVER)
                 )
+            } else if (coverColors != null) {
+                Box(Modifier.size(COVER).background(Brush.linearGradient(coverColors.toList())))
             } else {
                 BcIcon(BcIcons.Note, contentDescription = null, size = NOTE, tint = BcTextColor.Muted)
             }

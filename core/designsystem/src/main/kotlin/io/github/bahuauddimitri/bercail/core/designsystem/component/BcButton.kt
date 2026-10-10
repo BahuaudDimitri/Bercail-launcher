@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
@@ -60,7 +61,10 @@ fun BcButton(
     }
 }
 
-/** A round button holding a single icon, announced by [contentDescription]. */
+/**
+ * A round button holding a single icon, announced by [contentDescription].
+ * A larger [size] (the remote's buttons) also gets a larger icon.
+ */
 @Composable
 fun BcIconButton(
     icon: BcIcons,
@@ -68,22 +72,25 @@ fun BcIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     variant: BcButtonVariant = BcButtonVariant.Glass,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    size: Dp = BcSizes.iconButton
 ) {
     Box(
         modifier = modifier
-            .size(BcSizes.iconButton)
+            .size(size)
             .surface(variant, BcShapes.pill, enabled)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(LocalBcContentColor provides variant.content) {
-            BcIcon(icon, contentDescription = contentDescription, size = SMALL_ICON)
+            val iconSize = if (size > BcSizes.iconButton) LARGE_ICON else SMALL_ICON
+            BcIcon(icon, contentDescription = contentDescription, size = iconSize)
         }
     }
 }
 
 private val SMALL_ICON = 18.dp
+private val LARGE_ICON = 22.dp
 
 internal fun Modifier.surface(variant: BcButtonVariant, shape: Shape, enabled: Boolean = true): Modifier = this
     .alpha(if (enabled) 1f else DISABLED_ALPHA)
