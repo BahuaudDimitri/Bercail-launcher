@@ -7,14 +7,26 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-/** The apps of a phone the tests fill by hand. It remembers which apps were opened; no app has an icon. */
+/** The apps of a phone the tests fill by hand. It remembers which apps were opened; no icon unless painted. */
 class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
     override val apps = MutableStateFlow(apps)
 
     /** The ids of the apps opened so far, in order. */
     val opened = mutableListOf<String>()
 
-    override suspend fun icon(appId: String): AppIcon? = null
+    /** The apps whose icon was asked for so far, in order. */
+    val iconRequests = mutableListOf<String>()
+    private val icons = mutableMapOf<String, AppIcon>()
+
+    override suspend fun icon(appId: String): AppIcon? {
+        iconRequests += appId
+        return icons[appId]
+    }
+
+    /** Gives an app a plain square icon of one color (ARGB). */
+    fun paintIcon(appId: String, color: Int, size: Int = 4) {
+        icons[appId] = AppIcon(size, size, IntArray(size * size) { color })
+    }
 
     override fun open(appId: String) {
         opened += appId

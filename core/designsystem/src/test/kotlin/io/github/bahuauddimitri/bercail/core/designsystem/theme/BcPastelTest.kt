@@ -18,6 +18,15 @@ class BcPastelTest {
     }
 
     @Test
+    fun `les favoris prennent les pastels dans leur ordre, deux favoris n'ont jamais le même`() {
+        val favorites = listOf("lea", "tom", "team", "mum")
+
+        assertThat(favorites.map { BcPastel.forKey(it, ranked = favorites) })
+            .isEqualTo(listOf(BcPastel.Coral, BcPastel.Blue, BcPastel.Mint, BcPastel.Lavender))
+        assertThat(BcPastel.forKey("julien", ranked = favorites)).isEqualTo(BcPastel.forKey("julien"))
+    }
+
+    @Test
     fun `des personnes différentes se répartissent sur plusieurs couleurs`() {
         val colors = (1..20).map { BcPastel.forKey("room-$it") }.toSet()
 

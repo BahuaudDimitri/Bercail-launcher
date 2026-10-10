@@ -54,7 +54,11 @@ class FakePhoneTest {
     }
 
     @Test
-    fun `les apps factices n'ont pas d'icône`() = runTest {
+    fun `les apps factices n'ont pas d'icône, sauf celles qu'on peint`() = runTest {
+        val painted = FakeAppsSource(Samples.apps).apply { paintIcon("agenda", color = 7, size = 2) }
+
+        assertThat(painted.icon("agenda")!!.pixels.toList()).containsExactly(7, 7, 7, 7)
+        assertThat(painted.iconRequests).containsExactly("agenda")
         assertThat(FakeAppsSource(Samples.apps).icon("spotify")).isNull()
     }
 

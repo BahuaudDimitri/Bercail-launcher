@@ -40,10 +40,7 @@ internal val HomeControl.pastel: BcPastel
  * The pastel of a person: favorites take the pastels in their order, so two favorites never share one;
  * anyone else always gets the same one.
  */
-internal fun pastelOf(personId: String, favoriteIds: List<String>): BcPastel {
-    val rank = favoriteIds.indexOf(personId)
-    return if (rank >= 0) BcPastel.entries[rank % BcPastel.entries.size] else BcPastel.forKey(personId)
-}
+internal fun pastelOf(personId: String, favoriteIds: List<String>): BcPastel = BcPastel.forKey(personId, favoriteIds)
 
 internal val CoverColors.pair: Pair<Color, Color> get() = Color(first) to Color(second)
 
