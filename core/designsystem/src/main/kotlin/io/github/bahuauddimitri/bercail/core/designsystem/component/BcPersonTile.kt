@@ -37,7 +37,7 @@ private const val MAX_BADGE = 99
 
 /**
  * A favorite person: pastel tile with initials (or photo), unread count, name below.
- * Without [pastel], it is the glass "Tous" tile.
+ * Without [pastel], it is the glass "Tous" tile, which shows an [icon] instead of initials.
  */
 @Composable
 fun BcPersonTile(
@@ -48,7 +48,8 @@ fun BcPersonTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     description: String = name,
-    photo: ImageBitmap? = null
+    photo: ImageBitmap? = null,
+    icon: BcIcons? = null
 ) {
     Column(
         modifier = modifier
@@ -63,7 +64,7 @@ fun BcPersonTile(
         verticalArrangement = Arrangement.spacedBy(TILE_GAP)
     ) {
         Box {
-            Tile(initials, pastel, photo)
+            Tile(initials, pastel, photo, icon)
             if (unread > 0) UnreadBadge(unread, Modifier.align(Alignment.TopEnd).testTag(UNREAD_BADGE + name))
         }
         BcText(
@@ -76,7 +77,7 @@ fun BcPersonTile(
 }
 
 @Composable
-private fun Tile(initials: String, pastel: BcPastel?, photo: ImageBitmap?) {
+private fun Tile(initials: String, pastel: BcPastel?, photo: ImageBitmap?, icon: BcIcons?) {
     val base = Modifier.size(BcSizes.personTile)
     val tile = if (pastel != null) {
         base.shadow(TILE_SHADOW, BcShapes.tile).background(pastel.color, BcShapes.tile)
@@ -89,7 +90,11 @@ private fun Tile(initials: String, pastel: BcPastel?, photo: ImageBitmap?) {
         } else {
             val ink = if (pastel != null) BcColors.onPastel else BcColors.text
             CompositionLocalProvider(LocalBcContentColor provides ink) {
-                BcText(initials, style = BcTextStyle.Initials, maxLines = 1)
+                if (icon != null) {
+                    BcIcon(icon, contentDescription = null)
+                } else {
+                    BcText(initials, style = BcTextStyle.Initials, maxLines = 1)
+                }
             }
         }
     }

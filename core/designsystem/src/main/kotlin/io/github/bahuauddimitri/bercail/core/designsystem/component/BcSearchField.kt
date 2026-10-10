@@ -29,7 +29,10 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 
-/** The "Chercher" bar, which is the field itself: sunken pill, magnifier, clear button once something is typed. */
+/**
+ * The "Chercher" bar, which is the field itself: sunken pill, magnifier, clear button once something is typed.
+ * Disabled, it keeps its place and its look but takes no focus and no text.
+ */
 @Composable
 fun BcSearchField(
     value: String,
@@ -37,7 +40,8 @@ fun BcSearchField(
     modifier: Modifier = Modifier,
     placeholder: String = "Chercher",
     onFocusChange: (Boolean) -> Unit = {},
-    onSearch: () -> Unit = {}
+    onSearch: () -> Unit = {},
+    enabled: Boolean = true
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -69,6 +73,7 @@ fun BcSearchField(
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = placeholder },
                 textStyle = BcType.message.copy(color = BcColors.text),
+                enabled = enabled,
                 singleLine = true,
                 cursorBrush = SolidColor(BcColors.text),
                 interactionSource = interactions,

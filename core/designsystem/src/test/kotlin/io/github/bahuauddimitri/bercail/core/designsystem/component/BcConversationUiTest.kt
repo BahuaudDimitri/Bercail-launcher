@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -44,6 +45,13 @@ class BcConversationUiTest {
         compose.onNodeWithContentDescription("Chercher").performTextInput("spo")
 
         assertThat(query).isEqualTo("spo")
+    }
+
+    @Test
+    fun `une barre Chercher désactivée reste visible mais ne se laisse pas remplir`() {
+        compose.setContent { BcTheme { BcSearchField(value = "", onValueChange = {}, enabled = false) } }
+
+        compose.onNodeWithContentDescription("Chercher").assertIsNotEnabled()
     }
 
     @Test

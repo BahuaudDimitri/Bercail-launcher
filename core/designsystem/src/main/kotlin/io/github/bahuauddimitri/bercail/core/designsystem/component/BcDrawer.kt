@@ -58,6 +58,7 @@ val DRAWER_DRAG_THRESHOLD = 24.dp
 /**
  * The glass drawer at the bottom of the home screen. Touching the handle, or sliding more than 24 dp up or down
  * anywhere on it, expands or collapses it; a slide never presses a button. Its height follows its content smoothly.
+ * Without [handle] (the drawer as a remote on the Listen screen), it keeps its shape but no longer opens or closes.
  */
 @Composable
 fun BcDrawer(
@@ -65,6 +66,7 @@ fun BcDrawer(
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     searching: Boolean = false,
+    handle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val motion = BcTheme.motion
@@ -78,13 +80,9 @@ fun BcDrawer(
         animationSpec = tween(motion.fadeMillis),
         label = "drawer glass"
     )
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(BcShapes.drawer)
-            .background(glass)
-            .verticalSlide { up -> if (up != expanded) change(up) }
-            .animateContentSize(tween(motion.drawerMillis, easing = motion.easing))
+    val opening = if (handle) {
+        Modifier
+            .verticalSlide { up -> change(up) }
             .semantics {
                 if (expanded) {
                     collapse {
@@ -98,14 +96,31 @@ fun BcDrawer(
                     }
                 }
             }
-            .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),
+    } else {
+        Modifier
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(BcShapes.drawer)
+            .background(glass)
+            .then(opening)
+            .animateContentSize(tween(motion.drawerMillis, easing = motion.easing))
+            .padding(
+                start = BcSpacing.l,
+                top = if (handle) 0.dp else BcSpacing.l,
+                end = BcSpacing.l,
+                bottom = bottomPadding()
+            ),
         verticalArrangement = Arrangement.spacedBy(BcSpacing.m),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Handle(
-            description = if (expanded) "Replier le tiroir" else "Déplier le tiroir",
-            onClick = { change(!expanded) }
-        )
+        if (handle) {
+            Handle(
+                description = if (expanded) "Replier le tiroir" else "Déplier le tiroir",
+                onClick = { change(!expanded) }
+            )
+        }
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BcSpacing.m), content = content)
     }
 }

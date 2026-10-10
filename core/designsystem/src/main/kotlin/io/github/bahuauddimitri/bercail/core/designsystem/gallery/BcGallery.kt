@@ -176,7 +176,7 @@ private fun PeopleAndHome() {
         BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = { unread++ })
         BcPersonTile("Équipe", "É", BcPastel.Mint, unread = 0, onClick = {})
         BcPersonTile("Maman", "M", BcPastel.Lavender, unread = 140, onClick = {})
-        BcPersonTile("Tous", "+", pastel = null, unread = 5, onClick = {})
+        BcPersonTile("Tous", "", pastel = null, unread = 5, onClick = {}, icon = BcIcons.Chat)
     }
     val lit = remember { mutableStateListOf(true, false, true, false) }
     Row {

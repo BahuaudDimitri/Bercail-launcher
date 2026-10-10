@@ -35,6 +35,7 @@ class BcDrawerUiTest {
 
     private var expanded by mutableStateOf(false)
     private var buttonClicks = 0
+    private var handle by mutableStateOf(true)
 
     private fun showDrawer() = compose.setContent {
         BcTheme {
@@ -42,6 +43,7 @@ class BcDrawerUiTest {
                 BcDrawer(
                     expanded = expanded,
                     onExpandedChange = { expanded = it },
+                    handle = handle,
                     modifier = Modifier.align(Alignment.BottomCenter).testTag("drawer")
                 ) {
                     BcButton("Salon", onClick = { buttonClicks++ })
@@ -124,6 +126,38 @@ class BcDrawerUiTest {
         }
 
         assertThat(expanded).isEqualTo(true)
+    }
+
+    @Test
+    fun `un tiroir déplié en glissant se replie en glissant dans l'autre sens`() {
+        showDrawer()
+        compose.onNodeWithTag("drawer").performTouchInput {
+            swipe(start = Offset(centerX, bottom - 4f), end = Offset(centerX, bottom - 4f - 40.dp.toPx()), 300)
+        }
+        assertThat(expanded).isEqualTo(true)
+
+        compose.onNodeWithTag("drawer").performTouchInput {
+            swipe(start = Offset(centerX, top + 4f), end = Offset(centerX, top + 4f + 40.dp.toPx()), 300)
+        }
+
+        assertThat(expanded).isEqualTo(false)
+    }
+
+    @Test
+    fun `sans poignée, le tiroir garde sa forme et ignore les glissements`() {
+        handle = false
+        showDrawer()
+
+        compose.onNodeWithContentDescription("Déplier le tiroir").assertDoesNotExist()
+        compose.onNodeWithTag("drawer").performTouchInput {
+            swipe(
+                start = Offset(centerX, bottom - 4f),
+                end = Offset(centerX, bottom - 4f - 40.dp.toPx()),
+                durationMillis = 300
+            )
+        }
+
+        assertThat(expanded).isEqualTo(false)
     }
 
     @Test

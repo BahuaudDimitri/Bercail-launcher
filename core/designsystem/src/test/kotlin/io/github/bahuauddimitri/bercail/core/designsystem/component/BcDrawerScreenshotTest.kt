@@ -42,7 +42,7 @@ class BcDrawerScreenshotTest {
                 BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = {})
                 BcPersonTile("Équipe", "É", BcPastel.Mint, unread = 0, onClick = {})
                 BcPersonTile("Maman", "M", BcPastel.Lavender, unread = 0, onClick = {})
-                BcPersonTile("Tous", "+", pastel = null, unread = 3, onClick = {})
+                BcPersonTile("Tous", "", pastel = null, unread = 3, onClick = {}, icon = BcIcons.Chat)
             }
             Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
                 BcSearchField(value = "", onValueChange = {})

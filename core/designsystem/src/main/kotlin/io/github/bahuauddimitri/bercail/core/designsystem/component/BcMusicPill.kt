@@ -37,6 +37,7 @@ import kotlin.math.sin
 /**
  * The music pill on the home screen: round cover, "Title · Artist" and an equalizer, frozen when paused.
  * Without [cover] image, the disc is a blend of [coverColors], or a note when there are none.
+ * With [still], the equalizer keeps its pose: the screen is at rest, even though the music plays.
  */
 @Composable
 fun BcMusicPill(
@@ -46,7 +47,8 @@ fun BcMusicPill(
     playing: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    coverColors: Pair<Color, Color>? = null
+    coverColors: Pair<Color, Color>? = null,
+    still: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -79,14 +81,14 @@ fun BcMusicPill(
             style = BcTextStyle.Label,
             maxLines = 1
         )
-        Equalizer(playing)
+        Equalizer(playing, moving = playing && !still)
     }
 }
 
 /** Three bars that dance at 20 frames per second while playing and rest low when paused. */
 @Composable
-private fun Equalizer(playing: Boolean) {
-    val seconds by rememberAnimationSeconds(running = playing)
+private fun Equalizer(playing: Boolean, moving: Boolean) {
+    val seconds by rememberAnimationSeconds(running = moving)
     Canvas(Modifier.size(EQ_WIDTH, EQ_HEIGHT)) {
         val bar = BAR_WIDTH.toPx()
         val gap = (size.width - BARS * bar) / (BARS - 1)
