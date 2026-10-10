@@ -2,7 +2,7 @@
 
 Oct 3, 2026 · @Dimitri
 
-> Copie exportée le 9 octobre 2026 (fin de la vague 2) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
+> Copie mise à jour le 10 octobre 2026 (fin de la vague 3) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
 
 ## Résumé
 
@@ -421,6 +421,18 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 - Écran d'accueil complet : en-tête météo et prochain rendez-vous, ligne du temps verticale, tiroir et ses gestes (seuil 24 dp), personnes, maison, pastille média, modes d'écran.
 - Toutes les sources viennent des faux de `core:testing` : on valide le comportement sans aucune API réelle.
 - **Fini quand** : l'accueil se comporte comme le prototype, toutes les règles de comportement ont leur test.
+
+**Terminée le 10 octobre 2026** : l'accueil (écrans Accueil et Écoute, tiroir) tourne sur le Pixel avec les données du prototype, release [v0.6.0](https://github.com/BahuaudDimitri/Bercail-launcher/releases/tag/v0.6.0) publiée par la CI, 307 tests au total (environ 190 de plus). Mesuré sur le Pixel : écran à 20 Hz pendant que Brume bouge ; après 10 s sans toucher, 0 image dessinée sur l'Accueil et environ 3 par seconde sur l'écran Écoute (la progression du morceau) ; accueil caché, 0 image. Le fond d'écran du système est bien retiré sous Brume. Écarts et leçons :
+
+- **Périmètre.** La vague livre les deux écrans de l'accueil et le tiroir. Les feuilles « Aujourd'hui », apps média et conversation, et la recherche, restent dans leurs vagues (6, 7, 8 et 4) : leurs boutons existent et sont testés, mais n'ouvrent encore rien. La barre « Chercher » est à sa place, inactive.
+- **Un écran = un module.** Nouveau module `:feature:home`, qui ne voit que le domaine et le design system. L'app branche les sources dans `HomeSources.kt` : seule l'heure est réelle (`DeviceClock`, qu'Android prévient à chaque minute), les autres sont les faux de `core:testing` jusqu'à leur vague. Hilt attendra la première vraie source.
+- **Batterie.** L'égaliseur de la pastille se fige avec Brume après 10 s (sinon il redessinait l'écran 20 fois par seconde tant que la musique jouait). La position du morceau n'est suivie que sur l'écran Écoute. Le relevé batterystats d'une journée est reporté à la vague 4, quand Bercail sera le launcher du quotidien.
+- **Phrase météo simplifiée** : « Pluie ce matin », « Nuit claire ». Les précisions du prototype (« jusqu'à 16 h », km/h) viendront avec les vraies prévisions, en vague 6. Quatre moments : matin 5 h à 12 h, après-midi 12 h à 18 h, soir 18 h à 20 h, nuit 20 h à 5 h.
+- **Pastels des personnes** : les favoris prennent les cinq pastels dans l'ordre (deux favoris n'ont jamais la même couleur), les autres en reçoivent un fixe d'après leur identifiant.
+- **Réglages** : le modèle existe avec ce que l'accueil lit (favoris, ligne du temps, tiroir au départ, fond sans musique) et ses valeurs par défaut ; l'écran des réglages et leur stockage restent en vague 4.
+- **Design system** : quatre composants ajoutés (ligne de résumé, points de pagination, grande pochette, ligne météo) ; le tiroir sans poignée devient la télécommande et laisse la barre de navigation du téléphone sous son contenu. Sans image de pochette (vague 7), la pochette est un dégradé de ses deux couleurs.
+- **Pas encore vu sur le téléphone** : le retour du fond d'écran quand la musique s'arrête, car le faux lecteur joue toujours. Testé sur l'écran simulé seulement ; à revoir en vague 7.
+- **Noms des tests instrumentés** : Android refuse aussi la virgule, ce qui a rendu la CI rouge une fois. La règle d'architecture n'accepte plus que lettres, chiffres, espaces, tiret et `’`, et `./gradlew check` construit maintenant l'APK de ces tests.
 
 ### Vague 4 — Apps, recherche et réglages : Bercail devient ton launcher
 
