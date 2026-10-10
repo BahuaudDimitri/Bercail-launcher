@@ -39,6 +39,7 @@ Aucun secret dans le dépôt. La clé de signature vit dans les secrets GitHub (
 | Tests sur le téléphone branché en USB | `./gradlew connectedCheck` |
 | Installer l'app de debug sur le téléphone | `./gradlew :app:installDebug` |
 | Mesurer l'énergie de Brume sur le Pixel 9 | `bash scripts/measure-brume.sh` (voir l'en-tête du script) |
+| Vérifier l'app sur le téléphone branché, sans toucher à l'aveugle | `source scripts/phone-ui.sh`, puis `tap_label "Chercher"` (voir l'en-tête du script) |
 
 Noms des tests instrumentés (`androidTest/`) : seulement des lettres, des chiffres, des espaces, le tiret et l'apostrophe typographique `’`. Le format DEX d'Android refuse le reste (`'`, virgule, deux-points…) ; vérifié par `ModuleRulesTest`, et `./gradlew check` construit l'APK de ces tests.
 

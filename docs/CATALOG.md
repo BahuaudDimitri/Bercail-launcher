@@ -118,3 +118,4 @@ Chaque source est une interface du domaine, sous forme de flux : rien ne tourne 
 | Outil | Rôle |
 |---|---|
 | `scripts/measure-brume.sh` | Mesure l'énergie de Brume (immobile ou animée) sur le Pixel 9 branché, avec ses capteurs de puissance (Perfetto) |
+| `scripts/phone-ui.sh` | Pilote Bercail sur le téléphone branché pour les vérifications de fin de vague : chaque toucher vise un élément trouvé à l'écran par son libellé, et rien n'est touché si Bercail n'est pas au premier plan |
