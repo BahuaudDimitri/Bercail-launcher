@@ -69,17 +69,17 @@ Dans `:core:domain`, en Kotlin pur. Chaque règle du doc de passation a son test
 
 ## Sources de données
 
-Chaque source est une interface du domaine, sous forme de flux : rien ne tourne tant que personne n'écoute. Les vraies sources arrivent avec leur vague.
+Chaque source est une interface du domaine, sous forme de flux : rien ne tourne tant que personne n'écoute. Les vraies sources arrivent avec leur vague ; d'ici là, l'app tourne sur les faux de `:core:testing`, remplis avec les données du prototype : `FakeWorld` et ses trois moments (matin, trajet, soir), dans `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeWorld.kt`.
 
-| Source | Interface | Vraie source |
-|---|---|---|
-| Heure (`Clock`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/time/Clock.kt` | — |
-| Agenda (`AgendaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/Agenda.kt` | vague 6 |
-| Météo (`WeatherSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/weather/Weather.kt` | vague 6 |
-| Messages (`MessagesSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/Messages.kt` | vague 8 |
-| Maison (`HomeSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | vague 9 |
-| Média (`MediaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | vague 7 |
-| Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | vague 4 |
+| Source | Interface | Faux | Vraie source |
+|---|---|---|---|
+| Heure (`Clock`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/time/Clock.kt` | `FakeClock`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | — |
+| Agenda (`AgendaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/Agenda.kt` | `FakeAgendaSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 6 |
+| Météo (`WeatherSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/weather/Weather.kt` | `FakeWeatherSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 6 |
+| Messages (`MessagesSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/Messages.kt` | `FakeMessagesSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 8 |
+| Maison (`HomeSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | `FakeHomeSource` (avec sa scène Cinéma), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeHomeSource.kt` | vague 9 |
+| Média (`MediaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | `FakeMediaSource` (liste de lecture, temps qui avance), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeMediaSource.kt` | vague 7 |
+| Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | `FakeSettingsSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 4 |
 
 ## Règles d'architecture (vérifiées en CI)
 
