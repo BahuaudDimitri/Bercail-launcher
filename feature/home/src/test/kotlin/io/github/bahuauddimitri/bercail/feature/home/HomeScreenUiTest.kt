@@ -191,7 +191,7 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `la recherche attend sa vague, la barre Chercher ne prend pas encore le texte`() {
+    fun `sans recherche branchée, la barre Chercher reste inactive`() {
         show()
 
         compose.onNodeWithContentDescription("Chercher").assertIsNotEnabled()
