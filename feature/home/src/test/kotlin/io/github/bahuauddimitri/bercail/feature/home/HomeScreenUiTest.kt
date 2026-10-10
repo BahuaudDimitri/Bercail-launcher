@@ -414,15 +414,17 @@ class HomeScreenUiTest {
         show()
 
         compose.onNodeWithTag(BRUME_TAG).assertExists()
+        compose.onNodeWithTag(VEIL_TAG).assertDoesNotExist()
         assertThat(compose.activity.window.attributes.flags and FLAG_SHOW_WALLPAPER).isEqualTo(0)
     }
 
     @Test
-    fun `sans contenu, le fond d'écran du téléphone reste visible`() {
+    fun `sans contenu, le fond d'écran du téléphone reste visible, sous un voile qui garde l'agenda lisible`() {
         compose.activity.window.addFlags(FLAG_SHOW_WALLPAPER)
         show(silent())
 
         compose.onNodeWithTag(BRUME_TAG).assertDoesNotExist()
+        compose.onNodeWithTag(VEIL_TAG).assertExists()
         assertThat(compose.activity.window.attributes.flags and FLAG_SHOW_WALLPAPER).isNotEqualTo(0)
     }
 

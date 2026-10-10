@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
+import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWallpaperVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
@@ -351,6 +352,11 @@ private fun Brume() {
         night = weather == 0,
         modifier = Modifier.fillMaxWidth().height(BRUME_HEIGHT).wakesBrume(state)
     )
+    BcText("Voile sur une image claire", style = BcTextStyle.Caption, color = BcTextColor.Muted)
+    Box(Modifier.fillMaxWidth().height(BRUME_HEIGHT).background(BcColors.pastelApricot)) {
+        BcWallpaperVeil(Modifier.matchParentSize())
+        BcText("Journée libre", modifier = Modifier.padding(BcSpacing.l), style = BcTextStyle.AgendaTitle)
+    }
 }
 
 private const val ICONS_PER_ROW = 7

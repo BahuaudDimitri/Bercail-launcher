@@ -72,7 +72,8 @@ class MainActivity : ComponentActivity() {
                     open = searching.open,
                     query = searching.query,
                     onQueryChange = search::onQueryChange,
-                    onOpenChange = search::onOpenChange
+                    onOpenChange = search::onOpenChange,
+                    onSubmit = search::onSubmit
                 ) { SearchList(searching, search, search.icons, links = links) }
             )
             AnimatedVisibility(visible = settingsOpen, enter = fadeIn(), exit = fadeOut()) {

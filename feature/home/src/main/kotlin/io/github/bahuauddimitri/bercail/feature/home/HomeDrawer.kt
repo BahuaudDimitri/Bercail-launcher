@@ -222,6 +222,7 @@ private fun SearchBar(search: HomeSearch?) {
     BcSearchField(
         value = search?.query.orEmpty(),
         onValueChange = { search?.onQueryChange?.invoke(it) },
+        onSearch = { search?.onSubmit?.invoke() },
         modifier = Modifier.pointerInput(Unit) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)

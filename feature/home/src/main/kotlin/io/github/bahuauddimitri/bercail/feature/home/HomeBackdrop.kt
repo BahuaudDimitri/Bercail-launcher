@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeState
+import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWallpaperVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
@@ -38,6 +39,8 @@ internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState) {
     val opacity by animateFloatAsState(if (wanted != null) 1f else 0f, fade, label = "brume")
 
     SystemWallpaper(visible = opacity < 1f)
+    // Under Brume, over the wallpaper: the agenda stays readable on any picture.
+    if (opacity < 1f) BcWallpaperVeil(Modifier.fillMaxSize().testTag(VEIL_TAG))
     if (shown != null && opacity > 0f) {
         val first by animateColorAsState(shown.first, tween(BcTheme.motion.fadeMillis), label = "brume first")
         val second by animateColorAsState(shown.second, tween(BcTheme.motion.fadeMillis), label = "brume second")

@@ -115,6 +115,21 @@ fun BcBrume(
     Canvas(modifier.clipToBounds().clearAndSetSemantics {}) { drawBrume(seconds, colors, weather, night) }
 }
 
+/**
+ * What lies over the user's own wallpaper when Brume is away: a light dimming, and the same dark veil at the top
+ * as on Brume, so that the agenda stays readable on any picture. It never moves.
+ */
+@Composable
+fun BcWallpaperVeil(modifier: Modifier = Modifier) {
+    Canvas(modifier.clearAndSetSemantics {}) { drawWallpaperVeil() }
+}
+
+/** Pure drawing, also used by the tests. */
+internal fun DrawScope.drawWallpaperVeil() {
+    drawRect(BcColors.nightTop.copy(alpha = WALLPAPER_DIM))
+    drawTopVeil()
+}
+
 /** Where a still Brume rests: the same moment every time. */
 internal const val BRUME_START_SECONDS = 12f
 
@@ -209,6 +224,7 @@ private const val DRIFT_STEP = 0.25f
 private const val SWAY_SPEED = 0.8f
 private const val PHASE_SKEW = 1.3f
 private const val VEIL_TOP = 0.85f
+private const val WALLPAPER_DIM = 0.18f
 private const val VEIL_MIDDLE = 0.45f
 private const val VEIL_MIDDLE_STOP = 0.75f
 private const val DARKEN_STEPS = 12

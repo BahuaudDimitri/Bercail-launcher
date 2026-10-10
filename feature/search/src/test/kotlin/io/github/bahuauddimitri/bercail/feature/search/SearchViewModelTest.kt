@@ -182,6 +182,31 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun `la touche rechercher du clavier ouvre la première app trouvée`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+        search.onQueryChange("pho")
+
+        search.onSubmit()
+
+        assertThat(world.apps.opened).containsExactly("photos")
+        assertThat(state.open).isFalse()
+    }
+
+    @Test
+    fun `sans app trouvée, la touche rechercher du clavier ne fait rien`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+
+        search.onSubmit()
+        search.onQueryChange("léa")
+        search.onSubmit()
+
+        assertThat(world.apps.opened).isEmpty()
+        assertThat(state.open).isTrue()
+    }
+
+    @Test
     fun `toucher une commande maison dans les résultats la bascule sur place`() = runTest(dispatcher) {
         show()
         search.onOpenChange(true)

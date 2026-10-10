@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -38,6 +39,7 @@ class HomeSearchUiTest {
 
     private var open by mutableStateOf(false)
     private var query by mutableStateOf("")
+    private var submitted = 0
 
     private fun show() {
         val home = FakeWorld(Moment.Matin).homeViewModel()
@@ -52,7 +54,8 @@ class HomeSearchUiTest {
                         onOpenChange = {
                             open = it
                             if (!it) query = ""
-                        }
+                        },
+                        onSubmit = { submitted++ }
                     ) { BcText("Toutes les apps") }
                 )
             }
@@ -106,6 +109,17 @@ class HomeSearchUiTest {
         compose.onNodeWithContentDescription("Chercher").performTextInput("spo")
 
         assertThat(query).isEqualTo("spo")
+    }
+
+    @Test
+    fun `la touche rechercher du clavier est transmise à la recherche`() {
+        show()
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        compose.onNodeWithContentDescription("Chercher").performTextInput("spo")
+
+        compose.onNodeWithContentDescription("Chercher").performImeAction()
+
+        assertThat(submitted).isEqualTo(1)
     }
 
     @Test

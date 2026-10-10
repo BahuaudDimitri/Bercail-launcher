@@ -27,6 +27,7 @@ internal const val TIMELINE_TAG = "home-timeline"
 internal const val MIDDLE_TAG = "home-middle"
 internal const val DRAWER_TAG = "home-drawer"
 internal const val BRUME_TAG = "home-brume"
+internal const val VEIL_TAG = "home-veil"
 
 /** What the home screen does by itself. */
 interface HomeActions {
@@ -60,6 +61,8 @@ class HomeSearch(
     val query: String,
     val onQueryChange: (String) -> Unit,
     val onOpenChange: (Boolean) -> Unit,
+    /** The keyboard's search key. */
+    val onSubmit: () -> Unit = {},
     val list: @Composable () -> Unit
 )
 

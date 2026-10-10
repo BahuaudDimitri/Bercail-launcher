@@ -44,6 +44,9 @@ interface SearchActions {
     fun onOpenChange(open: Boolean)
     fun onQueryChange(query: String)
     fun onOpenApp(appId: String)
+
+    /** The keyboard's search key: opens the first app found, if any. */
+    fun onSubmit()
     fun onToggleControl(id: String)
     fun onSearchWeb()
     fun onSearchStore()
@@ -119,6 +122,10 @@ class SearchViewModel(
     override fun onOpenApp(appId: String) {
         apps.open(appId)
         onOpenChange(false)
+    }
+
+    override fun onSubmit() {
+        state.value.results?.apps?.firstOrNull()?.let { onOpenApp(it.id) }
     }
 
     override fun onToggleControl(id: String) {
