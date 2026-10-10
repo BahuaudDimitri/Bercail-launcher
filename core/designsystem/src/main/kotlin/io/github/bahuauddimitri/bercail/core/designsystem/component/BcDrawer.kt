@@ -23,12 +23,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -59,6 +62,7 @@ val DRAWER_DRAG_THRESHOLD = 24.dp
  * The glass drawer at the bottom of the home screen. Touching the handle, or sliding more than 24 dp up or down
  * anywhere on it, expands or collapses it; a slide never presses a button. Its height follows its content smoothly.
  * Without [handle] (the drawer as a remote on the Listen screen), it keeps its shape but no longer opens or closes.
+ * While [searching], it grows to the whole screen, under the status bar; its content fills it.
  */
 @Composable
 fun BcDrawer(
@@ -80,50 +84,55 @@ fun BcDrawer(
         animationSpec = tween(motion.fadeMillis),
         label = "drawer glass"
     )
-    val opening = if (handle) {
-        Modifier
-            .verticalSlide { up -> change(up) }
-            .semantics {
-                if (expanded) {
-                    collapse {
-                        change(false)
-                        true
-                    }
-                } else {
-                    expand {
-                        change(true)
-                        true
-                    }
-                }
-            }
-    } else {
-        Modifier
-    }
+    // While searching, the drawer is the whole screen: nothing to grab, nothing to slide.
+    val grips = handle && !searching
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(BcShapes.drawer)
             .background(glass)
-            .then(opening)
+            .then(if (grips) Modifier.opens(expanded) { change(it) } else Modifier)
             .animateContentSize(tween(motion.drawerMillis, easing = motion.easing))
+            .then(if (searching) Modifier.fillMaxHeight().statusBarsPadding() else Modifier)
             .padding(
                 start = BcSpacing.l,
-                top = if (handle) 0.dp else BcSpacing.l,
+                top = if (grips) 0.dp else BcSpacing.l,
                 end = BcSpacing.l,
                 bottom = bottomPadding()
             ),
         verticalArrangement = Arrangement.spacedBy(BcSpacing.m),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (handle) {
+        if (grips) {
             Handle(
                 description = if (expanded) "Replier le tiroir" else "Déplier le tiroir",
                 onClick = { change(!expanded) }
             )
         }
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BcSpacing.m), content = content)
+        Column(
+            modifier = if (searching) Modifier.fillMaxWidth().weight(1f) else Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(BcSpacing.m),
+            content = content
+        )
     }
 }
+
+/** Sliding up or down on the drawer, and the matching screen-reader actions, open or close it. */
+private fun Modifier.opens(expanded: Boolean, change: (Boolean) -> Unit): Modifier = this
+    .verticalSlide { up -> change(up) }
+    .semantics {
+        if (expanded) {
+            collapse {
+                change(false)
+                true
+            }
+        } else {
+            expand {
+                change(true)
+                true
+            }
+        }
+    }
 
 /**
  * The same glass drawer, opened over the screen for a conversation, the day or the media apps.
@@ -188,12 +197,14 @@ fun BcSheet(
 }
 
 /**
- * The glass goes down to the edge of the screen; its content stays above the phone's navigation bar.
+ * The glass goes down to the edge of the screen; its content stays above the phone's navigation bar, and above
+ * the keyboard when it is out.
  */
 @Composable
 private fun bottomPadding(): Dp {
     val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    return max(BcSpacing.l, navigationBar + BcSpacing.s)
+    val keyboard = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    return max(BcSpacing.l, max(navigationBar, keyboard) + BcSpacing.s)
 }
 
 /** The grab bar: a short light line inside a 120 × 40 dp touch area. */

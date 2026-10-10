@@ -47,12 +47,16 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
@@ -93,6 +97,7 @@ internal val GALLERY_SECTIONS = listOf(
 @Composable
 fun BcGallery(modifier: Modifier = Modifier) {
     var sheetOpen by remember { mutableStateOf(false) }
+    var panelOpen by remember { mutableStateOf(false) }
     Box(modifier.fillMaxSize().background(BcColors.base)) {
         Column(
             modifier = Modifier
@@ -115,7 +120,9 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Conversation") { Conversation() }
             Section("Musique") { Music() }
             Section("Navigation") { Navigation() }
-            Section("Tiroir et feuille") { DrawerAndSheet(onOpenSheet = { sheetOpen = true }) }
+            Section("Tiroir et feuille") {
+                DrawerAndSheet(onOpenSheet = { sheetOpen = true }, onOpenPanel = { panelOpen = true })
+            }
             Section("Brume") { Brume() }
         }
         BcSheet(visible = sheetOpen, onDismiss = { sheetOpen = false }) {
@@ -123,6 +130,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             BcText("WhatsApp via Beeper", style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
             BcBubble("On se retrouve à 20 h ?", author = "Léa", mine = false, pastel = BcPastel.Coral)
         }
+        if (panelOpen) SamplePanel(onBack = { panelOpen = false })
     }
 }
 
@@ -311,7 +319,7 @@ private fun Navigation() {
 }
 
 @Composable
-private fun DrawerAndSheet(onOpenSheet: () -> Unit) {
+private fun DrawerAndSheet(onOpenSheet: () -> Unit, onOpenPanel: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     BcDrawer(expanded = expanded, onExpandedChange = { expanded = it }) {
         if (expanded) {
@@ -322,6 +330,7 @@ private fun DrawerAndSheet(onOpenSheet: () -> Unit) {
         BcSearchField(value = "", onValueChange = {})
     }
     BcButton("Ouvrir une feuille", onClick = onOpenSheet)
+    BcButton("Ouvrir un panneau", onClick = onOpenPanel)
 }
 
 @Composable
@@ -356,3 +365,17 @@ private val BRUME_HEIGHT = 420.dp
 private val COVER_GAP = 48.dp
 private val REMOTE = 52.dp
 private val REMOTE_MAIN = 66.dp
+
+/** The settings panel with sample rows: a choice, a link, a section title. */
+@Composable
+private fun SamplePanel(onBack: () -> Unit) {
+    var choice by remember { mutableIntStateOf(1) }
+    BcPanel("Réglages de Bercail", onBack = onBack, backDescription = "Fermer le panneau") {
+        BcPanelHeader("Toutes les apps", onBack = onBack, backDescription = "Fermer la recherche")
+        BcSectionLabel("Agenda")
+        BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {
+            BcSegmented(listOf("Horizontale", "Verticale"), selected = choice, onSelect = { choice = it })
+        }
+        BcSettingRow("Apps favorites", subtitle = "Spotify, Beeper", onClick = {})
+    }
+}

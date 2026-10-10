@@ -80,6 +80,21 @@ class BcHomePiecesScreenshotTest {
             }
         }
 
+    @Test
+    fun `l'en-tête de liste, les titres de section et les lignes de réglage correspondent à leur capture`() =
+        compose.captureComponent("panel_rows") {
+            Column(Modifier.width(348.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
+                BcPanelHeader("Toutes les apps", onBack = {}, backDescription = "Fermer la recherche")
+                BcSectionLabel("Apps favorites")
+                BcListRow("Spotify", onClick = {}, leading = BcLeading.Initials("S", BcPastel.Mint))
+                BcSectionLabel("Agenda")
+                BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {
+                    BcSegmented(listOf("Horizontale", "Verticale"), selected = 1, onSelect = {})
+                }
+                BcSettingRow("Apps favorites", subtitle = "Spotify, Beeper", onClick = {})
+            }
+        }
+
     private companion object {
         val CORAL = Color(0xFFF2A49A)
         val LAVENDER = Color(0xFFB4A7F0)
