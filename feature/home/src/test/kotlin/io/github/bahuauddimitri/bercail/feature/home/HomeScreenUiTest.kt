@@ -109,7 +109,7 @@ class HomeScreenUiTest {
     @Test
     fun `en réglage horizontal, la ligne du temps se couche sous l'en-tête`() {
         val world = FakeWorld(Moment.Matin)
-        world.settings.update { it.copy(timeline = TimelineOrientation.Horizontal) }
+        world.settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
         show(world)
 
         val line = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()

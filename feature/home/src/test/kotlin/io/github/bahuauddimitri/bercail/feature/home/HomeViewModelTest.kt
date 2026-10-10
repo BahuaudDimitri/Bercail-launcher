@@ -132,7 +132,7 @@ class HomeViewModelTest {
         show(home)
         assertThat(home.state.value.timeline).isEqualTo(TimelineOrientation.Vertical)
 
-        world.settings.update { it.copy(timeline = TimelineOrientation.Horizontal) }
+        world.settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
 
         assertThat(home.state.value.timeline).isEqualTo(TimelineOrientation.Horizontal)
     }
@@ -189,7 +189,7 @@ class HomeViewModelTest {
     @Test
     fun `le tiroir démarre ouvert si le réglage le demande`() = runTest(dispatcher) {
         val world = FakeWorld(Moment.Matin)
-        world.settings.update { it.copy(drawerExpandedAtStart = true) }
+        world.settings.change { it.copy(drawerExpandedAtStart = true) }
         val home = homeOf(world)
         show(home)
 
@@ -419,7 +419,7 @@ class HomeViewModelTest {
     fun `sans musique, Brume reste aux couleurs du moment si le réglage le demande`() = runTest(dispatcher) {
         val world = FakeWorld(Moment.Soir)
         world.media.stop()
-        world.settings.update { it.copy(idleBackground = IdleBackground.Brume) }
+        world.settings.change { it.copy(idleBackground = IdleBackground.Brume) }
         val home = homeOf(world)
         show(home)
 

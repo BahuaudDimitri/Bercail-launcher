@@ -87,7 +87,7 @@ class HomeScreenshotTest {
     fun `la ligne du temps horizontale correspond à sa capture`() {
         val world = FakeWorld(Moment.Trajet).apply {
             media.stop()
-            settings.update { it.copy(timeline = TimelineOrientation.Horizontal) }
+            settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
         }
         show(world)
 

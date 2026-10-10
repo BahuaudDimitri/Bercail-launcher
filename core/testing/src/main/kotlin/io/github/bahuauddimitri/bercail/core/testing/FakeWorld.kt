@@ -3,6 +3,7 @@
 package io.github.bahuauddimitri.bercail.core.testing
 
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
+import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
@@ -35,6 +36,8 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val home = FakeHomeSource()
     val media = FakeMediaSource(moment.playlist, playing = playing, position = Samples.position)
     val settings = FakeSettingsSource(Samples.settings)
+    val apps = FakeAppsSource(Samples.apps)
+    val phone = FakePhone()
 }
 
 /** The prototype's sample data. */
@@ -52,7 +55,17 @@ object Samples {
         Conversation("julien", "Julien", "Instagram")
     )
 
-    val settings = Settings(favoritePeople = listOf("lea", "tom", "team", "mum"))
+    val settings = Settings(
+        favoritePeople = listOf("lea", "tom", "team", "mum"),
+        favoriteApps = listOf("spotify", "youtube", "beeper", "agenda")
+    )
+
+    /** The apps of the prototype's phone. Their id is their name, in lower case. */
+    val apps: List<App> = listOf(
+        "Agenda", "Appareil photo", "Banque", "Beeper", "Calculatrice", "Chrome", "Contacts", "Drive", "Fichiers",
+        "Gmail", "Horloge", "Keep", "Maps", "Météo", "Netflix", "Notion", "Paramètres", "Photos", "Play Store",
+        "Pocket Casts", "Spotify", "Strava", "Téléphone", "Uber", "Wallet", "Waze", "YouTube"
+    ).map { App(id = it.lowercase(), name = it) }
 
     val home: List<HomeControl> = listOf(
         HomeControl.Light("salon", "Salon", brightness = 60, on = true),

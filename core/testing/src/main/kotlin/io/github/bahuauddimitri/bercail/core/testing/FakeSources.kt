@@ -71,5 +71,8 @@ class FakeMessagesSource(conversations: List<Conversation> = emptyList()) : Mess
 class FakeSettingsSource(settings: Settings = Settings()) : SettingsSource {
     override val settings = MutableStateFlow(settings)
 
-    fun update(transform: (Settings) -> Settings) = settings.update(transform)
+    override suspend fun update(transform: (Settings) -> Settings) = settings.update(transform)
+
+    /** The same change, for tests that are not in a coroutine. */
+    fun change(transform: (Settings) -> Settings) = settings.update(transform)
 }

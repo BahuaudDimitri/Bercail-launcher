@@ -75,6 +75,8 @@ Dans `:core:domain`, en Kotlin pur. Chaque règle du doc de passation a son test
 | Un libellé par appareil (« Salon 60 % », « Volets ouverts », « Cinéma active », « Chauffage 21 °C »), « Maison au repos » (`HomeControl`, `homeSummary`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControlTest.kt` |
 | Trois états média (aucun, pause, lecture), « Précédent » après 5 s, temps et progression d'un morceau (`MediaState`, `previousAction`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/MediaRulesTest.kt` |
 | Écran Écoute seulement avec un contenu chargé ; fond : Brume de la pochette, image de l'utilisateur ou Brume du moment (`HomePage`, `backgroundFor`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/screen/HomeScreenRules.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/screen/HomeScreenRulesTest.kt` |
+| Recherche : apps de A à Z sans accents ni majuscules, lettres utilisées seulement, favorites en tête ; résultats par famille (apps, gens, maison, agenda, réglages), « rien trouvé » pour proposer le web et le Play Store (`appDirectory`, `search`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/search/Search.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/search/SearchTest.kt` |
+| Sources pas encore branchées : états vides, jamais de données inventées (`Unconnected`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/Unconnected.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/UnconnectedTest.kt` |
 
 ## Sources de données
 
@@ -89,6 +91,7 @@ Chaque source est une interface du domaine, sous forme de flux : rien ne tourne 
 | Maison (`HomeSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | `FakeHomeSource` (avec sa scène Cinéma), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeHomeSource.kt` | vague 9 |
 | Média (`MediaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | `FakeMediaSource` (liste de lecture, temps qui avance), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeMediaSource.kt` | vague 7 |
 | Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | `FakeSettingsSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 4 |
+| Apps installées (`AppsSource`) et liens vers le téléphone (`Phone` : web, Play Store, Paramètres) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/apps/Apps.kt` | `FakeAppsSource`, `FakePhone`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakePhone.kt` | vague 4 |
 
 ## Règles d'architecture (vérifiées en CI)
 
