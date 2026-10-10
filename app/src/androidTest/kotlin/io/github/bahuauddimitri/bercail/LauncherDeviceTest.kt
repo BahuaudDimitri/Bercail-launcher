@@ -38,7 +38,7 @@ class LauncherDeviceTest {
     }
 
     @Test
-    fun `toucher la poignée déplie le tiroir, la retoucher le replie`() {
+    fun `toucher la poignée déplie le tiroir puis le replie`() {
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
 

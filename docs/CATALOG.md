@@ -97,7 +97,7 @@ Chaque source est une interface du domaine, sous forme de flux : rien ne tourne 
 | Seulement le design system dans les écrans | `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/DesignSystemOnlyTest.kt`, detekt `config/detekt/screens.yml` |
 | Interdits batterie : verrou de réveil, service au premier plan, alarme exacte | `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/BatteryRulesTest.kt` |
 | Animations continues à 20 images/s au plus, immobiles si Android supprime les animations (`core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/motion/FrameThrottle.kt`) | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/motion/FrameThrottleTest.kt` |
-| Domaine sans Android, un README par module | `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/ModuleRulesTest.kt` |
+| Domaine sans Android, un README par module, noms des tests instrumentés acceptés par Android (ni virgule ni apostrophe droite) | `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/ModuleRulesTest.kt` |
 | Catalogue à jour | `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/CatalogTest.kt` |
 
 ## Outils

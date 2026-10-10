@@ -40,7 +40,7 @@ Aucun secret dans le dépôt. La clé de signature vit dans les secrets GitHub (
 | Installer l'app de debug sur le téléphone | `./gradlew :app:installDebug` |
 | Mesurer l'énergie de Brume sur le Pixel 9 | `bash scripts/measure-brume.sh` (voir l'en-tête du script) |
 
-Noms des tests instrumentés (`androidTest/`) : apostrophe typographique `’` et non `'`, que le format DEX d'Android refuse (vérifié par `ModuleRulesTest`).
+Noms des tests instrumentés (`androidTest/`) : seulement des lettres, des chiffres, des espaces, le tiret et l'apostrophe typographique `’`. Le format DEX d'Android refuse le reste (`'`, virgule, deux-points…) ; vérifié par `ModuleRulesTest`, et `./gradlew check` construit l'APK de ces tests.
 
 Suites : les classes `*UiTest` sont les tests d'interface (Robolectric), `*ScreenshotTest` les captures (Roborazzi), les autres les tests unitaires ; `androidTest/` contient les tests instrumentés.
 

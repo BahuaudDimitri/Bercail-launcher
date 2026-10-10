@@ -13,5 +13,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             lint.checkDependencies = true
         }
         configureQuality()
+        // The instrumented tests only run on a device, but they must at least build before every push.
+        tasks.named("check") { dependsOn(tasks.matching { it.name == "assembleDebugAndroidTest" }) }
     }
 }

@@ -15,14 +15,16 @@ class ModuleRulesTest {
     }
 
     @Test
-    fun `les noms des tests instrumentés utilisent l'apostrophe typographique`() {
-        // Android's DEX format rejects the straight apostrophe in method names, but accepts ’.
-        val straightApostrophe = Regex("""fun `[^`]*'[^`]*`""")
+    fun `les noms des tests instrumentés n'utilisent que des lettres, des chiffres, des espaces, le tiret et ’`() {
+        // Android's DEX format rejects most punctuation in method names: the straight apostrophe, the comma,
+        // the colon… It accepts letters, digits, spaces, the hyphen and the typographic apostrophe ’.
+        val name = Regex("""fun `([^`]*)`""")
+        val allowed = Regex("""[\p{L}\p{N} ’-]*""")
         val offenders = Repository.root.walkTopDown()
             .onEnter { it.name != "build" && it.name != ".gradle" }
             .filter { it.extension == "kt" && "/src/androidTest/" in it.invariantSeparatorsPath }
-            .filter { straightApostrophe.containsMatchIn(it.readText()) }
-            .map { it.relativeTo(Repository.root).invariantSeparatorsPath }
+            .flatMap { file -> name.findAll(file.readText()).map { it.groupValues[1] } }
+            .filterNot { allowed.matches(it) }
             .toList()
 
         assertThat(offenders).isEmpty()
