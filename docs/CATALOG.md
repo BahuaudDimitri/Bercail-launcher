@@ -52,9 +52,34 @@ Jetons et thème (vague 2). Police Outfit sous licence SIL OFL (`core/designsyst
 | `BcWeather` (effets météo) | Pluie, rafales, neige et étoiles de nuit dessinées sur Brume, positions calculées à partir du temps | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/brume/BcWeatherLayer.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/brume/BcBrumeScreenshotTest.kt` |
 | `BcGallery` | Galerie de debug : chaque composant dans ses états, interactif (app « Bercail galerie » de la version debug, et Brume plein écran pour les mesures d'énergie) | `core/designsystem/src/main/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/gallery/BcGallery.kt`, `app/src/debug/kotlin/io/github/bahuauddimitri/bercail/GalleryActivity.kt` | `core/designsystem/src/test/kotlin/io/github/bahuauddimitri/bercail/core/designsystem/gallery/BcGalleryUiTest.kt`, `architecture/src/test/kotlin/io/github/bahuauddimitri/bercail/architecture/CatalogTest.kt` |
 
+## Règles métier
+
+Dans `:core:domain`, en Kotlin pur. Chaque règle du doc de passation a son test, nommé d'après elle.
+
+| Règle | Fichier | Tests |
+|---|---|---|
+| En-tête de l'accueil : « Dans 45 min » sous 1 h, « Dans 1 h 20 » au-delà, « Ensuite … à … », « Plus rien aujourd'hui » (`glanceAt`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/Agenda.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/GlanceTest.kt` |
+| Ligne du temps : de 7 h à minuit, une marque par rendez-vous, le prochain entouré (`dayLineAt`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/Agenda.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/DayLineTest.kt` |
+| Moments de la journée : matin, après-midi, soir, nuit (`DayPart`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/time/Clock.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/time/DayPartTest.kt` |
+| Ligne météo : température, puis phrase selon l'heure, pas de « Nuit claire » le matin (`weatherLine`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/weather/Weather.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/weather/WeatherLineTest.kt` |
+| Résumé des messages (« 2 non lus · Léa, Tom », « Aucun message »), favoris, non-lus de la tuile « Tous » (`messagesSummary`, `favoritesAmong`, `unreadOutsideFavorites`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/Messages.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/MessagesSummaryTest.kt` |
+| Un libellé par appareil (« Salon 60 % », « Volets ouverts », « Cinéma active », « Chauffage 21 °C »), « Maison au repos » (`HomeControl`, `homeSummary`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControlTest.kt` |
+| Trois états média (aucun, pause, lecture), « Précédent » après 5 s, temps et progression d'un morceau (`MediaState`, `previousAction`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/MediaRulesTest.kt` |
+| Écran Écoute seulement avec un contenu chargé ; fond : Brume de la pochette, image de l'utilisateur ou Brume du moment (`HomePage`, `backgroundFor`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/screen/HomeScreenRules.kt` | `core/domain/src/test/kotlin/io/github/bahuauddimitri/bercail/core/domain/screen/HomeScreenRulesTest.kt` |
+
 ## Sources de données
 
-Aucune pour l'instant.
+Chaque source est une interface du domaine, sous forme de flux : rien ne tourne tant que personne n'écoute. Les vraies sources arrivent avec leur vague.
+
+| Source | Interface | Vraie source |
+|---|---|---|
+| Heure (`Clock`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/time/Clock.kt` | — |
+| Agenda (`AgendaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/agenda/Agenda.kt` | vague 6 |
+| Météo (`WeatherSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/weather/Weather.kt` | vague 6 |
+| Messages (`MessagesSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/Messages.kt` | vague 8 |
+| Maison (`HomeSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | vague 9 |
+| Média (`MediaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | vague 7 |
+| Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | vague 4 |
 
 ## Règles d'architecture (vérifiées en CI)
 
