@@ -26,6 +26,10 @@ gradlePlugin {
             id = "bercail.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
+        register("androidData") {
+            id = "bercail.android.data"
+            implementationClass = "AndroidDataConventionPlugin"
+        }
         register("jvmLibrary") {
             id = "bercail.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"

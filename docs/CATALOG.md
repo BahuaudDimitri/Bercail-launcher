@@ -12,6 +12,8 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 | `:core:domain` | Règles métier et interfaces des sources de données, en Kotlin pur | `core/domain/README.md` |
 | `:core:designsystem` | Design system : jetons et composants `Bc…`, seule porte vers Compose pour les écrans | `core/designsystem/README.md` |
 | `:core:testing` | Faux (fakes) des sources du domaine, pour les tests, les aperçus et, en attendant les vraies sources, pour l'app | `core/testing/README.md` |
+| `:data:settings` | Réglages enregistrés sur le téléphone (DataStore) | `data/settings/README.md` |
+| `:data:apps` | Apps installées, leurs icônes, leur lancement ; liens vers le web, le Play Store et les Paramètres | `data/apps/README.md` |
 | `:feature:home` | L'accueil : ses deux écrans (Accueil, Écoute) et son tiroir, assemblés avec le design system | `feature/home/README.md` |
 | `:architecture` | Tests d'architecture : « seulement le design system », interdits batterie, catalogue | `architecture/README.md` |
 
@@ -90,8 +92,8 @@ Chaque source est une interface du domaine, sous forme de flux : rien ne tourne 
 | Messages (`MessagesSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/messages/Messages.kt` | `FakeMessagesSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 8 |
 | Maison (`HomeSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/home/HomeControl.kt` | `FakeHomeSource` (avec sa scène Cinéma), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeHomeSource.kt` | vague 9 |
 | Média (`MediaSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/media/Media.kt` | `FakeMediaSource` (liste de lecture, temps qui avance), `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeMediaSource.kt` | vague 7 |
-| Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | `FakeSettingsSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | vague 4 |
-| Apps installées (`AppsSource`) et liens vers le téléphone (`Phone` : web, Play Store, Paramètres) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/apps/Apps.kt` | `FakeAppsSource`, `FakePhone`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakePhone.kt` | vague 4 |
+| Réglages (`SettingsSource`) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/settings/Settings.kt` | `FakeSettingsSource`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeSources.kt` | `StoredSettings` : un fichier sur le téléphone, lu à la demande, écrit seulement quand un réglage change (`data/settings/src/main/kotlin/io/github/bahuauddimitri/bercail/data/settings/StoredSettings.kt`, `data/settings/src/test/kotlin/io/github/bahuauddimitri/bercail/data/settings/StoredSettingsTest.kt`) |
+| Apps installées (`AppsSource`) et liens vers le téléphone (`Phone` : web, Play Store, Paramètres) | `core/domain/src/main/kotlin/io/github/bahuauddimitri/bercail/core/domain/apps/Apps.kt` | `FakeAppsSource`, `FakePhone`, `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakePhone.kt` | `DeviceApps` et `DevicePhone` : Android prévient des installations, rien n'est écouté hors recherche (`data/apps/src/main/kotlin/io/github/bahuauddimitri/bercail/data/apps/DeviceApps.kt`, `data/apps/src/main/kotlin/io/github/bahuauddimitri/bercail/data/apps/DevicePhone.kt`, `data/apps/src/test/kotlin/io/github/bahuauddimitri/bercail/data/apps/DeviceAppsUiTest.kt`) |
 
 ## Règles d'architecture (vérifiées en CI)
 
