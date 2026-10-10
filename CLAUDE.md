@@ -46,4 +46,4 @@ Suites : les classes `*UiTest` sont les tests d'interface (Robolectric), `*Scree
 
 ## Modules
 
-`:app` (launcher), `:core:domain` (Kotlin pur, couverture 90 %), `:core:designsystem`, `:core:testing` (faux), `:architecture` (tests Konsist). Les plugins de convention sont dans `build-logic/`, les versions dans `gradle/libs.versions.toml` (mises à jour par Renovate).
+`:app` (launcher, branchement des sources), `:core:domain` (Kotlin pur, couverture 90 %), `:core:designsystem`, `:core:testing` (faux ; l'app les affiche tant que la vraie source n'existe pas), `:feature:home` (l'accueil et l'écran Écoute), `:architecture` (tests Konsist). Un écran = un module `:feature:…` qui ne voit que le domaine et le design system. Les plugins de convention sont dans `build-logic/`, les versions dans `gradle/libs.versions.toml` (mises à jour par Renovate).
