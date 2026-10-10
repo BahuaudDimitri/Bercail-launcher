@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -68,6 +70,8 @@ class MainActivity : ComponentActivity() {
         Box {
             HomeRoute(
                 viewModel = home,
+                // Under the settings, the home screen is covered: a screen reader must not read it either.
+                modifier = if (settingsOpen) Modifier.clearAndSetSemantics {} else Modifier,
                 search = HomeSearch(
                     open = searching.open,
                     query = searching.query,

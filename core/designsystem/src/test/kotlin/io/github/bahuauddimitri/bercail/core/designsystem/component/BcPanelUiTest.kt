@@ -4,12 +4,15 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -152,6 +155,28 @@ class BcPanelUiTest {
         compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
 
         assertThat(closed).isEqualTo(2)
+    }
+
+    @Test
+    fun `un panneau qui s'ouvre fait rentrer le clavier`() {
+        var hidden = 0
+        val keyboard = object : SoftwareKeyboardController {
+            override fun show() = Unit
+
+            override fun hide() {
+                hidden++
+            }
+        }
+        compose.setContent {
+            BcTheme {
+                CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                    BcPanel("Réglages de Bercail", onBack = {}, backDescription = "Retour") {}
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        assertThat(hidden).isEqualTo(1)
     }
 
     @Test

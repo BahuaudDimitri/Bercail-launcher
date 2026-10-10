@@ -18,10 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
@@ -42,7 +45,8 @@ fun BcPanelHeader(title: String, onBack: () -> Unit, backDescription: String, mo
 }
 
 /**
- * A full-screen glass panel over everything (the settings): header with a back arrow, then a scrolling column.
+ * A full-screen panel over everything (the settings): header with a back arrow, then a scrolling column. It is
+ * opaque, so that nothing shows through, and it takes the keyboard down when it opens.
  * The system back gesture closes it; touches do not reach what is underneath.
  */
 @Composable
@@ -54,10 +58,17 @@ fun BcPanel(
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(onBack = onBack)
+    // The panel covers everything: a field left focused underneath gives the keyboard back.
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = LocalFocusManager.current
+    LaunchedEffect(Unit) {
+        focus.clearFocus(force = true)
+        keyboard?.hide()
+    }
     Column(
         modifier
             .fillMaxSize()
-            .background(BcColors.glassSearch)
+            .background(BcColors.base)
             .pointerInput(Unit) { detectTapGestures {} }
             // Bars first, then scrolling: content never slides under the status bar.
             .safeDrawingPadding()

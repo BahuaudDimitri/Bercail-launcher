@@ -11,8 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
@@ -120,10 +122,20 @@ fun HomeScreen(
 private fun DrawerOverScreen(searching: Boolean, screen: @Composable () -> Unit, drawer: @Composable () -> Unit) {
     val rising = updateTransition(searching, label = "search")
     // Gives the transition the duration of the drawer's own movement.
-    rising.animateFloat({ tween(BcTheme.motion.drawerMillis) }, label = "search rise") { if (it) 1f else 0f }
+    val rise = rising.animateFloat({ tween(BcTheme.motion.drawerMillis) }, label = "search rise") {
+        if (it) 1f else 0f
+    }
     val covered = rising.targetState || rising.currentState
     val restingDrawerHeight = remember { IntArray(1) }
-    Layout(contents = listOf(screen, drawer), modifier = Modifier.fillMaxSize()) { (screens, drawers), constraints ->
+    // The glass of the search is not opaque: what it covers fades away, and is no longer read out either.
+    val fading: @Composable () -> Unit = {
+        Box(
+            Modifier
+                .graphicsLayer { alpha = 1f - rise.value }
+                .then(if (searching) Modifier.clearAndSetSemantics {} else Modifier)
+        ) { screen() }
+    }
+    Layout(contents = listOf(fading, drawer), modifier = Modifier.fillMaxSize()) { (screens, drawers), constraints ->
         val placedDrawers = drawers.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
         val drawerHeight = placedDrawers.maxOfOrNull { it.height } ?: 0
         if (!covered || restingDrawerHeight[0] == 0) restingDrawerHeight[0] = drawerHeight

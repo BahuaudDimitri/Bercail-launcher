@@ -154,13 +154,27 @@ class HomeSearchUiTest {
     }
 
     @Test
-    fun `pendant la recherche, le haut de l'accueil ne se déforme pas sous le tiroir`() {
+    fun `pendant la recherche, le haut de l'accueil s'efface sous le tiroir`() {
         show()
-        val before = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
 
         compose.onNodeWithContentDescription("Chercher").performClick()
 
+        compose.onNodeWithTag(TIMELINE_TAG).assertDoesNotExist()
+        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+        compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
+    }
+
+    @Test
+    fun `la recherche fermée, le haut de l'accueil revient exactement à sa place`() {
+        show()
+        val before = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
+        compose.onNodeWithContentDescription("Chercher").performClick()
+
+        open = false
+        compose.waitForIdle()
+
         assertThat(compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()).isEqualTo(before)
+        compose.onNodeWithText("Stand-up").assertExists()
     }
 
     @Test
