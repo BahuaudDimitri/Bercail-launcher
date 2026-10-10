@@ -1,6 +1,5 @@
 plugins {
     id("bercail.android.application")
-    id("bercail.screenshots")
 }
 
 android {
@@ -43,11 +42,13 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    implementation(project(":feature:home"))
+    // Provisional: the prototype's fakes stand in for the sources whose wave has not come yet.
+    implementation(project(":core:testing"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)
-
-    testImplementation(project(":core:testing"))
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
