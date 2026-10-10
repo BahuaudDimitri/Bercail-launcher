@@ -43,8 +43,13 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":feature:home"))
-    // Provisional: the prototype's fakes stand in for the sources whose wave has not come yet.
-    implementation(project(":core:testing"))
+    implementation(project(":feature:search"))
+    implementation(project(":feature:settings"))
+    implementation(project(":data:apps"))
+    implementation(project(":data:settings"))
+    // The debug app shows the prototype's data for the sources whose wave has not come yet; the release shows
+    // their empty states and ships no fake.
+    debugImplementation(project(":core:testing"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)

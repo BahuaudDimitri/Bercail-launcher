@@ -439,6 +439,19 @@ class HomeScreenUiTest {
     }
 
     @Test
+    fun `sans source branchée, l'accueil montre ses états vides, jamais de données inventées`() {
+        val home = unconnectedHomeViewModel(hour = 9)
+        compose.setContent { BcTheme { HomeRoute(home) } }
+
+        compose.onNodeWithText("Plus rien aujourd'hui").assertExists()
+        compose.onNodeWithText("Journée libre").assertExists()
+        compose.onNodeWithText("Aucun message").assertExists()
+        compose.onNodeWithText("Maison au repos").assertExists()
+        compose.onNodeWithText("Écouter…").assertExists()
+        compose.onNodeWithTag(BRUME_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun `quand l'accueil n'est plus à l'écran, plus aucune source n'est écoutée`() {
         val world = show()
         compose.waitForIdle()

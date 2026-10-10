@@ -2,6 +2,8 @@ package io.github.bahuauddimitri.bercail
 
 import android.content.Intent
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -21,6 +23,14 @@ class LauncherDeviceTest {
     @get:Rule
     val compose = createAndroidComposeRule<MainActivity>()
 
+    /** The settings are read from their file off the main thread: what depends on them arrives a moment later. */
+    private fun awaitText(text: String) =
+        compose.waitUntil(TIMEOUT) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+
+    private fun awaitDescription(text: String) = compose.waitUntil(TIMEOUT) {
+        compose.onAllNodesWithContentDescription(text).fetchSemanticsNodes().isNotEmpty()
+    }
+
     @Test
     fun `le téléphone propose Bercail comme écran d’accueil`() {
         val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
@@ -34,11 +44,12 @@ class LauncherDeviceTest {
     @Test
     fun `l’accueil s’affiche au lancement`() {
         compose.onNodeWithTag(HOME_TAG).assertExists()
-        compose.onNodeWithText("2 non lus · Léa, Tom").assertExists()
+        awaitText("2 non lus · Léa, Tom")
     }
 
     @Test
     fun `toucher la poignée déplie le tiroir puis le replie`() {
+        awaitDescription("Déplier le tiroir")
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
 
@@ -48,9 +59,34 @@ class LauncherDeviceTest {
 
     @Test
     fun `toucher la pastille musique ouvre l’écran Écoute et sa télécommande`() {
+        awaitText("Looped · Kiasmos")
         compose.onNodeWithText("Looped · Kiasmos").performClick()
 
         compose.onNodeWithText("Ouvrir dans Spotify").assertExists()
         compose.onNodeWithContentDescription("Pause").assertExists()
+    }
+
+    @Test
+    fun `toucher la barre Chercher ouvre la liste des apps du téléphone`() {
+        awaitDescription("Chercher")
+        compose.onNodeWithContentDescription("Chercher").performClick()
+
+        awaitText("Toutes les apps")
+        compose.onNodeWithText("Réglages de Bercail").assertExists()
+    }
+
+    @Test
+    fun `les Réglages de Bercail s’ouvrent depuis la recherche`() {
+        awaitDescription("Chercher")
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        awaitText("Réglages de Bercail")
+
+        compose.onNodeWithText("Réglages de Bercail").performClick()
+
+        awaitText("Ligne du temps")
+    }
+
+    private companion object {
+        const val TIMEOUT = 10_000L
     }
 }

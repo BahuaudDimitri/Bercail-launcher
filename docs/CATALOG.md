@@ -11,7 +11,7 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 | `:app` | L'application : écran d'accueil déclaré à Android, assemblage des modules | `app/README.md` |
 | `:core:domain` | Règles métier et interfaces des sources de données, en Kotlin pur | `core/domain/README.md` |
 | `:core:designsystem` | Design system : jetons et composants `Bc…`, seule porte vers Compose pour les écrans | `core/designsystem/README.md` |
-| `:core:testing` | Faux (fakes) des sources du domaine, pour les tests, les aperçus et, en attendant les vraies sources, pour l'app | `core/testing/README.md` |
+| `:core:testing` | Faux (fakes) des sources du domaine, pour les tests et pour la version de mise au point de l'app ; jamais dans la version publiée | `core/testing/README.md` |
 | `:data:settings` | Réglages enregistrés sur le téléphone (DataStore) | `data/settings/README.md` |
 | `:data:apps` | Apps installées, leurs icônes, leur lancement ; liens vers le web, le Play Store et les Paramètres | `data/apps/README.md` |
 | `:feature:home` | L'accueil : ses deux écrans (Accueil, Écoute) et son tiroir, assemblés avec le design system | `feature/home/README.md` |
@@ -31,7 +31,7 @@ Avant toute fonctionnalité : lire ce catalogue, chercher dans le code, puis n'a
 | Recherche : « Réglages de Bercail », apps favorites, apps de A à Z avec l'alphabet ; en tapant, résultats ancrés en bas par famille, sinon web et Play Store (`SearchList`, `SearchRoute`) | `feature/search/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchList.kt` | `feature/search/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchListUiTest.kt`, `feature/search/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchScreenshotTest.kt` |
 | État de la recherche : sources écoutées seulement quand elle est ouverte, dernière liste gardée ; icônes des apps dessinées une fois (`SearchViewModel`, `AppIcons`) | `feature/search/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchViewModel.kt`, `feature/search/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/search/AppIcons.kt` | `feature/search/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchViewModelTest.kt`, `feature/search/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/search/SearchScreenshotTest.kt` |
 | Réglages de Bercail : fond sans musique, ligne du temps, tiroir au départ, apps favorites (liste à cocher), liens vers l'écran d'accueil par défaut et les Paramètres ; chaque choix est enregistré tout de suite (`SettingsScreen`, `FavoriteAppsScreen`, `SettingsRoute`, `SettingsViewModel`) | `feature/settings/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/settings/SettingsScreen.kt`, `feature/settings/src/main/kotlin/io/github/bahuauddimitri/bercail/feature/settings/SettingsViewModel.kt` | `feature/settings/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/settings/SettingsUiTest.kt`, `feature/settings/src/test/kotlin/io/github/bahuauddimitri/bercail/feature/settings/SettingsScreenshotTest.kt` |
-| Activité launcher (écran d'accueil d'Android, retour bloqué, fond d'écran visible) et branchement des sources de l'accueil | `app/src/main/kotlin/io/github/bahuauddimitri/bercail/MainActivity.kt`, `app/src/main/kotlin/io/github/bahuauddimitri/bercail/HomeSources.kt` | `app/src/test/kotlin/io/github/bahuauddimitri/bercail/LauncherUiTest.kt`, `app/src/androidTest/kotlin/io/github/bahuauddimitri/bercail/LauncherDeviceTest.kt` |
+| Activité launcher (écran d'accueil d'Android, retour bloqué, fond d'écran visible) ; la recherche dans le tiroir, les réglages par-dessus, le bouton Accueil qui ramène à l'accueil simple ; branchement des sources (réelles, vides en version publiée, du prototype en version de mise au point) | `app/src/main/kotlin/io/github/bahuauddimitri/bercail/MainActivity.kt`, `app/src/main/kotlin/io/github/bahuauddimitri/bercail/Sources.kt`, `app/src/release/kotlin/io/github/bahuauddimitri/bercail/Waiting.kt`, `app/src/debug/kotlin/io/github/bahuauddimitri/bercail/Waiting.kt` | `app/src/test/kotlin/io/github/bahuauddimitri/bercail/LauncherUiTest.kt`, `app/src/androidTest/kotlin/io/github/bahuauddimitri/bercail/LauncherDeviceTest.kt` |
 
 ## Design system
 
@@ -89,7 +89,7 @@ Dans `:core:domain`, en Kotlin pur. Chaque règle du doc de passation a son test
 
 ## Sources de données
 
-Chaque source est une interface du domaine, sous forme de flux : rien ne tourne tant que personne n'écoute. Les vraies sources arrivent avec leur vague ; d'ici là, l'app tourne sur les faux de `:core:testing`, remplis avec les données du prototype : `FakeWorld` et ses trois moments (matin, trajet, soir), dans `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeWorld.kt`.
+Chaque source est une interface du domaine, sous forme de flux : rien ne tourne tant que personne n'écoute. Les vraies sources arrivent avec leur vague ; d'ici là, la version publiée montre leur état vide (`Unconnected`) et la version de mise au point les faux de `:core:testing`, remplis avec les données du prototype : `FakeWorld` et ses trois moments (matin, trajet, soir), dans `core/testing/src/main/kotlin/io/github/bahuauddimitri/bercail/core/testing/FakeWorld.kt`.
 
 | Source | Interface | Faux | Vraie source |
 |---|---|---|---|

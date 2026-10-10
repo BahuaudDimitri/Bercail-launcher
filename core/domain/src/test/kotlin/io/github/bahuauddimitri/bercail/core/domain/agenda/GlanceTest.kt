@@ -78,6 +78,14 @@ class GlanceTest {
     }
 
     @Test
+    fun `sans rendez-vous à venir, la journée est libre avant 18 h, la soirée ensuite`() {
+        assertThat(glanceAt(at(9, 0), emptyList()).title).isEqualTo("Journée libre")
+        assertThat(glanceAt(at(15, 0), emptyList()).title).isEqualTo("Journée libre")
+        assertThat(glanceAt(at(18, 0), emptyList()).title).isEqualTo("Soirée libre")
+        assertThat(glanceAt(at(23, 0), emptyList()).title).isEqualTo("Soirée libre")
+    }
+
+    @Test
     fun `les rendez-vous sont lus dans l'ordre de leur heure, pas de leur arrivée`() {
         val glance = glanceAt(at(8, 10), events.reversed())
 

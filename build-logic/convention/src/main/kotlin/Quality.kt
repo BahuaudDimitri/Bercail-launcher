@@ -39,7 +39,8 @@ internal fun Project.configureQuality() {
             "src/main/kotlin",
             "src/test/kotlin",
             "src/androidTest/kotlin",
-            "src/debug/kotlin"
+            "src/debug/kotlin",
+            "src/release/kotlin"
         )
         config.setFrom(rootProject.file("config/detekt/detekt.yml"))
         if (path !in DESIGN_SYSTEM_OWNERS) {

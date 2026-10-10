@@ -84,6 +84,16 @@ class HomeScreenshotTest {
     }
 
     @Test
+    fun `sans source branchée, l'accueil vide correspond à sa capture`() {
+        val home = unconnectedHomeViewModel(hour = 9)
+        compose.setContent {
+            BcTheme { Box(Modifier.fillMaxSize().background(BcColors.nightBottom)) { HomeRoute(home) } }
+        }
+
+        capture("home_unconnected")
+    }
+
+    @Test
     fun `la ligne du temps horizontale correspond à sa capture`() {
         val world = FakeWorld(Moment.Trajet).apply {
             media.stop()

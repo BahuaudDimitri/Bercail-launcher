@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.domain.agenda
 
+import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.domain.time.asClockTime
 import java.time.Duration
 import java.time.LocalDate
@@ -21,13 +22,19 @@ data class Glance(val countdown: String, val title: String, val after: String?)
 /** What the top of the home screen says at [now]: the next appointment, how far it is, and the one after. */
 fun glanceAt(now: LocalDateTime, events: List<AgendaEvent>): Glance {
     val upcoming = events.sortedBy { it.start }.filter { it.start > now }
-    val next = upcoming.firstOrNull() ?: return Glance("Plus rien aujourd'hui", "Soirée libre", after = null)
+    val next = upcoming.firstOrNull() ?: return Glance("Plus rien aujourd'hui", freeTitle(now), after = null)
     val after = upcoming.getOrNull(1)?.let { "Ensuite ${it.title} à ${it.start.toLocalTime().asClockTime()}" }
     return Glance(
         countdown = "${countdown(now, next.start)} · ${next.start.toLocalTime().asClockTime()}",
         title = next.title,
         after = after ?: "Rien d'autre aujourd'hui"
     )
+}
+
+/** With nothing left: the day is free until 6 pm, the evening after. */
+private fun freeTitle(now: LocalDateTime): String = when (DayPart.at(now.toLocalTime())) {
+    DayPart.Morning, DayPart.Afternoon -> "Journée libre"
+    DayPart.Evening, DayPart.Night -> "Soirée libre"
 }
 
 /** "Dans 45 min" under an hour, "Dans 1 h 20" beyond. A minute already started still counts. */
