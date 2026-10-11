@@ -2,7 +2,7 @@
 
 Oct 3, 2026 · @Dimitri
 
-> Copie mise à jour le 10 octobre 2026 (vague 4 développée) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
+> Copie mise à jour le 11 octobre 2026 (vagues 4 et 5 développées) du doc de passation (Claude Docs). Le doc d'origine reste la référence ; cette copie est mise à jour à chaque vague.
 
 ## Résumé
 
@@ -455,6 +455,17 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 
 - Placée tôt, car dès la vague 4 tu utilises Bercail tous les jours : chaque vague suivante arrive alors toute seule sur le téléphone.
 - Lecture quotidienne de la dernière release, téléchargement, installation via PackageInstaller, test de bout en bout du parcours.
+
+**Développée le 11 octobre 2026**, pas encore close : release [v0.9.0](https://github.com/BahuaudDimitri/Bercail-launcher/releases/tag/v0.9.0) publiée par la CI, environ 540 tests au total (une centaine de plus). **Reste à faire pour la clore** : installer la v0.9.0 à la main, une dernière fois ; donner l'autorisation « installer des applis inconnues » quand Android la demande ; puis voir la version suivante arriver seule. Vérifié sur le Pixel le 11 octobre : le parcours complet sur le vrai Android 17 (lecture, téléchargement, vérification, remise à l'installeur d'Android, refus d'un paquet qui n'est pas Bercail), et Android exige bien un accord tant que l'autorisation n'est pas donnée. Écarts et leçons :
+
+- **Au rythme de l'accueil, sans tâche de fond.** La lecture a lieu quand l'accueil s'affiche (une fois par jour ; une heure après un échec), jamais à heure fixe : ni tâche programmée ni alarme, une règle d'architecture l'interdit. Le téléchargement s'interrompt si l'accueil est caché et reprend au retour.
+- **Installation quand l'accueil est caché.** Android redémarre Bercail en l'installant : autant que personne ne regarde l'accueil. Si Android veut un accord (la première fois), Bercail n'insiste pas et n'affiche rien de lui-même.
+- **Ligne « Mise à jour » dans les Réglages de Bercail** (ajout) : la version installée, où en est la suivante, et un toucher pour vérifier, télécharger ou installer. C'est par elle que passe la première installation, avec l'écran d'accord d'Android.
+- **Sécurité.** API publique de GitHub, sans compte ni jeton. Seul un paquet hébergé dans les releases du dépôt, en https, est accepté ; sa taille et son empreinte SHA-256 sont vérifiées ; Android vérifie ensuite la signature et refuse un paquet plus ancien ou qui n'est pas Bercail. Https seulement dans la version publiée (règle d'architecture).
+- **Une panne de la mise à jour ne fait jamais tomber l'accueil** : elle est notée dans le journal du téléphone, et Bercail laisse passer une heure avant de réessayer seul.
+- **La version de mise au point ne se met pas à jour** : elle n'a pas de numéro de version, et sa signature n'est pas celle des releases.
+- **Test de bout en bout** sur émulateur en CI et sur téléphone, avec un petit serveur local qui joue GitHub. Le paquet servi n'est pas Bercail (se remplacer en plein test arrêterait le test) : le parcours va jusqu'au refus d'Android. L'installation réussie se vérifie avec deux vraies releases, à la clôture.
+- **Nouveau module** `:data:update`, et première utilisation du réseau par Bercail.
 
 ### Vague 6 — Agenda et météo
 
