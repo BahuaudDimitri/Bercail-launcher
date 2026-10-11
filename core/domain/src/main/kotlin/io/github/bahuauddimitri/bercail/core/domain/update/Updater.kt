@@ -5,6 +5,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,9 @@ class Updater(
     private val journal: UpdateJournal,
     private val clock: Clock,
     /** Where the reading, the files and the network run: off the main thread on a phone. */
-    private val background: CoroutineContext = EmptyCoroutineContext
+    private val background: CoroutineContext = EmptyCoroutineContext,
+    /** Told about what broke in a way nobody planned for. The home screen itself never hears of it. */
+    private val onFailure: (Exception) -> Unit = {}
 ) : Updates {
     private val state = MutableStateFlow(if (current == null) UpdateStatus.Off else UpdateStatus.UpToDate())
     override val status: StateFlow<UpdateStatus> = state.asStateFlow()
@@ -34,35 +37,40 @@ class Updater(
     // Forgotten when Bercail restarts: one more quiet attempt then costs nothing.
     private var needsUser = false
     private var refused = false
-    private var downloadFailedAt: LocalDateTime? = null
+    private var failedAt: LocalDateTime? = null
 
     /** The home screen just appeared. */
     suspend fun onHomeShown() = oneAtATime {
         val notes = journal.read()
-        settle(if (isCheckDue(notes, clock.now())) check(notes) else notes, patient = true)
+        val due = isCheckDue(notes, clock.now()) && !failedRecently()
+        settle(if (due) check(notes) else notes, patient = true)
     }
 
     /** The home screen just went away: a ready version can take over, unless Android wants the user's word. */
     suspend fun onHomeHidden() = oneAtATime {
         val ready = state.value as? UpdateStatus.Ready
-        if (ready != null && !ready.needsUser) install(askUser = false)
+        if (ready != null && !ready.needsUser && !failedRecently()) install(askUser = false)
     }
 
     override suspend fun proceed() = oneAtATime {
-        if (state.value is UpdateStatus.Ready) {
-            install(
-                askUser = true
-            )
-        } else {
-            settle(check(journal.read()), patient = false)
-        }
+        val ready = state.value is UpdateStatus.Ready
+        if (ready) install(askUser = true) else settle(check(journal.read()), patient = false)
     }
 
-    /** A build without a version does nothing, and a request that arrives during another one is dropped. */
+    /**
+     * A build without a version does nothing, and a request that arrives during another one is dropped. A home
+     * screen must never go down because its update stumbled: what breaks unexpectedly is reported, and Bercail
+     * leaves the update alone for an hour unless the user asks.
+     */
     private suspend fun oneAtATime(work: suspend () -> Unit) {
         if (current == null || !busy.tryLock()) return
         try {
             withContext(background) { work() }
+        } catch (stopped: CancellationException) {
+            throw stopped
+        } catch (@Suppress("TooGenericExceptionCaught") failure: Exception) {
+            failedAt = clock.now()
+            onFailure(failure)
         } finally {
             busy.unlock()
         }
@@ -116,7 +124,7 @@ class Updater(
             // Also when the home screen goes away in the middle: the download starts again at the next return.
             state.value = UpdateStatus.Waiting(found.version)
         }
-        downloadFailedAt = if (fetched) null else clock.now()
+        failedAt = if (fetched) null else clock.now()
     }
 
     private suspend fun install(askUser: Boolean) {
@@ -154,7 +162,7 @@ class Updater(
     private fun isNewer(release: Release) = current != null && release.version > current
 
     private fun failedRecently(): Boolean {
-        val failedAt = downloadFailedAt ?: return false
+        val failedAt = failedAt ?: return false
         val now = clock.now()
         return now >= failedAt && Duration.between(failedAt, now) < AFTER_A_FAILURE
     }

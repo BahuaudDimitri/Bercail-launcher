@@ -27,9 +27,11 @@ class UpdaterTest {
     private val feed = FakeReleaseFeed(published = release("0.8.1"))
     private val packages = FakeUpdatePackages()
     private val journal = FakeUpdateJournal()
+    private val reported = mutableListOf<Exception>()
     private var updater = updaterAt("0.8.1")
 
-    private fun updaterAt(version: String) = Updater(Version.parse(version), feed, packages, journal, clock)
+    private fun updaterAt(version: String) =
+        Updater(Version.parse(version), feed, packages, journal, clock, onFailure = reported::add)
 
     private val status get() = updater.status.value
 
@@ -349,6 +351,58 @@ class UpdaterTest {
 
         assertThat(feed.reads).isEqualTo(1)
         assertThat(packages.downloads.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `une panne imprévue ne remonte pas jusqu'à l'accueil, elle est seulement signalée`() = runBlocking {
+        feed.breakdown = IllegalStateException("imprévu")
+
+        updater.onHomeShown()
+
+        assertThat(reported.map { it.message }).containsExactly("imprévu")
+        assertThat(status).isEqualTo(UpdateStatus.UpToDate())
+    }
+
+    @Test
+    fun `après une panne imprévue, Bercail attend une heure avant de réessayer seul`() = runBlocking {
+        feed.breakdown = IllegalStateException("imprévu")
+        updater.onHomeShown()
+        feed.breakdown = null
+
+        clock.advanceMinutes(59)
+        updater.onHomeShown()
+        assertThat(feed.reads).isEqualTo(1)
+
+        clock.advanceMinutes(1)
+        updater.onHomeShown()
+        assertThat(feed.reads).isEqualTo(2)
+    }
+
+    @Test
+    fun `après une panne imprévue, toucher la ligne réessaie tout de suite`() = runBlocking {
+        feed.breakdown = IllegalStateException("imprévu")
+        updater.onHomeShown()
+        feed.breakdown = null
+
+        updater.proceed()
+
+        assertThat(feed.reads).isEqualTo(2)
+    }
+
+    @Test
+    fun `une installation qui tombe en panne n'est pas retentée à chaque sortie de l'accueil`() = runBlocking {
+        publish("0.9.0")
+        updater.onHomeShown()
+        packages.breakdown = IllegalStateException("imprévu")
+
+        repeat(3) {
+            updater.onHomeHidden()
+            clock.advanceMinutes(5)
+            updater.onHomeShown()
+        }
+
+        assertThat(packages.installs.size).isEqualTo(1)
+        assertThat(reported.size).isEqualTo(1)
     }
 
     @Test

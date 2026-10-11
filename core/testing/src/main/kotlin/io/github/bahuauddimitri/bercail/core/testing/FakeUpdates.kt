@@ -25,8 +25,12 @@ class FakeReleaseFeed(var published: Release? = null) : ReleaseFeed {
     var reachable = true
     var reads = 0
 
+    /** When set, reading breaks in a way nobody planned for. */
+    var breakdown: Exception? = null
+
     override suspend fun latest(): Release? {
         reads++
+        breakdown?.let { throw it }
         return published.takeIf { reachable }
     }
 }
@@ -38,6 +42,9 @@ class FakeUpdatePackages : UpdatePackages {
 
     /** False until the user lets Bercail install packages, in the settings of the phone. */
     var allowedToInstall = true
+
+    /** When set, handing a package to Android breaks in a way nobody planned for. */
+    var breakdown: Exception? = null
 
     /** What Android answers to the next installation. */
     var answer = InstallAnswer.Installed
@@ -68,6 +75,7 @@ class FakeUpdatePackages : UpdatePackages {
 
     override suspend fun install(release: Release, askUser: Boolean): InstallAnswer {
         installs += "${release.version} " + if (askUser) "asking the user" else "without asking"
+        breakdown?.let { throw it }
         return answer
     }
 

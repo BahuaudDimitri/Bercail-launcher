@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
@@ -67,7 +68,7 @@ class Sources(context: Context, update: UpdateParts? = null) {
 
     /** Bercail updating itself as the home screen comes and goes. */
     val updater: Updater =
-        updateParts.let { Updater(it.version, it.feed, it.packages, it.journal, clock, it.background) }
+        updateParts.let { Updater(it.version, it.feed, it.packages, it.journal, clock, it.background, ::logged) }
 
     fun homeViewModel() =
         HomeViewModel(clock, waiting.agenda, waiting.weather, waiting.messages, waiting.home, waiting.media, settings)
@@ -82,7 +83,13 @@ class Sources(context: Context, update: UpdateParts? = null) {
         background.launch(updateParts.background) { updater.onHomeHidden() }
     }
 
+    /** What broke unexpectedly in the update only leaves a trace: the home screen goes on. */
+    private fun logged(failure: Exception) {
+        Log.w(LOG_TAG, "The update of Bercail stumbled", failure)
+    }
+
     private companion object {
         const val SETTINGS_FILE = "datastore/settings.preferences_pb"
+        const val LOG_TAG = "Bercail"
     }
 }

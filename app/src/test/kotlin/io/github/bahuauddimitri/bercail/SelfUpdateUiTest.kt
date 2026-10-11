@@ -90,6 +90,20 @@ class SelfUpdateUiTest {
     }
 
     @Test
+    fun `une panne de la mise à jour ne fait pas tomber l'accueil`() {
+        feed.breakdown = IllegalStateException("imprévu")
+        packages.breakdown = IllegalStateException("imprévu")
+
+        showHome().use { home ->
+            home.hideHome()
+            home.comeBackHome()
+
+            assertThat(home.state).isEqualTo(Lifecycle.State.RESUMED)
+            await { compose.onAllNodesWithContentDescription("Chercher").fetchSemanticsNodes().isNotEmpty() }
+        }
+    }
+
+    @Test
     fun `si Android veut un accord, les Réglages de Bercail proposent d'installer la version d'un toucher`() {
         packages.answer = InstallAnswer.NeedsUser
         showHome().use { home ->
