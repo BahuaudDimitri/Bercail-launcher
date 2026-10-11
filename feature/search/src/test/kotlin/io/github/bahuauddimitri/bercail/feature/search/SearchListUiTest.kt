@@ -21,6 +21,8 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isFalse
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
+import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import org.junit.Rule
@@ -159,6 +161,21 @@ class SearchListUiTest {
         compose.onNodeWithText("Déjeuner avec Léa").performClick()
 
         assertThat(opened).containsExactly("journée")
+    }
+
+    @Test
+    fun `quand une version attend un accord, la ligne des Réglages de Bercail l'annonce`() {
+        world.updates.status.value = UpdateStatus.Ready(Version(0, 9, 0), needsUser = true)
+        show()
+
+        compose.onNodeWithText("Version 0.9.0 prête à installer").assertIsDisplayed()
+    }
+
+    @Test
+    fun `quand aucune version n'attend, la ligne des Réglages de Bercail n'annonce rien`() {
+        show()
+
+        compose.onNodeWithText("Version 0.9.0 prête à installer").assertDoesNotExist()
     }
 
     @Test

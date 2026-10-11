@@ -112,6 +112,7 @@ class SelfUpdateUiTest {
             await { compose.onAllNodesWithContentDescription("Chercher").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithContentDescription("Chercher").performClick()
             await { compose.onAllNodesWithText("Réglages de Bercail").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Version 0.9.0 prête à installer").assertExists()
             compose.onNodeWithText("Réglages de Bercail").performClick()
             await { compose.onAllNodesWithText("Bercail 0.8.1").fetchSemanticsNodes().isNotEmpty() }
 

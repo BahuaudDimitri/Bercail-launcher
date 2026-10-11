@@ -129,6 +129,13 @@ fun isCheckDue(notes: UpdateNotes, now: LocalDateTime): Boolean {
 internal val BETWEEN_CHECKS: Duration = Duration.ofDays(1)
 internal val AFTER_A_FAILURE: Duration = Duration.ofHours(1)
 
+/**
+ * What the search says under « Réglages de Bercail »: only a version that waits for the user's agreement. One
+ * that installs by itself needs no announcement.
+ */
+fun updateNotice(status: UpdateStatus): String? =
+    (status as? UpdateStatus.Ready)?.takeIf { it.needsUser }?.let { "Version ${it.version} prête à installer" }
+
 /** The update row of the settings: the version running, what is going on, and whether a touch does something. */
 data class UpdateLine(val title: String, val detail: String, val touchable: Boolean)
 

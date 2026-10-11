@@ -14,6 +14,8 @@ import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
 import io.github.bahuauddimitri.bercail.core.domain.search.search
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
+import io.github.bahuauddimitri.bercail.core.domain.update.Updates
+import io.github.bahuauddimitri.bercail.core.domain.update.updateNotice
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +38,9 @@ data class SearchUiState(
     /** The favorite people, who keep their own pastel everywhere. */
     val favoritePeople: List<String> = emptyList(),
     /** Absent until something is typed. */
-    val results: SearchResults? = null
+    val results: SearchResults? = null,
+    /** What the row of Bercail's settings announces: a version waiting to be installed, or nothing. */
+    val settingsNote: String? = null
 )
 
 /** What the search does by itself. */
@@ -72,7 +76,8 @@ class SearchViewModel(
     agenda: AgendaSource,
     messages: MessagesSource,
     private val home: HomeSource,
-    settings: SettingsSource
+    settings: SettingsSource,
+    updates: Updates
 ) : ViewModel(),
     SearchActions {
     private val open = MutableStateFlow(false)
@@ -97,15 +102,17 @@ class SearchViewModel(
         .map { }
         .onStart { emit(Unit) }
 
-    val state: StateFlow<SearchUiState> = combine(open, query, known, listening) { isOpen, typed, known, _ ->
-        SearchUiState(
-            open = isOpen,
-            query = typed,
-            directory = appDirectory(known.scope.apps, known.favoriteApps),
-            favoritePeople = known.favoritePeople,
-            results = if (typed.isBlank()) null else search(typed, known.scope)
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SearchUiState())
+    val state: StateFlow<SearchUiState> =
+        combine(open, query, known, updates.status, listening) { isOpen, typed, known, update, _ ->
+            SearchUiState(
+                open = isOpen,
+                query = typed,
+                directory = appDirectory(known.scope.apps, known.favoriteApps),
+                favoritePeople = known.favoritePeople,
+                results = if (typed.isBlank()) null else search(typed, known.scope),
+                settingsNote = updateNotice(update)
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SearchUiState())
 
     /** The icons of the apps, drawn once and kept for the rows that show them. */
     val icons = AppIcons(apps)

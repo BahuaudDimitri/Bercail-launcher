@@ -69,7 +69,7 @@ fun SearchList(
             backDescription = "Fermer la recherche"
         )
         if (results == null) {
-            Directory(state.directory, icons, actions, links, Modifier.weight(1f))
+            Directory(state.directory, state.settingsNote, icons, actions, links, Modifier.weight(1f))
         } else {
             Results(state, results, icons, actions, links, Modifier.weight(1f))
         }
@@ -80,6 +80,7 @@ fun SearchList(
 @Composable
 private fun Directory(
     directory: AppDirectory,
+    settingsNote: String?,
     icons: AppIcons,
     actions: SearchActions,
     links: SearchLinks,
@@ -94,7 +95,7 @@ private fun Directory(
     }
     Box(modifier) {
         LazyColumn(Modifier.fillMaxSize().padding(end = RAIL_ROOM), state = list) {
-            item(key = "settings") { SettingsRow(links::onOpenSettings) }
+            item(key = "settings") { SettingsRow(settingsNote, links::onOpenSettings) }
             if (directory.favorites.isNotEmpty()) {
                 item(key = "favorites") { BcSectionLabel("Apps favorites") }
                 items(directory.favorites, key = { "favorite ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
@@ -133,14 +134,14 @@ private fun Results(
         if (results.isEmpty) {
             nothingFound(state.query.trim(), actions)
         } else {
-            found(results, state.favoritePeople, icons, actions, links)
+            found(results, state, icons, actions, links)
         }
     }
 }
 
 private fun LazyListScope.found(
     results: SearchResults,
-    favoritePeople: List<String>,
+    state: SearchUiState,
     icons: AppIcons,
     actions: SearchActions,
     links: SearchLinks
@@ -151,7 +152,7 @@ private fun LazyListScope.found(
             title = person.name,
             onClick = { links.onOpenConversation(person.id) },
             subtitle = person.network,
-            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, favoritePeople))
+            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople))
         )
     }
     family("Maison", results.controls, key = { "control ${it.id}" }) { control ->
@@ -171,7 +172,7 @@ private fun LazyListScope.found(
     }
     if (results.settings) {
         item(key = "settings title") { BcSectionLabel("Réglages") }
-        item(key = "settings") { SettingsRow(links::onOpenSettings) }
+        item(key = "settings") { SettingsRow(state.settingsNote, links::onOpenSettings) }
     }
 }
 
@@ -203,8 +204,8 @@ private fun LazyListScope.nothingFound(typed: String, actions: SearchActions) {
 }
 
 @Composable
-private fun SettingsRow(onOpen: () -> Unit) {
-    BcListRow("Réglages de Bercail", onClick = onOpen, leading = BcLeading.Icon(BcIcons.Settings))
+private fun SettingsRow(note: String?, onOpen: () -> Unit) {
+    BcListRow("Réglages de Bercail", onClick = onOpen, subtitle = note, leading = BcLeading.Icon(BcIcons.Settings))
 }
 
 /** An app with its icon; until the icon is drawn, or without one, its initial on the neutral tile. */

@@ -3,6 +3,7 @@ package io.github.bahuauddimitri.bercail.core.domain.update
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import org.junit.Test
 
@@ -74,5 +75,20 @@ class UpdateLineTest {
         assertThat(line.title).isEqualTo("Bercail, version de mise au point")
         assertThat(line.detail).isEqualTo("Elle ne se met pas à jour toute seule")
         assertThat(line.touchable).isFalse()
+    }
+
+    @Test
+    fun `une version qui attend un accord s'annonce sur la ligne des Réglages de Bercail, dans la recherche`() {
+        assertThat(
+            updateNotice(UpdateStatus.Ready(next, needsUser = true))
+        ).isEqualTo("Version 0.9.0 prête à installer")
+    }
+
+    @Test
+    fun `quand la version peut s'installer seule ou que rien n'attend, la recherche n'annonce rien`() {
+        assertThat(updateNotice(UpdateStatus.Ready(next))).isNull()
+        assertThat(updateNotice(UpdateStatus.UpToDate())).isNull()
+        assertThat(updateNotice(UpdateStatus.Downloading(next))).isNull()
+        assertThat(updateNotice(UpdateStatus.Off)).isNull()
     }
 }

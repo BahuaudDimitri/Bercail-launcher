@@ -74,7 +74,7 @@ class Sources(context: Context, update: UpdateParts? = null) {
         HomeViewModel(clock, waiting.agenda, waiting.weather, waiting.messages, waiting.home, waiting.media, settings)
 
     fun searchViewModel() =
-        SearchViewModel(apps, phone, clock, waiting.agenda, waiting.messages, waiting.home, settings)
+        SearchViewModel(apps, phone, clock, waiting.agenda, waiting.messages, waiting.home, settings, updater)
 
     fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater)
 
