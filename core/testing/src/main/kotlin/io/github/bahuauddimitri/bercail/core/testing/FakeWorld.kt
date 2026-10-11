@@ -38,6 +38,7 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val settings = FakeSettingsSource(Samples.settings)
     val apps = FakeAppsSource(Samples.apps)
     val phone = FakePhone()
+    val updates = FakeUpdates()
 }
 
 /** The prototype's sample data. */

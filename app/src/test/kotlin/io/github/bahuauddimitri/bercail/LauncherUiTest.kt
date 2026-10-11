@@ -133,6 +133,14 @@ class LauncherUiTest {
     }
 
     @Test
+    fun `la version de mise au point annonce qu'elle ne se met pas à jour toute seule`() {
+        openSettings()
+
+        compose.onNodeWithText("Bercail, version de mise au point").performScrollTo().assertExists()
+        compose.onNodeWithText("Elle ne se met pas à jour toute seule").assertExists()
+    }
+
+    @Test
     fun `le bouton Accueil referme les réglages et la recherche`() {
         openSettings()
 

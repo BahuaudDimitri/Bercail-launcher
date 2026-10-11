@@ -15,6 +15,8 @@ import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
+import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import org.junit.Rule
 import org.junit.Test
@@ -30,9 +32,10 @@ class SettingsScreenshotTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun show() {
+    private fun show(update: UpdateStatus = UpdateStatus.UpToDate()) {
         val world = FakeWorld()
-        val settings = SettingsViewModel(world.settings, world.apps, world.phone)
+        world.updates.status.value = update
+        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.base)) { SettingsRoute(settings, onBack = {}) } }
         }
@@ -49,6 +52,13 @@ class SettingsScreenshotTest {
         show()
 
         capture("settings")
+    }
+
+    @Test
+    fun `les réglages avec une version prête à installer correspondent à leur capture`() {
+        show(UpdateStatus.Ready(Version(0, 9, 0)))
+
+        capture("settings_update_ready")
     }
 
     @Test

@@ -17,6 +17,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
+import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import org.junit.Rule
 import org.junit.Test
@@ -34,7 +36,7 @@ class SettingsUiTest {
     private var closed = 0
 
     private fun show() {
-        val settings = SettingsViewModel(world.settings, world.apps, world.phone)
+        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
         compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }) } }
     }
 
@@ -130,8 +132,53 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la liste des apps n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone)
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
 
         assertThat(world.apps.apps.subscriptionCount.value).isEqualTo(0)
+    }
+
+    @Test
+    fun `la ligne de mise à jour donne la version installée et propose de vérifier`() {
+        show()
+
+        compose.onNodeWithText("Bercail 0.8.1").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("À jour · toucher pour vérifier").assertExists()
+    }
+
+    @Test
+    fun `toucher la ligne de mise à jour lance la vérification`() {
+        show()
+
+        compose.onNodeWithText("Bercail 0.8.1").performScrollTo().performClick()
+
+        assertThat(world.updates.proceeded).isEqualTo(1)
+    }
+
+    @Test
+    fun `la ligne suit la mise à jour, jusqu'à la version prête à installer`() {
+        show()
+
+        world.updates.status.value = UpdateStatus.Downloading(Version(0, 9, 0))
+        compose.onNodeWithText("Téléchargement de la version 0.9.0…").assertExists()
+
+        world.updates.status.value = UpdateStatus.Ready(Version(0, 9, 0), needsUser = true)
+        compose.onNodeWithText("Version 0.9.0 prête · toucher pour l'installer").assertExists()
+    }
+
+    @Test
+    fun `pendant un téléchargement, toucher la ligne ne relance rien`() {
+        world.updates.status.value = UpdateStatus.Downloading(Version(0, 9, 0))
+        show()
+
+        compose.onNodeWithText("Bercail 0.8.1").performScrollTo().performClick()
+
+        assertThat(world.updates.proceeded).isEqualTo(0)
+    }
+
+    @Test
+    fun `tant que les réglages ne sont pas affichés, la mise à jour n'est pas écoutée`() {
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
+
+        assertThat(world.updates.status.subscriptionCount.value).isEqualTo(0)
     }
 }

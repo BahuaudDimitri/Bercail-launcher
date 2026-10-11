@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":data:apps"))
     implementation(project(":data:settings"))
+    implementation(project(":data:update"))
     // The debug app shows the prototype's data for the sources whose wave has not come yet; the release shows
     // their empty states and ships no fake.
     debugImplementation(project(":core:testing"))
@@ -54,6 +55,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)

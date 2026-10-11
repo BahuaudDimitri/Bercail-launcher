@@ -16,4 +16,6 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.assertk)
+    // The fakes of the sources, shared with the screens' tests.
+    testImplementation(project(":core:testing"))
 }

@@ -17,7 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
@@ -30,6 +33,7 @@ import io.github.bahuauddimitri.bercail.feature.search.SearchList
 import io.github.bahuauddimitri.bercail.feature.search.SearchViewModel
 import io.github.bahuauddimitri.bercail.feature.settings.SettingsRoute
 import io.github.bahuauddimitri.bercail.feature.settings.SettingsViewModel
+import kotlinx.coroutines.launch
 
 /** The home screen of the phone: the home with its search in the drawer, and the settings over it. */
 class MainActivity : ComponentActivity() {
@@ -47,6 +51,14 @@ class MainActivity : ComponentActivity() {
         // The home screen is the bottom of the stack: back has nowhere to go.
         onBackPressedDispatcher.addCallback(this) {}
         setContent { BcTheme { Screen() } }
+        // Each time the home screen shows, Bercail may look for its own update; it stops as soon as it is hidden.
+        lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.STARTED) { sources.updater.onHomeShown() } }
+    }
+
+    /** Nobody looks at the home screen anymore: a new version of Bercail may replace this one. */
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) sources.onHomeHidden()
     }
 
     /** The Home button always comes back to the plain home screen: no settings, no search, the Accueil page. */

@@ -30,8 +30,8 @@ fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit, modifier: Mo
 }
 
 /**
- * Bercail's settings: only what already works. The favorite people, the home controls and the media app will
- * join them with their waves.
+ * Bercail's settings: only what already works, and the update of Bercail itself. The favorite people, the home
+ * controls and the media app will join them with their waves.
  */
 @Composable
 fun SettingsScreen(
@@ -71,6 +71,12 @@ fun SettingsScreen(
         }
         BcSectionLabel("Recherche")
         BcSettingRow("Apps favorites", subtitle = state.favoriteAppNames, onClick = onPickApps)
+        BcSectionLabel("Mise à jour")
+        BcSettingRow(
+            title = state.update.title,
+            subtitle = state.update.detail,
+            onClick = if (state.update.touchable) actions::onUpdateTouched else null
+        )
         BcSectionLabel("Android")
         BcSettingRow(
             title = "Écran d'accueil par défaut",

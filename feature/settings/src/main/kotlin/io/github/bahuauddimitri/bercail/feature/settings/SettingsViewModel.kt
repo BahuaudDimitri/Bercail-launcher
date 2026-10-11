@@ -10,17 +10,23 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
+import io.github.bahuauddimitri.bercail.core.domain.update.Updates
+import io.github.bahuauddimitri.bercail.core.domain.update.updateLine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** What the settings screen shows: the settings as stored, and the apps to choose favorites from. */
+/** What the settings screen shows: the settings as stored, the apps to choose favorites from, the update. */
 data class SettingsUiState(
     val settings: Settings = Settings(),
     /** Every app, from A to Z. */
-    val apps: List<App> = emptyList()
+    val apps: List<App> = emptyList(),
+    /** The version running and where its update stands. */
+    val update: UpdateLine = updateLine(null, UpdateStatus.Off)
 ) {
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
@@ -36,17 +42,29 @@ interface SettingsActions {
     fun onTimeline(orientation: TimelineOrientation)
     fun onDrawerExpandedAtStart(expanded: Boolean)
     fun onToggleFavoriteApp(appId: String)
+
+    /** Looks for a newer version, fetches it or installs it: whatever the update row offers. */
+    fun onUpdateTouched()
     fun onOpenHomeScreenSettings()
     fun onOpenPhoneSettings()
 }
 
 /** Bercail's settings. Sources are only listened to while the screen is shown. */
-class SettingsViewModel(private val settings: SettingsSource, apps: AppsSource, private val phone: Phone) :
-    ViewModel(),
+class SettingsViewModel(
+    private val settings: SettingsSource,
+    apps: AppsSource,
+    private val phone: Phone,
+    private val updates: Updates
+) : ViewModel(),
     SettingsActions {
-    val state: StateFlow<SettingsUiState> = combine(settings.settings, apps.apps) { current, installed ->
-        SettingsUiState(current, appDirectory(installed, emptyList()).sections.flatMap { it.apps })
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
+    val state: StateFlow<SettingsUiState> =
+        combine(settings.settings, apps.apps, updates.status) { current, installed, update ->
+            SettingsUiState(
+                settings = current,
+                apps = appDirectory(installed, emptyList()).sections.flatMap { it.apps },
+                update = updateLine(updates.current, update)
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 
     override fun onIdleBackground(background: IdleBackground) = change { it.copy(idleBackground = background) }
 
@@ -55,6 +73,10 @@ class SettingsViewModel(private val settings: SettingsSource, apps: AppsSource, 
     override fun onDrawerExpandedAtStart(expanded: Boolean) = change { it.copy(drawerExpandedAtStart = expanded) }
 
     override fun onToggleFavoriteApp(appId: String) = change { it.withFavoriteAppToggled(appId) }
+
+    override fun onUpdateTouched() {
+        viewModelScope.launch { updates.proceed() }
+    }
 
     override fun onOpenHomeScreenSettings() = phone.openHomeScreenSettings()
 
