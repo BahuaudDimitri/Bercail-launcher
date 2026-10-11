@@ -6,6 +6,7 @@ import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import io.github.bahuauddimitri.bercail.core.domain.weather.ForecastNotes
 import io.github.bahuauddimitri.bercail.core.domain.weather.HourForecast
+import io.github.bahuauddimitri.bercail.core.domain.weather.Place
 import io.github.bahuauddimitri.bercail.core.domain.weather.Sky
 import java.io.File
 import java.time.LocalDateTime
@@ -108,5 +109,22 @@ class StoredForecastTest {
         assertThat(StoredForecast.forecastIn(text)).isNull()
         assertThat(StoredForecast.forecastIn("n'importe quoi")).isNull()
         assertThat(StoredForecast.forecastIn("")).isNull()
+    }
+
+    @Test
+    fun `la ville pour laquelle la prévision a été reçue est notée avec elle`() {
+        val nantes = Place(47.21725, -1.55336)
+        withNotes { it.write(ForecastNotes(forecast, fetchedAt = morning, city = nantes)) }
+
+        assertThat(withNotes { it.read() }.city).isEqualTo(nantes)
+    }
+
+    @Test
+    fun `une prévision reçue pour la position du téléphone n'a pas de ville`() {
+        withNotes { it.write(ForecastNotes(forecast, fetchedAt = morning, city = Place(47.2, -1.5))) }
+
+        withNotes { it.write(ForecastNotes(forecast, fetchedAt = morning.plusHours(1))) }
+
+        assertThat(withNotes { it.read() }.city).isNull()
     }
 }

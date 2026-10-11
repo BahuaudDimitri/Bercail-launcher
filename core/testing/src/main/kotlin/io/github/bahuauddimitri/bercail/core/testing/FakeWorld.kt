@@ -9,6 +9,7 @@ import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
+import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import java.time.LocalDate
 import java.time.LocalTime
@@ -39,6 +40,7 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val apps = FakeAppsSource(Samples.apps)
     val phone = FakePhone()
     val updates = FakeUpdates()
+    val cities = FakeCitySearch(Samples.cities)
 }
 
 /** The prototype's sample data. */
@@ -47,6 +49,13 @@ object Samples {
     val day: LocalDate = LocalDate.of(2026, 10, 2)
 
     val position = 72.seconds
+
+    /** Two cities of the same name, as a search by name finds them. */
+    val cities = listOf(
+        City("Nantes", "Pays de la Loire, France", 47.21725, -1.55336),
+        City("Nantes", "São Paulo, Brésil", -22.62056, -51.23694),
+        City("Lyon", "Auvergne-Rhône-Alpes, France", 45.74846, 4.84671)
+    )
 
     val people = listOf(
         Conversation("lea", "Léa", "WhatsApp"),

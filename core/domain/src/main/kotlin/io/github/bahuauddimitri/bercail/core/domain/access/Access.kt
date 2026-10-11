@@ -21,10 +21,18 @@ fun agendaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
 
 private const val AGENDA = "Agenda du téléphone"
 
-fun weatherSourceLine(allowed: Boolean): SourceLine = if (allowed) {
-    SourceLine(WEATHER, "Ta position approximative · Open-Meteo, une fois par heure au plus", false)
-} else {
-    SourceLine(WEATHER, "Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo", true)
+/**
+ * The weather in the settings: the forecasts are those of [city] when one was chosen, of the place where the
+ * phone is otherwise. The line always leads to the choice of the place.
+ */
+fun weatherSourceLine(allowed: Boolean, city: String? = null): SourceLine {
+    val place = city ?: "Ta position approximative".takeIf { allowed }
+    val detail = place?.let { "$it · Open-Meteo, une fois par heure au plus" }
+    return SourceLine(
+        WEATHER,
+        detail ?: "Toucher pour choisir : ta position approximative ou une ville",
+        touchable = true
+    )
 }
 
 private const val WEATHER = "Lieu des prévisions"

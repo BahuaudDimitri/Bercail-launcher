@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -35,7 +37,8 @@ class SettingsScreenshotTest {
     private fun show(update: UpdateStatus = UpdateStatus.UpToDate()) {
         val world = FakeWorld()
         world.updates.status.value = update
-        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
+        val settings =
+            SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.base)) { SettingsRoute(settings, onBack = {}) } }
         }
@@ -69,6 +72,16 @@ class SettingsScreenshotTest {
         compose.onNodeWithText("Apps favorites").performScrollTo().performClick()
 
         capture("settings_favorite_apps")
+    }
+
+    @Test
+    fun `le choix du lieu des prévisions, une ville cherchée, correspond à sa capture`() {
+        show()
+        compose.onNodeWithText("Lieu des prévisions").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Nom de la ville").performTextInput("Nantes")
+        compose.onNodeWithText("Chercher cette ville").performClick()
+
+        capture("settings_weather_place")
     }
 
     private companion object {

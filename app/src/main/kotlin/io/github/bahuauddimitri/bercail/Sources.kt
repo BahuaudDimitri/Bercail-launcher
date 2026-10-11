@@ -20,6 +20,7 @@ import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
 import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
+import io.github.bahuauddimitri.bercail.data.weather.OpenMeteoCities
 import io.github.bahuauddimitri.bercail.data.weather.PhonePosition
 import io.github.bahuauddimitri.bercail.data.weather.StoredForecast
 import io.github.bahuauddimitri.bercail.data.weather.forecastStore
@@ -78,6 +79,7 @@ class Sources(
     val weather: WeatherSource = weather ?: WeatherWatch(
         clock = this.clock,
         access = access,
+        settings = settings,
         position = PhonePosition(context),
         service = OpenMeteo(),
         journal = StoredForecast(forecastStore(File(context.filesDir, WEATHER_FILE), background)),
@@ -106,7 +108,7 @@ class Sources(
     fun searchViewModel() =
         SearchViewModel(apps, phone, clock, agenda, waiting.messages, waiting.home, settings, updater)
 
-    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access)
+    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access, OpenMeteoCities())
 
     /** The home screen just went away: a version that is ready may take over. */
     fun onHomeHidden() {

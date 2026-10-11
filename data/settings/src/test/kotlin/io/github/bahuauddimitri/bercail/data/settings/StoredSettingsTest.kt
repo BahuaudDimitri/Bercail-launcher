@@ -5,10 +5,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
+import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +81,17 @@ class StoredSettingsTest {
         assertThat(afterRestart.timeline).isEqualTo(TimelineOrientation.Horizontal)
         assertThat(afterRestart.drawerExpandedAtStart).isTrue()
         assertThat(afterRestart.idleBackground).isEqualTo(IdleBackground.Brume)
+    }
+
+    @Test
+    fun `la ville choisie pour la météo est gardée, puis oubliée quand on revient à la position du téléphone`() {
+        val nantes = City("Nantes", "Pays de la Loire, France", 47.21725, -1.55336)
+        withSettings { it.update { current -> current.copy(weatherCity = nantes) } }
+        assertThat(withSettings { it.settings.first() }.weatherCity).isEqualTo(nantes)
+
+        withSettings { it.update { current -> current.copy(weatherCity = null) } }
+
+        assertThat(withSettings { it.settings.first() }.weatherCity).isNull()
     }
 
     @Test

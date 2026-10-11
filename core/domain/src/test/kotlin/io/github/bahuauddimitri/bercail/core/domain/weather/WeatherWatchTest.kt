@@ -15,6 +15,7 @@ import io.github.bahuauddimitri.bercail.core.testing.FakeClock
 import io.github.bahuauddimitri.bercail.core.testing.FakeForecastJournal
 import io.github.bahuauddimitri.bercail.core.testing.FakeForecastService
 import io.github.bahuauddimitri.bercail.core.testing.FakePlaceSource
+import io.github.bahuauddimitri.bercail.core.testing.FakeSettingsSource
 import io.github.bahuauddimitri.bercail.core.testing.forecastOn
 import io.github.bahuauddimitri.bercail.core.testing.hourly
 import java.time.LocalDate
@@ -45,7 +46,11 @@ class WeatherWatchTest {
     private val service = FakeForecastService(sunny)
     private val journal = FakeForecastJournal()
     private val failures = mutableListOf<Exception>()
-    private val watch = WeatherWatch(clock, access, position, service, journal, onFailure = { failures += it })
+    private val settings = FakeSettingsSource()
+    private val nantes = City("Nantes", "Pays de la Loire, France", 47.21725, -1.55336)
+    private val lyon = City("Lyon", "Auvergne-Rhône-Alpes, France", 45.74846, 4.84671)
+    private val watch =
+        WeatherWatch(clock, access, settings, position, service, journal, onFailure = { failures += it })
 
     /** What the home screen was told so far, in order. */
     private val seen = mutableListOf<Forecast?>()
@@ -252,5 +257,63 @@ class WeatherWatchTest {
         assertThat(notes.usableAt(morning.plusHours(6))).isNull()
         assertThat(notes.usableAt(morning.minusMinutes(1))).isNull()
         assertThat(ForecastNotes().usableAt(morning)).isNull()
+    }
+
+    // ---------- a city instead of the position ----------
+
+    @Test
+    fun `avec une ville choisie, la prévision est celle de la ville, et la position n'est pas lue`() =
+        runTest(dispatcher) {
+            settings.change { it.copy(weatherCity = nantes) }
+
+            showHome()
+
+            assertThat(service.asked).containsExactly(nantes.place)
+            assertThat(position.reads).isEqualTo(0)
+            assertThat(journal.notes.city).isEqualTo(nantes.place)
+        }
+
+    @Test
+    fun `une ville choisie se passe de l'autorisation de position`() = runTest(dispatcher) {
+        access.refuse(Access.Location)
+        settings.change { it.copy(weatherCity = nantes) }
+
+        showHome()
+
+        assertThat(seen.last()).isEqualTo(sunny)
+    }
+
+    @Test
+    fun `changer de ville redemande la prévision tout de suite, sans montrer celle de l'ancienne`() =
+        runTest(dispatcher) {
+            settings.change { it.copy(weatherCity = nantes) }
+            showHome()
+            service.forecast = rainy
+
+            settings.change { it.copy(weatherCity = lyon) }
+
+            assertThat(service.asked).containsExactly(nantes.place, lyon.place)
+            assertThat(seen).containsExactly(null, sunny, null, rainy)
+        }
+
+    @Test
+    fun `revenir à la position du téléphone redemande la prévision, là où est le téléphone`() = runTest(dispatcher) {
+        settings.change { it.copy(weatherCity = lyon) }
+        showHome()
+
+        settings.change { it.copy(weatherCity = null) }
+
+        assertThat(service.asked).containsExactly(lyon.place, Place(47.22, -1.55))
+        assertThat(journal.notes.city).isNull()
+    }
+
+    @Test
+    fun `la prévision d'une ville gardée sur le téléphone n'est montrée que pour cette ville`() = runTest(dispatcher) {
+        journal.notes = ForecastNotes(rainy, fetchedAt = morning.minusMinutes(10), city = lyon.place)
+        settings.change { it.copy(weatherCity = nantes) }
+
+        showHome()
+
+        assertThat(seen).containsExactly(null, sunny)
     }
 }

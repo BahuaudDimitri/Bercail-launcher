@@ -27,13 +27,11 @@ class AccessTest {
     }
 
     @Test
-    fun `sans autorisation, la ligne Météo dit ce qui sera envoyé, et à qui`() {
+    fun `sans position autorisée ni ville choisie, la ligne Météo invite à choisir un lieu`() {
         val line = weatherSourceLine(allowed = false)
 
         assertThat(line.title).isEqualTo("Lieu des prévisions")
-        assertThat(line.detail)
-            .isEqualTo("Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo")
-        assertThat(line.touchable).isTrue()
+        assertThat(line.detail).isEqualTo("Toucher pour choisir : ta position approximative ou une ville")
     }
 
     @Test
@@ -42,6 +40,22 @@ class AccessTest {
 
         assertThat(line.detail)
             .isEqualTo("Ta position approximative · Open-Meteo, une fois par heure au plus")
-        assertThat(line.touchable).isFalse()
+        assertThat(line.touchable).isTrue()
+    }
+
+    @Test
+    fun `avec une ville choisie, la ligne Météo la nomme, que la position soit autorisée ou non`() {
+        assertThat(weatherSourceLine(allowed = false, city = "Nantes").detail)
+            .isEqualTo("Nantes · Open-Meteo, une fois par heure au plus")
+        assertThat(weatherSourceLine(allowed = true, city = "Nantes").detail)
+            .isEqualTo("Nantes · Open-Meteo, une fois par heure au plus")
+    }
+
+    @Test
+    fun `la ligne Météo se touche toujours, pour changer de lieu`() {
+        assertThat(weatherSourceLine(allowed = true).touchable).isTrue()
+        assertThat(weatherSourceLine(allowed = false).touchable).isTrue()
+        assertThat(weatherSourceLine(allowed = false).detail)
+            .isEqualTo("Toucher pour choisir : ta position approximative ou une ville")
     }
 }

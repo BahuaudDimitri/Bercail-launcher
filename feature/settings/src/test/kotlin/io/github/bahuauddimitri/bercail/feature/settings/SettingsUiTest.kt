@@ -8,11 +8,13 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -22,6 +24,7 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
+import io.github.bahuauddimitri.bercail.core.testing.Samples
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,7 +42,8 @@ class SettingsUiTest {
     private val asked = mutableListOf<Access>()
 
     private fun show() {
-        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
+        val settings =
+            SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
         compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }, onAskAccess = { asked += it }) } }
     }
 
@@ -105,25 +109,116 @@ class SettingsUiTest {
         compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
     }
 
+    // ---------- the place of the weather ----------
+
+    private fun openPlace() {
+        show()
+        compose.onNodeWithText("Lieu des prévisions").performScrollTo().performClick()
+        compose.onNodeWithText("Ma position approximative").assertIsDisplayed()
+    }
+
+    private fun searchCity(name: String) {
+        compose.onNodeWithContentDescription("Nom de la ville").performTextInput(name)
+        compose.onNodeWithText("Chercher cette ville").performClick()
+    }
+
     @Test
-    fun `sans autorisation, la ligne Météo demande à Android la position approximative, d'un toucher`() {
+    fun `sans position autorisée ni ville, la ligne du lieu invite à choisir`() {
         world.access.refuse(Access.Location)
         show()
-        compose.onNodeWithText("Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo")
-            .assertExists()
 
-        compose.onNodeWithText("Lieu des prévisions").performScrollTo().performClick()
+        compose.onNodeWithText("Toucher pour choisir : ta position approximative ou une ville").assertExists()
+    }
+
+    @Test
+    fun `la ligne du lieu ouvre le choix du lieu, sa flèche ramène aux réglages`() {
+        openPlace()
+
+        compose.onNodeWithContentDescription("Retour aux réglages").performClick()
+
+        compose.onNodeWithText("Réglages de Bercail").assertIsDisplayed()
+        assertThat(closed).isEqualTo(0)
+    }
+
+    @Test
+    fun `position autorisée et sans ville, la position est dite utilisée et ne se touche pas`() {
+        openPlace()
+
+        compose.onNodeWithText("Utilisée · envoyée arrondie à Open-Meteo, jamais la position précise").assertExists()
+        compose.onNodeWithText("Ma position approximative").assertHasNoClickAction()
+    }
+
+    @Test
+    fun `sans autorisation, toucher « Ma position approximative » la demande à Android`() {
+        world.access.refuse(Access.Location)
+        openPlace()
+
+        compose.onNodeWithText("Ma position approximative").performClick()
 
         assertThat(asked).containsExactly(Access.Location)
     }
 
     @Test
-    fun `une fois la position autorisée, la ligne Météo dit d'où viennent les prévisions et ne se touche plus`() {
+    fun `chercher une ville la propose avec sa région, la toucher la choisit`() {
+        openPlace()
+
+        searchCity("Nantes")
+        compose.onNodeWithText("São Paulo, Brésil").assertExists()
+        compose.onNodeWithText("Pays de la Loire, France").performClick()
+
+        assertThat(stored.weatherCity).isEqualTo(Samples.cities.first())
+        compose.onNodeWithText("Pays de la Loire, France · utilisée").assertExists()
+        compose.onNodeWithText("São Paulo, Brésil").assertDoesNotExist()
+    }
+
+    @Test
+    fun `rien ne part sur le réseau tant que la recherche n'est pas demandée`() {
+        openPlace()
+
+        compose.onNodeWithContentDescription("Nom de la ville").performTextInput("Nan")
+
+        assertThat(world.cities.asked).isEqualTo(emptyList())
+        compose.onNodeWithText("Chercher cette ville").performClick()
+        assertThat(world.cities.asked).containsExactly("Nan")
+    }
+
+    @Test
+    fun `un nom que personne ne porte le dit`() {
+        openPlace()
+
+        searchCity("Zzyzx")
+
+        compose.onNodeWithText("Aucune ville de ce nom").assertExists()
+    }
+
+    @Test
+    fun `sans réseau, la recherche le dit au lieu de tourner sans fin`() {
+        world.cities.reachable = false
+        openPlace()
+
+        searchCity("Nantes")
+
+        compose.onNodeWithText("Recherche impossible pour l'instant : vérifie le réseau").assertExists()
+    }
+
+    @Test
+    fun `une fois la ville choisie, les réglages la nomment sur la ligne du lieu`() {
+        world.settings.change { it.copy(weatherCity = Samples.cities.first()) }
         show()
 
-        compose.onNodeWithText("Ta position approximative · Open-Meteo, une fois par heure au plus")
-            .performScrollTo()
-            .assertHasNoClickAction()
+        compose.onNodeWithText("Nantes · Open-Meteo, une fois par heure au plus").assertExists()
+    }
+
+    @Test
+    fun `revenir à ma position oublie la ville`() {
+        world.settings.change { it.copy(weatherCity = Samples.cities.first()) }
+        openPlace()
+        compose.onNodeWithText("Toucher pour l'utiliser à la place de Nantes").assertExists()
+
+        compose.onNodeWithText("Ma position approximative").performClick()
+
+        assertThat(stored.weatherCity).isNull()
+        assertThat(asked).isEqualTo(emptyList())
     }
 
     @Test
@@ -185,7 +280,7 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la liste des apps n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
 
         assertThat(world.apps.apps.subscriptionCount.value).isEqualTo(0)
     }
@@ -230,7 +325,7 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la mise à jour n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
 
         assertThat(world.updates.status.subscriptionCount.value).isEqualTo(0)
     }

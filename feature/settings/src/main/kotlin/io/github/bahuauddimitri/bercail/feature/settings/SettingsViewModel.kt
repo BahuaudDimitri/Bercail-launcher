@@ -19,6 +19,7 @@ import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Updates
 import io.github.bahuauddimitri.bercail.core.domain.update.updateLine
+import io.github.bahuauddimitri.bercail.core.domain.weather.CitySearch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,7 +36,8 @@ data class SettingsUiState(
     /** Whether Bercail may read the calendar, and how to let it. */
     val agenda: SourceLine = agendaSourceLine(allowed = false),
     /** Whether Bercail may know roughly where the phone is, for the weather. */
-    val weather: SourceLine = weatherSourceLine(allowed = false)
+    val weather: SourceLine = weatherSourceLine(allowed = false),
+    val locationAllowed: Boolean = false
 ) {
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
@@ -64,9 +66,13 @@ class SettingsViewModel(
     apps: AppsSource,
     private val phone: Phone,
     private val updates: Updates,
-    access: AccessSource
+    access: AccessSource,
+    cities: CitySearch
 ) : ViewModel(),
     SettingsActions {
+    /** The choice of the place of the weather, with its search for a city. */
+    val place = PlacePicker(settings, cities, viewModelScope)
+
     val state: StateFlow<SettingsUiState> =
         combine(settings.settings, apps.apps, updates.status, access.granted) { current, installed, update, granted ->
             SettingsUiState(
@@ -74,7 +80,8 @@ class SettingsViewModel(
                 apps = appDirectory(installed, emptyList()).sections.flatMap { it.apps },
                 update = updateLine(updates.current, update),
                 agenda = agendaSourceLine(allowed = Access.Calendar in granted),
-                weather = weatherSourceLine(allowed = Access.Location in granted)
+                weather = weatherSourceLine(Access.Location in granted, current.weatherCity?.name),
+                locationAllowed = Access.Location in granted
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 

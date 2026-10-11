@@ -18,7 +18,10 @@ import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 
-/** « Réglages de Bercail » plugged into the stored settings, with its list of apps to pick favorites from. */
+/**
+ * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the favorite apps and
+ * the place of the weather.
+ */
 @Composable
 fun SettingsRoute(
     viewModel: SettingsViewModel,
@@ -27,13 +30,35 @@ fun SettingsRoute(
     onAskAccess: (Access) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var pickingApps by rememberSaveable { mutableStateOf(false) }
-    if (pickingApps) {
-        FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, onBack = { pickingApps = false }, modifier)
-    } else {
-        SettingsScreen(state, viewModel, onBack, onPickApps = { pickingApps = true }, modifier, onAskAccess)
+    val place by viewModel.place.state.collectAsStateWithLifecycle()
+    var shown by rememberSaveable { mutableStateOf(Shown.Settings) }
+    val backToSettings = { shown = Shown.Settings }
+    when (shown) {
+        Shown.Apps -> FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, backToSettings, modifier)
+
+        Shown.Place -> PlaceScreen(
+            state = state,
+            place = place,
+            actions = viewModel.place,
+            onAskLocation = { onAskAccess(Access.Location) },
+            onBack = backToSettings,
+            modifier = modifier
+        )
+
+        Shown.Settings -> SettingsScreen(
+            state = state,
+            actions = viewModel,
+            onBack = onBack,
+            onPickApps = { shown = Shown.Apps },
+            modifier = modifier,
+            onAskAccess = onAskAccess,
+            onPickPlace = { shown = Shown.Place }
+        )
     }
 }
+
+/** What the settings panel shows: itself, or one of the lists it opens. */
+private enum class Shown { Settings, Apps, Place }
 
 /**
  * Bercail's settings: only what already works, the sources to allow and the update of Bercail itself. The favorite
@@ -46,7 +71,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onPickApps: () -> Unit,
     modifier: Modifier = Modifier,
-    onAskAccess: (Access) -> Unit = {}
+    onAskAccess: (Access) -> Unit = {},
+    onPickPlace: () -> Unit = {}
 ) {
     val settings = state.settings
     BcPanel("Réglages de Bercail", onBack, backDescription = "Retour à la recherche", modifier = modifier) {
@@ -77,7 +103,7 @@ fun SettingsScreen(
         BcSettingRow(
             title = state.weather.title,
             subtitle = state.weather.detail,
-            onClick = if (state.weather.touchable) ({ onAskAccess(Access.Location) }) else null
+            onClick = onPickPlace
         )
         BcSectionLabel("Tiroir")
         BcSettingRow("Tiroir", subtitle = "État de départ") {

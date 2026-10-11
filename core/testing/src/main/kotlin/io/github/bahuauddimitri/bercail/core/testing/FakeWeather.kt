@@ -2,6 +2,8 @@
 
 package io.github.bahuauddimitri.bercail.core.testing
 
+import io.github.bahuauddimitri.bercail.core.domain.weather.City
+import io.github.bahuauddimitri.bercail.core.domain.weather.CitySearch
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import io.github.bahuauddimitri.bercail.core.domain.weather.ForecastJournal
 import io.github.bahuauddimitri.bercail.core.domain.weather.ForecastNotes
@@ -77,5 +79,19 @@ class FakeForecastJournal(var notes: ForecastNotes = ForecastNotes()) : Forecast
 
     override suspend fun write(notes: ForecastNotes) {
         this.notes = notes
+    }
+}
+
+/** A search that knows [cities] and finds those whose name starts with what was typed, whatever the capitals. */
+class FakeCitySearch(var cities: List<City> = emptyList()) : CitySearch {
+    /** False when the network is down: the search then cannot be made. */
+    var reachable = true
+
+    /** Every name searched so far, in order. */
+    val asked = mutableListOf<String>()
+
+    override suspend fun find(name: String): List<City>? {
+        asked += name
+        return cities.filter { it.name.startsWith(name, ignoreCase = true) }.takeIf { reachable }
     }
 }

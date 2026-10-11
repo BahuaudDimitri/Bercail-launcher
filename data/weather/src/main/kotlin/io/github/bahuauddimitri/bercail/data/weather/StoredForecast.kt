@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -11,6 +12,7 @@ import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import io.github.bahuauddimitri.bercail.core.domain.weather.ForecastJournal
 import io.github.bahuauddimitri.bercail.core.domain.weather.ForecastNotes
 import io.github.bahuauddimitri.bercail.core.domain.weather.HourForecast
+import io.github.bahuauddimitri.bercail.core.domain.weather.Place
 import io.github.bahuauddimitri.bercail.core.domain.weather.Sky
 import java.io.File
 import java.time.LocalDateTime
@@ -35,7 +37,8 @@ class StoredForecast(private val store: DataStore<Preferences>) : ForecastJourna
             forecast = forecast,
             // A forecast that cannot be read anymore was never received.
             fetchedAt = saved[FETCHED_AT]?.let(::dateOrNull).takeIf { forecast != null },
-            failedAt = saved[FAILED_AT]?.let(::dateOrNull)
+            failedAt = saved[FAILED_AT]?.let(::dateOrNull),
+            city = saved[CITY_LATITUDE]?.let { latitude -> saved[CITY_LONGITUDE]?.let { Place(latitude, it) } }
         )
     }
 
@@ -45,6 +48,10 @@ class StoredForecast(private val store: DataStore<Preferences>) : ForecastJourna
             notes.forecast?.let { saved[HOURS] = written(it) }
             notes.fetchedAt?.let { saved[FETCHED_AT] = it.toString() }
             notes.failedAt?.let { saved[FAILED_AT] = it.toString() }
+            notes.city?.let {
+                saved[CITY_LATITUDE] = it.latitude
+                saved[CITY_LONGITUDE] = it.longitude
+            }
         }
     }
 
@@ -52,6 +59,8 @@ class StoredForecast(private val store: DataStore<Preferences>) : ForecastJourna
         private val HOURS = stringPreferencesKey("hours")
         private val FETCHED_AT = stringPreferencesKey("fetched_at")
         private val FAILED_AT = stringPreferencesKey("failed_at")
+        private val CITY_LATITUDE = doublePreferencesKey("city_latitude")
+        private val CITY_LONGITUDE = doublePreferencesKey("city_longitude")
         private const val FIELDS = 5
 
         /** One line per hour: its time, the temperature, the sky, the wind and its gusts. */

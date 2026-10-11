@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.domain.settings
 
+import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import kotlinx.coroutines.flow.Flow
 
 enum class TimelineOrientation { Vertical, Horizontal }
@@ -13,7 +14,9 @@ data class Settings(
     val favoriteApps: List<String> = emptyList(),
     val timeline: TimelineOrientation = TimelineOrientation.Vertical,
     val drawerExpandedAtStart: Boolean = false,
-    val idleBackground: IdleBackground = IdleBackground.Wallpaper
+    val idleBackground: IdleBackground = IdleBackground.Wallpaper,
+    /** The city whose weather is shown, or nothing for the place where the phone is. */
+    val weatherCity: City? = null
 ) {
     /** Adds the app to the favorites, or removes it if it already is one. */
     fun withFavoriteAppToggled(appId: String): Settings =
