@@ -24,7 +24,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
+import io.github.bahuauddimitri.bercail.feature.home.HomeLinks
 import io.github.bahuauddimitri.bercail.feature.home.HomeRoute
 import io.github.bahuauddimitri.bercail.feature.home.HomeSearch
 import io.github.bahuauddimitri.bercail.feature.home.HomeViewModel
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private val settings: SettingsViewModel by viewModels {
         viewModelFactory { initializer { sources.settingsViewModel() } }
     }
+    private val questions = AccessQuestions(this, access = { sources.access }, phone = { sources.phone })
     private var settingsOpen by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,18 +58,25 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.STARTED) { sources.updater.onHomeShown() } }
     }
 
+    /** The home screen comes back: the user may have changed, in the phone settings, what Bercail may read. */
+    override fun onStart() {
+        super.onStart()
+        sources.access.refresh()
+    }
+
     /** Nobody looks at the home screen anymore: a new version of Bercail may replace this one. */
     override fun onStop() {
         super.onStop()
         if (!isChangingConfigurations) sources.onHomeHidden()
     }
 
-    /** The Home button always comes back to the plain home screen: no settings, no search, the Accueil page. */
+    /** The Home button always comes back to the plain home screen: no settings, search or sheet, the Accueil page. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             settingsOpen = false
             search.onOpenChange(false)
+            home.onDayOpenChange(false)
             home.onPageWanted(HomePage.Home)
         }
     }
@@ -74,26 +84,36 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun Screen() {
         val searching by search.state.collectAsStateWithLifecycle()
-        val links = object : SearchLinks {
+        val searchLinks = object : SearchLinks {
             override fun onOpenSettings() {
                 settingsOpen = true
             }
+
+            /** An appointment found by the search: the search closes, the day opens on it. */
+            override fun onOpenDay(eventId: String) {
+                search.onOpenChange(false)
+                home.onDayOpenChange(true, focus = eventId)
+            }
+        }
+        val homeLinks = object : HomeLinks {
+            override fun onAskAccess(access: Access) = questions.ask(access)
         }
         Box {
             HomeRoute(
                 viewModel = home,
                 // Under the settings, the home screen is covered: a screen reader must not read it either.
                 modifier = if (settingsOpen) Modifier.clearAndSetSemantics {} else Modifier,
+                links = homeLinks,
                 search = HomeSearch(
                     open = searching.open,
                     query = searching.query,
                     onQueryChange = search::onQueryChange,
                     onOpenChange = search::onOpenChange,
                     onSubmit = search::onSubmit
-                ) { SearchList(searching, search, search.icons, links = links) }
+                ) { SearchList(searching, search, search.icons, links = searchLinks) }
             )
             AnimatedVisibility(visible = settingsOpen, enter = fadeIn(), exit = fadeOut()) {
-                SettingsRoute(settings, onBack = { settingsOpen = false })
+                SettingsRoute(settings, onBack = { settingsOpen = false }, onAskAccess = questions::ask)
             }
         }
     }

@@ -11,6 +11,9 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -31,6 +34,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
@@ -48,7 +52,7 @@ class HomeScreenUiTest {
 
     private val opened = mutableListOf<String>()
     private val links = object : HomeLinks {
-        override fun onOpenDay() = opened.add("journée").let {}
+        override fun onAskAccess(access: Access) = opened.add("demande d'accès $access").let {}
         override fun onOpenConversation(id: String) = opened.add("conversation $id").let {}
         override fun onOpenMessagesApp() = opened.add("app de messages").let {}
         override fun onOpenHomeApp() = opened.add("app de la maison").let {}
@@ -63,6 +67,8 @@ class HomeScreenUiTest {
     }
 
     private fun silent(moment: Moment = Moment.Matin) = FakeWorld(moment).apply { media.stop() }
+
+    private val inTheDaySheet = hasAnyAncestor(hasTestTag(DAY_TAG))
 
     private fun searchBarBottom() = compose.onNodeWithContentDescription("Chercher").getUnclippedBoundsInRoot().bottom
 
@@ -87,14 +93,98 @@ class HomeScreenUiTest {
         compose.onNodeWithText("Rien d'autre aujourd'hui").assertExists()
     }
 
+    // ---------- the sheet of the day ----------
+
     @Test
-    fun `toucher l'en-tête demande la journée`() {
+    fun `toucher l'en-tête ouvre la feuille « Aujourd'hui », avec la date et les rendez-vous du jour`() {
         show()
 
         compose.onNodeWithText("Stand-up").performClick()
 
-        assertThat(opened).containsExactly("journée")
+        compose.onNodeWithText("Aujourd'hui").assertExists()
+        compose.onNodeWithText("vendredi 2 octobre").assertExists()
+        listOf("Stand-up", "Déjeuner avec Léa", "Point design", "Courses", "Ciné à la maison").forEach {
+            compose.onNode(hasText(it) and inTheDaySheet).assertExists()
+        }
     }
+
+    @Test
+    fun `sous la feuille de la journée, l'accueil n'est plus lu`() {
+        show()
+        compose.onNodeWithText("Stand-up").performClick()
+
+        compose.onNodeWithText("Dans 1 h 20 · 09:30").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
+    }
+
+    @Test
+    fun `la feuille de la journée se referme par sa poignée, et l'accueil revient`() {
+        show()
+        compose.onNodeWithText("Stand-up").performClick()
+
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Aujourd'hui").assertDoesNotExist()
+        compose.onNodeWithText("Dans 1 h 20 · 09:30").assertExists()
+    }
+
+    @Test
+    fun `le geste retour referme la feuille de la journée`() {
+        show()
+        compose.onNodeWithText("Stand-up").performClick()
+
+        compose.waitForIdle()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Aujourd'hui").assertDoesNotExist()
+        compose.onNodeWithText("Dans 1 h 20 · 09:30").assertExists()
+    }
+
+    @Test
+    fun `toucher un rendez-vous de la feuille l'ouvre dans l'app agenda du téléphone`() {
+        val world = show()
+        compose.onNodeWithText("Stand-up").performClick()
+
+        compose.onNode(hasText("Point design") and inTheDaySheet).performClick()
+
+        assertThat(world.agenda.opened).containsExactly("event: Point design")
+    }
+
+    @Test
+    fun `le bouton Agenda de la feuille ouvre l'app agenda du téléphone à la date du jour`() {
+        val world = show()
+        compose.onNodeWithText("Stand-up").performClick()
+
+        compose.onNodeWithText("Agenda").performClick()
+
+        assertThat(world.agenda.opened).containsExactly("calendar: 2026-10-02")
+    }
+
+    @Test
+    fun `une journée sans rendez-vous le dit dans la feuille`() {
+        show(FakeWorld(Moment.Matin).apply { agenda.set(emptyList()) })
+
+        compose.onNodeWithText("Journée libre").performClick()
+
+        compose.onNodeWithText("Rien de prévu aujourd'hui").assertExists()
+    }
+
+    @Test
+    fun `sans autorisation, l'accueil propose de relier l'agenda, et la feuille de la demander à Android`() {
+        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Calendar) })
+        compose.onNodeWithText("Agenda pas encore relié").assertExists()
+        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+
+        compose.onNodeWithText("Relier l'agenda").performClick()
+        compose.onNodeWithText("Autoriser la lecture de l'agenda").performClick()
+
+        assertThat(opened).containsExactly("demande d'accès Calendar")
+    }
+
+    // ---------- the line of the day ----------
 
     @Test
     fun `la ligne du temps verticale longe l'écran avec l'heure de chaque rendez-vous`() {
@@ -441,12 +531,12 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `sans source branchée, l'accueil montre ses états vides, jamais de données inventées`() {
+    fun `juste après l'installation, l'accueil montre ses états vides, jamais de données inventées`() {
         val home = unconnectedHomeViewModel(hour = 9)
         compose.setContent { BcTheme { HomeRoute(home) } }
 
-        compose.onNodeWithText("Plus rien aujourd'hui").assertExists()
-        compose.onNodeWithText("Journée libre").assertExists()
+        compose.onNodeWithText("Agenda pas encore relié").assertExists()
+        compose.onNodeWithText("Relier l'agenda").assertExists()
         compose.onNodeWithText("Aucun message").assertExists()
         compose.onNodeWithText("Maison au repos").assertExists()
         compose.onNodeWithText("Écouter…").assertExists()

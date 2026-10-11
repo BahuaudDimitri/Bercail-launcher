@@ -1,15 +1,12 @@
 package io.github.bahuauddimitri.bercail.core.domain
 
 import assertk.assertThat
-import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
-import io.github.bahuauddimitri.bercail.core.domain.agenda.glanceAt
 import io.github.bahuauddimitri.bercail.core.domain.home.homeSummary
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.messages.messagesSummary
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
-import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.first
@@ -18,16 +15,6 @@ import org.junit.Test
 
 /** A source that is not plugged in yet shows an honest empty state, never made-up data. */
 class UnconnectedTest {
-    private val today = LocalDate.of(2026, 10, 10)
-
-    @Test
-    fun `sans agenda branché, l'accueil dit qu'il n'y a plus rien aujourd'hui`() = runBlocking {
-        val events = Unconnected.agenda.eventsOn(today).first()
-
-        assertThat(events).isEmpty()
-        assertThat(glanceAt(today.atTime(9, 0), events).countdown).isEqualTo("Plus rien aujourd'hui")
-    }
-
     @Test
     fun `sans météo branchée, il n'y a pas de ligne météo`() = runBlocking {
         assertThat(Unconnected.weather.weather.first()).isNull()

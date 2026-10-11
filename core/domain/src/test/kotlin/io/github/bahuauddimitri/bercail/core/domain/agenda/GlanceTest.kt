@@ -92,6 +92,22 @@ class GlanceTest {
         assertThat(glance.title).isEqualTo("Stand-up")
     }
 
+    @Test
+    fun `un événement sur la journée entière n'est jamais annoncé comme le prochain rendez-vous`() {
+        val birthday =
+            AgendaEvent("b", "Anniversaire", day.atStartOfDay(), day.plusDays(1).atStartOfDay(), allDay = true)
+
+        assertThat(glanceAt(at(8, 10), events + birthday).title).isEqualTo("Stand-up")
+        assertThat(glanceAt(at(20, 40), listOf(birthday)).countdown).isEqualTo("Plus rien aujourd'hui")
+    }
+
+    @Test
+    fun `tant que Bercail n'a pas le droit de lire l'agenda, l'en-tête propose de le relier`() {
+        assertThat(closedGlance.countdown).isEqualTo("Agenda pas encore relié")
+        assertThat(closedGlance.title).isEqualTo("Relier l'agenda")
+        assertThat(closedGlance.after).isEqualTo("Toucher pour autoriser sa lecture")
+    }
+
     private fun at(hour: Int, minute: Int): LocalDateTime = day.atTime(hour, minute)
 
     private fun event(title: String, hour: Int, minute: Int, endHour: Int, endMinute: Int) =

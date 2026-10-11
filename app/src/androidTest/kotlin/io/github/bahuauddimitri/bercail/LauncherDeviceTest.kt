@@ -1,6 +1,9 @@
 package io.github.bahuauddimitri.bercail
 
 import android.content.Intent
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -86,7 +89,34 @@ class LauncherDeviceTest {
         awaitText("Ligne du temps")
     }
 
+    @Test
+    fun `toucher l’en-tête ouvre la feuille de la journée et sa poignée la referme`() {
+        awaitDescription("Chercher")
+        compose.onNode(opensTheDay).performClick()
+        awaitText("Aujourd'hui")
+
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
+
+        awaitDescription("Chercher")
+    }
+
+    @Test
+    fun `les Réglages de Bercail parlent de l’agenda du téléphone`() {
+        awaitDescription("Chercher")
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        awaitText("Réglages de Bercail")
+
+        compose.onNodeWithText("Réglages de Bercail").performClick()
+
+        awaitText("Agenda du téléphone")
+    }
+
     private companion object {
         const val TIMEOUT = 10_000L
+
+        /** The top of the home screen, whatever it says: with or without the right to read the calendar. */
+        val opensTheDay = SemanticsMatcher("ouvre la journée") {
+            it.config.getOrNull(SemanticsActions.OnClick)?.label == "Voir la journée"
+        }
     }
 }

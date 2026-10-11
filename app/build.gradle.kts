@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:search"))
     implementation(project(":feature:settings"))
+    implementation(project(":data:agenda"))
     implementation(project(":data:apps"))
     implementation(project(":data:settings"))
     implementation(project(":data:update"))

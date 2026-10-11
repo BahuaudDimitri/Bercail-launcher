@@ -13,6 +13,7 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.update.Updater
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
+import io.github.bahuauddimitri.bercail.data.agenda.DeviceAgenda
 import io.github.bahuauddimitri.bercail.data.apps.DeviceApps
 import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
@@ -42,7 +43,6 @@ class BercailApplication : Application() {
 
 /** The sources whose wave has not come yet. What stands in for them depends on the build: see [waiting]. */
 internal class Waiting(
-    val agenda: AgendaSource,
     val weather: WeatherSource,
     val messages: MessagesSource,
     val home: HomeSource,
@@ -51,32 +51,45 @@ internal class Waiting(
 
 /**
  * Every source of Bercail, plugged once. Real today: the clock, the installed apps, the links to the phone, the
- * stored settings and the update of Bercail itself. The others wait for their wave (agenda and weather in 6,
- * media in 7, messages in 8, house in 9).
+ * stored settings, the update of Bercail itself, what the user lets it read, and the calendar. The others wait
+ * for their wave (media in 7, messages in 8, house in 9). The tests plug their own [update], [agenda] or [clock].
  */
-class Sources(context: Context, update: UpdateParts? = null) {
+class Sources(context: Context, update: UpdateParts? = null, agenda: AgendaSource? = null, clock: Clock? = null) {
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val waiting = waiting()
 
-    val clock: Clock = DeviceClock(context)
+    val clock: Clock = clock ?: DeviceClock(context)
     val apps: AppsSource = DeviceApps(context)
     val phone: Phone = DevicePhone(context)
     val settings: SettingsSource =
         StoredSettings(settingsStore(File(context.filesDir, SETTINGS_FILE), background)).forThisBuild()
 
+    /** What the user has let Bercail read so far. */
+    val access = DeviceAccess(context)
+    val agenda: AgendaSource = agenda ?: DeviceAgenda(context, access)
+
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
     /** Bercail updating itself as the home screen comes and goes. */
-    val updater: Updater =
-        updateParts.let { Updater(it.version, it.feed, it.packages, it.journal, clock, it.background, ::logged) }
+    val updater: Updater = updateParts.let {
+        Updater(it.version, it.feed, it.packages, it.journal, this.clock, it.background, ::logged)
+    }
 
-    fun homeViewModel() =
-        HomeViewModel(clock, waiting.agenda, waiting.weather, waiting.messages, waiting.home, waiting.media, settings)
+    fun homeViewModel() = HomeViewModel(
+        clock = clock,
+        agenda = agenda,
+        weather = waiting.weather,
+        messages = waiting.messages,
+        home = waiting.home,
+        media = waiting.media,
+        settings = settings,
+        access = access
+    )
 
     fun searchViewModel() =
-        SearchViewModel(apps, phone, clock, waiting.agenda, waiting.messages, waiting.home, settings, updater)
+        SearchViewModel(apps, phone, clock, agenda, waiting.messages, waiting.home, settings, updater)
 
-    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater)
+    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access)
 
     /** The home screen just went away: a version that is ready may take over. */
     fun onHomeHidden() {

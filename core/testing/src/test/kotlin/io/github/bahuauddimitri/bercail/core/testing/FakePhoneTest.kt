@@ -70,8 +70,10 @@ class FakePhoneTest {
         phone.searchStore("ramen")
         phone.openSettings()
         phone.openHomeScreenSettings()
+        phone.openAppSettings()
 
-        assertThat(phone.visits).containsExactly("web: ramen", "store: ramen", "settings", "home screen settings")
+        assertThat(phone.visits)
+            .containsExactly("web: ramen", "store: ramen", "settings", "home screen settings", "app settings")
     }
 
     @Test

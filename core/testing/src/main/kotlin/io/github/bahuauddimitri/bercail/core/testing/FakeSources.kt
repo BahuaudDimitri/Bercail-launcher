@@ -31,16 +31,22 @@ class FakeClock(start: LocalDateTime) : Clock {
     fun advanceMinutes(minutes: Long) = time.update { it.plusMinutes(minutes) }
 }
 
-/** A calendar holding [events]. With [everyDay], the same day repeats on every date. */
-class FakeAgendaSource(events: List<AgendaEvent> = emptyList(), private val everyDay: Boolean = false) : AgendaSource {
+/** A calendar holding [events]. It remembers what was shown in the calendar app. */
+class FakeAgendaSource(events: List<AgendaEvent> = emptyList()) : AgendaSource {
     private val events = MutableStateFlow(events)
 
-    override fun eventsOn(day: LocalDate): Flow<List<AgendaEvent>> = events.map { all ->
-        if (everyDay) {
-            all.map { it.copy(start = day.atTime(it.start.toLocalTime()), end = day.atTime(it.end.toLocalTime())) }
-        } else {
-            all.filter { it.start.toLocalDate() == day }
-        }
+    /** What the calendar app was asked to show so far, in order: "event: Stand-up", "calendar: 2026-10-02". */
+    val opened = mutableListOf<String>()
+
+    override fun eventsOn(day: LocalDate): Flow<List<AgendaEvent>> =
+        events.map { all -> all.filter { it.start.toLocalDate() == day } }
+
+    override fun open(event: AgendaEvent) {
+        opened += "event: ${event.title}"
+    }
+
+    override fun openCalendar(day: LocalDate) {
+        opened += "calendar: $day"
     }
 
     fun set(events: List<AgendaEvent>) {

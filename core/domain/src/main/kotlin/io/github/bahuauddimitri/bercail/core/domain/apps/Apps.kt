@@ -26,4 +26,7 @@ interface Phone {
 
     /** Where Android lets the user choose the home screen app. */
     fun openHomeScreenSettings()
+
+    /** The page of Bercail in the phone settings, where what it may read can be changed. */
+    fun openAppSettings()
 }

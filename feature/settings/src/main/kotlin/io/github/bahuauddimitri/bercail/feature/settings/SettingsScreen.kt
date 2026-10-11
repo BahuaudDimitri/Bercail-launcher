@@ -14,24 +14,30 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLab
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 
 /** « Réglages de Bercail » plugged into the stored settings, with its list of apps to pick favorites from. */
 @Composable
-fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsRoute(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onAskAccess: (Access) -> Unit = {}
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pickingApps by rememberSaveable { mutableStateOf(false) }
     if (pickingApps) {
         FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, onBack = { pickingApps = false }, modifier)
     } else {
-        SettingsScreen(state, viewModel, onBack, onPickApps = { pickingApps = true }, modifier)
+        SettingsScreen(state, viewModel, onBack, onPickApps = { pickingApps = true }, modifier, onAskAccess)
     }
 }
 
 /**
- * Bercail's settings: only what already works, and the update of Bercail itself. The favorite people, the home
- * controls and the media app will join them with their waves.
+ * Bercail's settings: only what already works, the sources to allow and the update of Bercail itself. The favorite
+ * people, the home controls and the media app will join them with their waves.
  */
 @Composable
 fun SettingsScreen(
@@ -39,7 +45,8 @@ fun SettingsScreen(
     actions: SettingsActions,
     onBack: () -> Unit,
     onPickApps: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAskAccess: (Access) -> Unit = {}
 ) {
     val settings = state.settings
     BcPanel("Réglages de Bercail", onBack, backDescription = "Retour à la recherche", modifier = modifier) {
@@ -52,6 +59,11 @@ fun SettingsScreen(
             )
         }
         BcSectionLabel("Agenda")
+        BcSettingRow(
+            title = state.agenda.title,
+            subtitle = state.agenda.detail,
+            onClick = if (state.agenda.touchable) ({ onAskAccess(Access.Calendar) }) else null
+        )
         BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {
             BcSegmented(
                 options = listOf("Horizontale", "Verticale"),

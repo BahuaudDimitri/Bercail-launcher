@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail
 
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
-import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Samples
@@ -16,8 +15,6 @@ import kotlinx.coroutines.flow.map
 internal fun waiting(): Waiting {
     val prototype = FakeWorld()
     return Waiting(
-        // The prototype's day, replayed every day.
-        agenda = FakeAgendaSource(Samples.eventsOn(Samples.day), everyDay = true),
         weather = prototype.weather,
         messages = prototype.messages,
         home = prototype.home,

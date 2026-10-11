@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,9 +15,12 @@ import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import io.github.bahuauddimitri.bercail.core.testing.Samples
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,7 +88,27 @@ class HomeScreenshotTest {
     }
 
     @Test
-    fun `sans source branchée, l'accueil vide correspond à sa capture`() {
+    fun `la feuille « Aujourd'hui », pendant le trajet, correspond à sa capture`() {
+        val world = FakeWorld(Moment.Trajet, playing = false)
+        val day = Samples.day
+        val birthday = AgendaEvent("b", "Anniversaire de Léa", day.atStartOfDay(), day.plusDays(1).atStartOfDay(), true)
+        world.agenda.set(Samples.eventsOn(day) + birthday)
+        show(world)
+        compose.onNodeWithText("Point design").performClick()
+
+        capture("home_day_sheet")
+    }
+
+    @Test
+    fun `la feuille « Aujourd'hui » sans autorisation correspond à sa capture`() {
+        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Calendar) })
+        compose.onNodeWithText("Relier l'agenda").performClick()
+
+        capture("home_day_sheet_locked")
+    }
+
+    @Test
+    fun `juste après l'installation, l'accueil vide correspond à sa capture`() {
         val home = unconnectedHomeViewModel(hour = 9)
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.nightBottom)) { HomeRoute(home) } }

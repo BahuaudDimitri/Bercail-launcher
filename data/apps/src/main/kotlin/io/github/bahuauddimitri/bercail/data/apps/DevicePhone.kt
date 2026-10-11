@@ -20,5 +20,9 @@ class DevicePhone(context: Context) : Phone {
 
     override fun openHomeScreenSettings() = open(Intent(Settings.ACTION_HOME_SETTINGS))
 
+    override fun openAppSettings() = open(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+    )
+
     private fun open(intent: Intent) = context.startSafely(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }

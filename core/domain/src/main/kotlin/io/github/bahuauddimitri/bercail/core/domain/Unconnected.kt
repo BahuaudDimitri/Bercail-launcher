@@ -1,7 +1,5 @@
 package io.github.bahuauddimitri.bercail.core.domain
 
-import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
-import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
@@ -10,20 +8,15 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
-import java.time.LocalDate
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
  * The sources whose wave has not come yet. Each one says "nothing", so that the home screen shows its empty
- * states (no appointment, no message, house at rest, nothing playing) instead of made-up data.
+ * states (no weather, no message, house at rest, nothing playing) instead of made-up data.
  */
 object Unconnected {
-    val agenda: AgendaSource = object : AgendaSource {
-        override fun eventsOn(day: LocalDate): Flow<List<AgendaEvent>> = flowOf(emptyList())
-    }
-
     val weather: WeatherSource = object : WeatherSource {
         override val weather: Flow<Weather?> = flowOf(null)
     }

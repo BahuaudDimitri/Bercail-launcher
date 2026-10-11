@@ -8,20 +8,39 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 
-data class AgendaEvent(val id: String, val title: String, val start: LocalDateTime, val end: LocalDateTime)
+/** An appointment. One that lasts the [allDay] has no hour: it is listed, but never announced as "the next one". */
+data class AgendaEvent(
+    val id: String,
+    val title: String,
+    val start: LocalDateTime,
+    val end: LocalDateTime,
+    val allDay: Boolean = false
+)
 
 /** The appointments of the phone's calendar. */
 interface AgendaSource {
-    /** The appointments of [day], emitted again when the calendar changes. */
+    /** The appointments of [day], emitted again when the calendar changes. Nothing is read while nobody listens. */
     fun eventsOn(day: LocalDate): Flow<List<AgendaEvent>>
+
+    /** Shows the appointment in the phone's calendar app. */
+    fun open(event: AgendaEvent)
+
+    /** Shows that day in the phone's calendar app. */
+    fun openCalendar(day: LocalDate)
 }
+
+/** The title of an appointment that has none. */
+const val UNTITLED_EVENT = "Sans titre"
 
 /** The three lines at the top of the home screen. [after] is absent when the day is over. */
 data class Glance(val countdown: String, val title: String, val after: String?)
 
+/** While Bercail may not read the calendar, the top of the home screen offers to link it: never a made-up free day. */
+val closedGlance = Glance("Agenda pas encore relié", "Relier l'agenda", after = "Toucher pour autoriser sa lecture")
+
 /** What the top of the home screen says at [now]: the next appointment, how far it is, and the one after. */
 fun glanceAt(now: LocalDateTime, events: List<AgendaEvent>): Glance {
-    val upcoming = events.sortedBy { it.start }.filter { it.start > now }
+    val upcoming = events.filterNot { it.allDay }.sortedBy { it.start }.filter { it.start > now }
     val next = upcoming.firstOrNull() ?: return Glance("Plus rien aujourd'hui", freeTitle(now), after = null)
     val after = upcoming.getOrNull(1)?.let { "Ensuite ${it.title} à ${it.start.toLocalTime().asClockTime()}" }
     return Glance(
@@ -55,7 +74,7 @@ data class DayMark(val position: Float, val time: String, val next: Boolean)
 data class DayLine(val now: Float, val marks: List<DayMark>)
 
 fun dayLineAt(now: LocalDateTime, events: List<AgendaEvent>): DayLine {
-    val sorted = events.sortedBy { it.start }
+    val sorted = events.filterNot { it.allDay }.sortedBy { it.start }
     val next = sorted.firstOrNull { it.start > now }
     return DayLine(
         now = positionOf(now.toLocalTime()),

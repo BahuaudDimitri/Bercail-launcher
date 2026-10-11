@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.glanceAt
 import io.github.bahuauddimitri.bercail.core.domain.messages.messagesSummary
 import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
@@ -60,12 +61,26 @@ class FakeWorldTest {
     }
 
     @Test
-    fun `un agenda qui se répète propose la même journée chaque jour`() = runTest {
-        val agenda = FakeAgendaSource(Samples.eventsOn(Samples.day), everyDay = true)
+    fun `l'agenda factice retient ce qu'on lui demande de montrer dans l'app agenda`() = runTest {
+        val world = FakeWorld(Moment.Matin)
+        val standUp = world.agenda.eventsOn(Samples.day).first().first()
 
-        val tomorrow = agenda.eventsOn(LocalDate.of(2026, 10, 3)).first()
+        world.agenda.open(standUp)
+        world.agenda.openCalendar(Samples.day)
 
-        assertThat(tomorrow.map { it.start.toString() }.first()).isEqualTo("2026-10-03T09:30")
+        assertThat(world.agenda.opened).containsExactly("event: Stand-up", "calendar: 2026-10-02")
+    }
+
+    @Test
+    fun `dans le monde factice, tout est autorisé, et une autorisation se retire ou se redonne`() = runTest {
+        val world = FakeWorld(Moment.Matin)
+        assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())
+
+        world.access.refuse(Access.Calendar)
+        assertThat(world.access.granted.first()).isEmpty()
+
+        world.access.grant(Access.Calendar)
+        assertThat(world.access.granted.first()).isEqualTo(setOf(Access.Calendar))
     }
 
     @Test

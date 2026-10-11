@@ -43,7 +43,7 @@ class SearchListUiTest {
     private val links = object : SearchLinks {
         override fun onOpenSettings() = opened.add("réglages").let {}
         override fun onOpenConversation(id: String) = opened.add("conversation $id").let {}
-        override fun onOpenDay() = opened.add("journée").let {}
+        override fun onOpenDay(eventId: String) = opened.add("journée, $eventId").let {}
     }
 
     private fun show(typed: String = "") {
@@ -155,12 +155,12 @@ class SearchListUiTest {
     }
 
     @Test
-    fun `toucher un rendez-vous demande la journée`() {
+    fun `toucher un rendez-vous demande la journée, ce rendez-vous mis en avant`() {
         show(typed = "déjeuner")
 
         compose.onNodeWithText("Déjeuner avec Léa").performClick()
 
-        assertThat(opened).containsExactly("journée")
+        assertThat(opened).containsExactly("journée, Déjeuner avec Léa")
     }
 
     @Test

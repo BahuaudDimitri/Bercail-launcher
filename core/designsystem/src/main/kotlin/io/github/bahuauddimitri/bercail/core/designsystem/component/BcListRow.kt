@@ -115,4 +115,6 @@ private val ROW_GAP = 14.dp
 private val LEADING_SIZE = 34.dp
 private val LEADING_SHAPE = RoundedCornerShape(12.dp)
 private val LEADING_ICON = 18.dp
-private val TIME_WIDTH = 46.dp
+
+// Wide enough for "Journée", the mark of an event that lasts the whole day.
+private val TIME_WIDTH = 54.dp

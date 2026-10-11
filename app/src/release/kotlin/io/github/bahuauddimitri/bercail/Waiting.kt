@@ -5,7 +5,6 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 
 /** In the released app, a source that is not plugged in yet shows its empty state, never made-up data. */
 internal fun waiting() = Waiting(
-    agenda = Unconnected.agenda,
     weather = Unconnected.weather,
     messages = Unconnected.messages,
     home = Unconnected.home,

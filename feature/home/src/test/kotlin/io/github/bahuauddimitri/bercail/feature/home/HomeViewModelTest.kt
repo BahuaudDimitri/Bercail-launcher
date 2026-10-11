@@ -2,10 +2,13 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
@@ -425,6 +428,124 @@ class HomeViewModelTest {
 
         assertThat(home.state.value.background).isEqualTo(HomeBackground.Brume(cover = null))
         assertThat(home.state.value.dayPart).isEqualTo(DayPart.Night)
+    }
+
+    // ---------- the agenda and the sheet of the day ----------
+
+    @Test
+    fun `sans le droit de lire l'agenda, l'en-tête propose de le relier, sans rendez-vous ni journée libre`() =
+        runTest(dispatcher) {
+            val world = FakeWorld(Moment.Matin).apply { access.refuse(Access.Calendar) }
+            val home = homeOf(world)
+            show(home)
+
+            assertThat(home.state.value.agendaAllowed).isFalse()
+            assertThat(home.state.value.glance.title).isEqualTo("Relier l'agenda")
+            assertThat(home.state.value.dayLine.marks).isEmpty()
+            assertThat(home.state.value.dayRows).isEmpty()
+        }
+
+    @Test
+    fun `dès que l'autorisation est donnée, l'en-tête annonce le prochain rendez-vous`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin).apply { access.refuse(Access.Calendar) }
+        val home = homeOf(world)
+        show(home)
+
+        world.access.grant(Access.Calendar)
+
+        assertThat(home.state.value.agendaAllowed).isTrue()
+        assertThat(home.state.value.glance.title).isEqualTo("Stand-up")
+    }
+
+    @Test
+    fun `la feuille de la journée est fermée au départ`() = runTest(dispatcher) {
+        val home = homeOf(FakeWorld(Moment.Matin))
+        show(home)
+
+        assertThat(home.state.value.dayOpen).isFalse()
+    }
+
+    @Test
+    fun `la feuille de la journée donne la date et les rendez-vous, le prochain mis en avant`() = runTest(dispatcher) {
+        val home = homeOf(FakeWorld(Moment.Trajet))
+        show(home)
+
+        home.onDayOpenChange(true)
+
+        val state = home.state.value
+        assertThat(state.dayOpen).isTrue()
+        assertThat(state.dayDate).isEqualTo("vendredi 2 octobre")
+        assertThat(state.dayRows.map { "${it.time} ${it.title}" }).containsExactly(
+            "09:30 Stand-up",
+            "12:30 Déjeuner avec Léa",
+            "14:00 Point design",
+            "18:30 Courses",
+            "21:00 Ciné à la maison"
+        )
+        assertThat(state.dayRows.map { it.state }).containsExactly(
+            DayRowState.Past,
+            DayRowState.Past,
+            DayRowState.Highlighted,
+            DayRowState.Coming,
+            DayRowState.Coming
+        )
+    }
+
+    @Test
+    fun `la feuille suit l'heure, un rendez-vous terminé s'atténue`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        val home = homeOf(world)
+        show(home)
+        home.onDayOpenChange(true)
+        assertThat(home.state.value.dayRows.first().state).isEqualTo(DayRowState.Highlighted)
+
+        world.clock.advanceMinutes(120)
+
+        assertThat(home.state.value.dayRows.first().state).isEqualTo(DayRowState.Past)
+    }
+
+    @Test
+    fun `venue de la recherche, la feuille met en avant le rendez-vous choisi`() = runTest(dispatcher) {
+        val home = homeOf(FakeWorld(Moment.Matin))
+        show(home)
+
+        home.onDayOpenChange(true, focus = "Courses")
+
+        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Courses")
+    }
+
+    @Test
+    fun `fermer la feuille oublie le rendez-vous choisi, le prochain reprend sa place`() = runTest(dispatcher) {
+        val home = homeOf(FakeWorld(Moment.Matin))
+        show(home)
+        home.onDayOpenChange(true, focus = "Courses")
+
+        home.onDayOpenChange(false)
+        home.onDayOpenChange(true)
+
+        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Stand-up")
+    }
+
+    @Test
+    fun `toucher un rendez-vous de la feuille l'ouvre dans l'app agenda du téléphone`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        val home = homeOf(world)
+        show(home)
+
+        home.onOpenEvent("Point design")
+
+        assertThat(world.agenda.opened).containsExactly("event: Point design")
+    }
+
+    @Test
+    fun `le bouton Agenda de la feuille ouvre l'app agenda à la date du jour`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        val home = homeOf(world)
+        show(home)
+
+        home.onOpenCalendar()
+
+        assertThat(world.agenda.opened).containsExactly("calendar: 2026-10-02")
     }
 
     // ---------- battery ----------

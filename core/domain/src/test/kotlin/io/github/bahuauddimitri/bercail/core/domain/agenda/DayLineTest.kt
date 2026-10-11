@@ -54,6 +54,16 @@ class DayLineTest {
         assertThat(line.marks.map { it.next }).containsExactly(false, false, false)
     }
 
+    @Test
+    fun `un événement sur la journée entière n'a pas de marque sur la ligne`() {
+        val birthday =
+            AgendaEvent("b", "Anniversaire", day.atStartOfDay(), day.plusDays(1).atStartOfDay(), allDay = true)
+
+        val line = dayLineAt(at(8, 10), events + birthday)
+
+        assertThat(line.marks.map { it.time }).containsExactly("09:30", "12:30", "21:00")
+    }
+
     private fun at(hour: Int, minute: Int): LocalDateTime = day.atTime(hour, minute)
 
     private fun event(title: String, hour: Int, minute: Int) =

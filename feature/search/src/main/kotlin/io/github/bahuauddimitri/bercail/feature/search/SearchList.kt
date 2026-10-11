@@ -166,7 +166,7 @@ private fun LazyListScope.found(
     family("Agenda", results.events, key = { "event ${it.id}" }) { event ->
         BcListRow(
             title = event.title,
-            onClick = links::onOpenDay,
+            onClick = { links.onOpenDay(event.id) },
             leading = BcLeading.Time(event.start.toLocalTime().asClockTime())
         )
     }

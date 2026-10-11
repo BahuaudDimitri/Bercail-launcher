@@ -56,11 +56,13 @@ interface SearchActions {
     fun onSearchStore()
 }
 
-/** What the search asks others to open. The conversation and the day arrive with their waves. */
+/** What the search asks others to open. The conversation arrives with its wave. */
 interface SearchLinks {
     fun onOpenSettings() = Unit
     fun onOpenConversation(id: String) = Unit
-    fun onOpenDay() = Unit
+
+    /** Shows the day with this appointment brought forward. */
+    fun onOpenDay(eventId: String) = Unit
 
     object None : SearchLinks
 }

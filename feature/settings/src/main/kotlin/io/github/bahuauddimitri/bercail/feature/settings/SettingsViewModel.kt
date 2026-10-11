@@ -2,6 +2,10 @@ package io.github.bahuauddimitri.bercail.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
+import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
+import io.github.bahuauddimitri.bercail.core.domain.access.agendaSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
@@ -20,13 +24,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** What the settings screen shows: the settings as stored, the apps to choose favorites from, the update. */
+/** What the settings screen shows: the settings as stored, the apps to choose favorites from, the sources. */
 data class SettingsUiState(
     val settings: Settings = Settings(),
     /** Every app, from A to Z. */
     val apps: List<App> = emptyList(),
     /** The version running and where its update stands. */
-    val update: UpdateLine = updateLine(null, UpdateStatus.Off)
+    val update: UpdateLine = updateLine(null, UpdateStatus.Off),
+    /** Whether Bercail may read the calendar, and how to let it. */
+    val agenda: SourceLine = agendaSourceLine(allowed = false)
 ) {
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
@@ -54,15 +60,17 @@ class SettingsViewModel(
     private val settings: SettingsSource,
     apps: AppsSource,
     private val phone: Phone,
-    private val updates: Updates
+    private val updates: Updates,
+    access: AccessSource
 ) : ViewModel(),
     SettingsActions {
     val state: StateFlow<SettingsUiState> =
-        combine(settings.settings, apps.apps, updates.status) { current, installed, update ->
+        combine(settings.settings, apps.apps, updates.status, access.granted) { current, installed, update, granted ->
             SettingsUiState(
                 settings = current,
                 apps = appDirectory(installed, emptyList()).sections.flatMap { it.apps },
-                update = updateLine(updates.current, update)
+                update = updateLine(updates.current, update),
+                agenda = agendaSourceLine(allowed = Access.Calendar in granted)
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 

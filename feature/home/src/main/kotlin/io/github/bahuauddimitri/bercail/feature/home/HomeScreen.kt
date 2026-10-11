@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.StateFlow
@@ -30,11 +32,21 @@ internal const val MIDDLE_TAG = "home-middle"
 internal const val DRAWER_TAG = "home-drawer"
 internal const val BRUME_TAG = "home-brume"
 internal const val VEIL_TAG = "home-veil"
+internal const val DAY_TAG = "home-day"
 
 /** What the home screen does by itself. */
 interface HomeActions {
     fun onDrawerExpandedChange(expanded: Boolean)
     fun onPageWanted(page: HomePage)
+
+    /** Opens or closes the « Aujourd'hui » sheet. [focus] names the appointment to bring forward, if any. */
+    fun onDayOpenChange(open: Boolean, focus: String? = null)
+
+    /** Shows an appointment of the day in the phone's calendar app. */
+    fun onOpenEvent(id: String)
+
+    /** Shows today in the phone's calendar app. */
+    fun onOpenCalendar()
     fun onToggleControl(id: String)
     fun onPlayPause()
     fun onNext()
@@ -44,7 +56,8 @@ interface HomeActions {
 
 /** What the home screen asks others to open. Each one arrives with its wave; until then, nothing happens. */
 interface HomeLinks {
-    fun onOpenDay() = Unit
+    /** Asks the user, on Android's own screen, to let Bercail read something on the phone. */
+    fun onAskAccess(access: Access) = Unit
     fun onOpenConversation(id: String) = Unit
     fun onOpenMessagesApp() = Unit
     fun onOpenHomeApp() = Unit
@@ -94,22 +107,33 @@ fun HomeScreen(
     search: HomeSearch? = null
 ) {
     val brume = rememberBcBrumeState()
+    // The sheet of the day is tinted glass: what it covers fades away, so that nothing shows through it.
+    val uncovered by animateFloatAsState(
+        targetValue = if (state.dayOpen) 0f else 1f,
+        animationSpec = tween(BcTheme.motion.fadeMillis),
+        label = "under the day sheet"
+    )
+    val fading = Modifier.graphicsLayer { alpha = uncovered }
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
             HomeBackdrop(state, brume)
-            DrawerOverScreen(
-                searching = search?.open == true,
-                screen = {
-                    Box(Modifier.fillMaxSize()) {
-                        Column(Modifier.fillMaxSize()) {
-                            HomeHeader(state, onOpenDay = links::onOpenDay)
-                            HomeMiddle(state, resting = !brume.isAnimating, actions, links, Modifier.weight(1f))
+            // Under the sheet, a screen reader must not read the screen either.
+            Box(if (state.dayOpen) Modifier.clearAndSetSemantics {} else Modifier) {
+                DrawerOverScreen(
+                    searching = search?.open == true,
+                    screen = {
+                        Box(Modifier.fillMaxSize()) {
+                            Column(Modifier.fillMaxSize()) {
+                                HomeHeader(state, onOpenDay = { actions.onDayOpenChange(true) })
+                                HomeMiddle(state, !brume.isAnimating, actions, links, Modifier.weight(1f).then(fading))
+                            }
+                            VerticalTimeline(state, Modifier.align(Alignment.TopEnd).then(fading))
                         }
-                        VerticalTimeline(state, Modifier.align(Alignment.TopEnd))
-                    }
-                },
-                drawer = { HomeDrawer(state, position, actions, links, search) }
-            )
+                    },
+                    drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search) } }
+                )
+            }
+            DaySheet(state, actions, links)
         }
     }
 }

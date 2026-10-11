@@ -159,4 +159,14 @@ class DeviceAppsUiTest {
         DevicePhone(phone).openHomeScreenSettings()
         assertThat(shadowOf(phone).nextStartedActivity.action).isEqualTo(Settings.ACTION_HOME_SETTINGS)
     }
+
+    @Test
+    fun `la page de Bercail dans les Paramètres du téléphone s'ouvre sur Bercail, pas sur une autre app`() {
+        DevicePhone(phone).openAppSettings()
+
+        val started = shadowOf(phone).nextStartedActivity
+
+        assertThat(started.action).isEqualTo(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        assertThat(started.data.toString()).isEqualTo("package:${phone.packageName}")
+    }
 }

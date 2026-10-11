@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.feature.settings
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -14,6 +15,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
@@ -34,10 +36,11 @@ class SettingsUiTest {
 
     private val world = FakeWorld()
     private var closed = 0
+    private val asked = mutableListOf<Access>()
 
     private fun show() {
-        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
-        compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }) } }
+        val settings = SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
+        compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }, onAskAccess = { asked += it }) } }
     }
 
     private val stored: Settings get() = world.settings.settings.value
@@ -71,6 +74,35 @@ class SettingsUiTest {
 
         compose.onNodeWithText("Verticale").performClick()
         assertThat(stored.timeline).isEqualTo(TimelineOrientation.Vertical)
+    }
+
+    @Test
+    fun `sans autorisation, la ligne « Agenda du téléphone » la demande à Android d'un toucher`() {
+        world.access.refuse(Access.Calendar)
+        show()
+        compose.onNodeWithText("Toucher pour autoriser Bercail à lire tes rendez-vous").assertExists()
+
+        compose.onNodeWithText("Agenda du téléphone").performScrollTo().performClick()
+
+        assertThat(asked).containsExactly(Access.Calendar)
+    }
+
+    @Test
+    fun `une fois l'agenda autorisé, sa ligne le dit et ne se touche plus`() {
+        show()
+
+        compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
+        compose.onNodeWithText("Agenda du téléphone").performScrollTo().assertHasNoClickAction()
+    }
+
+    @Test
+    fun `la ligne de l'agenda suit l'autorisation dès qu'elle est donnée`() {
+        world.access.refuse(Access.Calendar)
+        show()
+
+        world.access.grant(Access.Calendar)
+
+        compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
     }
 
     @Test
@@ -132,7 +164,7 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la liste des apps n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
 
         assertThat(world.apps.apps.subscriptionCount.value).isEqualTo(0)
     }
@@ -177,7 +209,7 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la mise à jour n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates)
+        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access)
 
         assertThat(world.updates.status.subscriptionCount.value).isEqualTo(0)
     }

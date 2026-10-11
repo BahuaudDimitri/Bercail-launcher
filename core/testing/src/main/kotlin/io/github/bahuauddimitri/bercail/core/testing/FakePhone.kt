@@ -39,7 +39,7 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 
 /** A phone that only remembers where it was sent. */
 class FakePhone : Phone {
-    /** Where the phone was sent so far, in order: "web: chat", "store: chat", "settings", "home screen settings". */
+    /** Where the phone was sent so far, in order: "web: chat", "store: chat", "settings", "app settings"… */
     val visits = mutableListOf<String>()
 
     override fun searchWeb(query: String) {
@@ -56,5 +56,9 @@ class FakePhone : Phone {
 
     override fun openHomeScreenSettings() {
         visits += "home screen settings"
+    }
+
+    override fun openAppSettings() {
+        visits += "app settings"
     }
 }
