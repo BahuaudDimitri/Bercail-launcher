@@ -57,6 +57,8 @@ class SettingsScreenshotTest {
     @Test
     fun `les réglages avec une version prête à installer correspondent à leur capture`() {
         show(UpdateStatus.Ready(Version(0, 9, 0)))
+        // The update row is at the bottom of the list.
+        compose.onNodeWithText("Paramètres du téléphone").performScrollTo()
 
         capture("settings_update_ready")
     }

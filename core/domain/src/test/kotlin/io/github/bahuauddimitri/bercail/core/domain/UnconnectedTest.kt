@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail.core.domain
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.domain.home.homeSummary
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.messages.messagesSummary
@@ -15,11 +14,6 @@ import org.junit.Test
 
 /** A source that is not plugged in yet shows an honest empty state, never made-up data. */
 class UnconnectedTest {
-    @Test
-    fun `sans météo branchée, il n'y a pas de ligne météo`() = runBlocking {
-        assertThat(Unconnected.weather.weather.first()).isNull()
-    }
-
     @Test
     fun `sans messages branchés, le résumé dit « Aucun message »`() = runBlocking {
         assertThat(messagesSummary(Unconnected.messages.conversations.first()).detail).isEqualTo("Aucun message")

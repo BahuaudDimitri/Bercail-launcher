@@ -8,8 +8,7 @@ import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.glanceAt
 import io.github.bahuauddimitri.bercail.core.domain.messages.messagesSummary
-import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
-import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
+import io.github.bahuauddimitri.bercail.core.domain.weather.weatherAt
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -22,7 +21,8 @@ class FakeWorldTest {
         val world = FakeWorld(Moment.Matin)
 
         assertThat(world.clock.now().toLocalTime().toString()).isEqualTo("08:10")
-        assertThat(world.weather.weather.first()).isEqualTo(Weather(11, WeatherCondition.Clear))
+        assertThat(weatherAt(world.clock.now(), world.weather.forecast.first()!!)!!.line)
+            .isEqualTo("11° · Ciel dégagé, 17° cet après-midi")
         assertThat(messagesSummary(world.messages.conversations.first()).detail).isEqualTo("Léa, Tom")
     }
 
@@ -31,7 +31,8 @@ class FakeWorldTest {
         val world = FakeWorld(Moment.Trajet)
 
         assertThat(world.clock.now().toLocalTime().toString()).isEqualTo("13:35")
-        assertThat(world.weather.weather.first()).isEqualTo(Weather(14, WeatherCondition.Rain))
+        assertThat(weatherAt(world.clock.now(), world.weather.forecast.first()!!)!!.line)
+            .isEqualTo("14° · Pluie fine jusqu'à 16 h")
         assertThat(messagesSummary(world.messages.conversations.first()).detail).isEqualTo("Léa, Équipe")
     }
 
@@ -40,7 +41,8 @@ class FakeWorldTest {
         val world = FakeWorld(Moment.Soir)
 
         assertThat(world.clock.now().toLocalTime().toString()).isEqualTo("20:40")
-        assertThat(world.weather.weather.first()).isEqualTo(Weather(12, WeatherCondition.Wind))
+        assertThat(weatherAt(world.clock.now(), world.weather.forecast.first()!!)!!.line)
+            .isEqualTo("12° · Vent 35 km/h cette nuit")
         assertThat(messagesSummary(world.messages.conversations.first()).headline).isEqualTo("3 non lus")
     }
 
@@ -77,10 +79,10 @@ class FakeWorldTest {
         assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())
 
         world.access.refuse(Access.Calendar)
-        assertThat(world.access.granted.first()).isEmpty()
+        assertThat(world.access.granted.first()).isEqualTo(setOf(Access.Location))
 
         world.access.grant(Access.Calendar)
-        assertThat(world.access.granted.first()).isEqualTo(setOf(Access.Calendar))
+        assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())
     }
 
     @Test

@@ -5,6 +5,7 @@ import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
 import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeClock
 import io.github.bahuauddimitri.bercail.core.testing.FakeSettingsSource
+import io.github.bahuauddimitri.bercail.core.testing.FakeWeatherSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Samples
 
@@ -21,7 +22,7 @@ fun FakeWorld.homeViewModel() = HomeViewModel(clock, agenda, weather, messages, 
 fun unconnectedHomeViewModel(hour: Int = 9) = HomeViewModel(
     clock = FakeClock(Samples.day.atTime(hour, 0)),
     agenda = FakeAgendaSource(),
-    weather = Unconnected.weather,
+    weather = FakeWeatherSource(),
     messages = Unconnected.messages,
     home = Unconnected.home,
     media = Unconnected.media,

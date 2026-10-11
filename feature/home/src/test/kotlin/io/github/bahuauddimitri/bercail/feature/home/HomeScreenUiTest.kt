@@ -78,7 +78,7 @@ class HomeScreenUiTest {
     fun `le matin, l'accueil annonce la météo et le prochain rendez-vous`() {
         show()
 
-        compose.onNodeWithText("11° · Ciel dégagé ce matin").assertExists()
+        compose.onNodeWithText("11° · Ciel dégagé, 17° cet après-midi").assertExists()
         compose.onNodeWithText("Dans 1 h 20 · 09:30").assertExists()
         compose.onNodeWithText("Stand-up").assertExists()
         compose.onNodeWithText("Ensuite Déjeuner avec Léa à 12:30").assertExists()
@@ -88,7 +88,7 @@ class HomeScreenUiTest {
     fun `le soir, l'accueil annonce le vent et le dernier rendez-vous`() {
         show(FakeWorld(Moment.Soir))
 
-        compose.onNodeWithText("12° · Vent cette nuit").assertExists()
+        compose.onNodeWithText("12° · Vent 35 km/h cette nuit").assertExists()
         compose.onNodeWithText("Ciné à la maison").assertExists()
         compose.onNodeWithText("Rien d'autre aujourd'hui").assertExists()
     }
@@ -554,6 +554,6 @@ class HomeScreenUiTest {
 
         assertThat(world.messages.conversations.subscriptionCount.value).isEqualTo(0)
         assertThat(world.home.controls.subscriptionCount.value).isEqualTo(0)
-        assertThat(world.weather.weather.subscriptionCount.value).isEqualTo(0)
+        assertThat(world.weather.forecast.subscriptionCount.value).isEqualTo(0)
     }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Bercail reads the forecast of the hours to come on Open-Meteo. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The forecast is the one of the place where the phone is, roughly: never the precise position. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+</manifest>

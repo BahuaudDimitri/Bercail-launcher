@@ -6,6 +6,7 @@ import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.access.agendaSourceLine
+import io.github.bahuauddimitri.bercail.core.domain.access.weatherSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
@@ -32,7 +33,9 @@ data class SettingsUiState(
     /** The version running and where its update stands. */
     val update: UpdateLine = updateLine(null, UpdateStatus.Off),
     /** Whether Bercail may read the calendar, and how to let it. */
-    val agenda: SourceLine = agendaSourceLine(allowed = false)
+    val agenda: SourceLine = agendaSourceLine(allowed = false),
+    /** Whether Bercail may know roughly where the phone is, for the weather. */
+    val weather: SourceLine = weatherSourceLine(allowed = false)
 ) {
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
@@ -70,7 +73,8 @@ class SettingsViewModel(
                 settings = current,
                 apps = appDirectory(installed, emptyList()).sections.flatMap { it.apps },
                 update = updateLine(updates.current, update),
-                agenda = agendaSourceLine(allowed = Access.Calendar in granted)
+                agenda = agendaSourceLine(allowed = Access.Calendar in granted),
+                weather = weatherSourceLine(allowed = Access.Location in granted)
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 

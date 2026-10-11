@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":data:apps"))
     implementation(project(":data:settings"))
     implementation(project(":data:update"))
+    implementation(project(":data:weather"))
     // The debug app shows the prototype's data for the sources whose wave has not come yet; the release shows
     // their empty states and ships no fake.
     debugImplementation(project(":core:testing"))

@@ -106,6 +106,27 @@ class SettingsUiTest {
     }
 
     @Test
+    fun `sans autorisation, la ligne Météo demande à Android la position approximative, d'un toucher`() {
+        world.access.refuse(Access.Location)
+        show()
+        compose.onNodeWithText("Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo")
+            .assertExists()
+
+        compose.onNodeWithText("Lieu des prévisions").performScrollTo().performClick()
+
+        assertThat(asked).containsExactly(Access.Location)
+    }
+
+    @Test
+    fun `une fois la position autorisée, la ligne Météo dit d'où viennent les prévisions et ne se touche plus`() {
+        show()
+
+        compose.onNodeWithText("Ta position approximative · Open-Meteo, une fois par heure au plus")
+            .performScrollTo()
+            .assertHasNoClickAction()
+    }
+
+    @Test
     fun `le tiroir démarre replié par défaut, on peut le faire démarrer ouvert`() {
         show()
         assertThat(stored.drawerExpandedAtStart).isFalse()

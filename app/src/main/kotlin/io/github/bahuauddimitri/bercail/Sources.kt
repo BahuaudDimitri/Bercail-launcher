@@ -13,11 +13,16 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.update.Updater
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
+import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherWatch
 import io.github.bahuauddimitri.bercail.data.agenda.DeviceAgenda
 import io.github.bahuauddimitri.bercail.data.apps.DeviceApps
 import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
+import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
+import io.github.bahuauddimitri.bercail.data.weather.PhonePosition
+import io.github.bahuauddimitri.bercail.data.weather.StoredForecast
+import io.github.bahuauddimitri.bercail.data.weather.forecastStore
 import io.github.bahuauddimitri.bercail.feature.home.HomeViewModel
 import io.github.bahuauddimitri.bercail.feature.search.SearchViewModel
 import io.github.bahuauddimitri.bercail.feature.settings.SettingsViewModel
@@ -42,19 +47,20 @@ class BercailApplication : Application() {
 }
 
 /** The sources whose wave has not come yet. What stands in for them depends on the build: see [waiting]. */
-internal class Waiting(
-    val weather: WeatherSource,
-    val messages: MessagesSource,
-    val home: HomeSource,
-    val media: MediaSource
-)
+internal class Waiting(val messages: MessagesSource, val home: HomeSource, val media: MediaSource)
 
 /**
  * Every source of Bercail, plugged once. Real today: the clock, the installed apps, the links to the phone, the
- * stored settings, the update of Bercail itself, what the user lets it read, and the calendar. The others wait
- * for their wave (media in 7, messages in 8, house in 9). The tests plug their own [update], [agenda] or [clock].
+ * stored settings, the update of Bercail itself, what the user lets it read, the calendar and the weather. The
+ * others wait for their wave (media in 7, messages in 8, house in 9). The tests plug their own parts.
  */
-class Sources(context: Context, update: UpdateParts? = null, agenda: AgendaSource? = null, clock: Clock? = null) {
+class Sources(
+    context: Context,
+    update: UpdateParts? = null,
+    agenda: AgendaSource? = null,
+    clock: Clock? = null,
+    weather: WeatherSource? = null
+) {
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val waiting = waiting()
 
@@ -68,6 +74,17 @@ class Sources(context: Context, update: UpdateParts? = null, agenda: AgendaSourc
     val access = DeviceAccess(context)
     val agenda: AgendaSource = agenda ?: DeviceAgenda(context, access)
 
+    /** The forecast of the place where the phone is, asked for only while the home screen is shown. */
+    val weather: WeatherSource = weather ?: WeatherWatch(
+        clock = this.clock,
+        access = access,
+        position = PhonePosition(context),
+        service = OpenMeteo(),
+        journal = StoredForecast(forecastStore(File(context.filesDir, WEATHER_FILE), background)),
+        background = Dispatchers.IO,
+        onFailure = { Log.w(LOG_TAG, "The weather of Bercail stumbled", it) }
+    )
+
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
     /** Bercail updating itself as the home screen comes and goes. */
@@ -78,7 +95,7 @@ class Sources(context: Context, update: UpdateParts? = null, agenda: AgendaSourc
     fun homeViewModel() = HomeViewModel(
         clock = clock,
         agenda = agenda,
-        weather = waiting.weather,
+        weather = weather,
         messages = waiting.messages,
         home = waiting.home,
         media = waiting.media,
@@ -103,6 +120,7 @@ class Sources(context: Context, update: UpdateParts? = null, agenda: AgendaSourc
 
     private companion object {
         const val SETTINGS_FILE = "datastore/settings.preferences_pb"
+        const val WEATHER_FILE = "datastore/weather.preferences_pb"
         const val LOG_TAG = "Bercail"
     }
 }

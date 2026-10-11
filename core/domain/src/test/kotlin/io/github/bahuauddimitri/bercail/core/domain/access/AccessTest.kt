@@ -25,4 +25,23 @@ class AccessTest {
         assertThat(line.detail).isEqualTo("Bercail lit tes rendez-vous, sans rien y changer")
         assertThat(line.touchable).isFalse()
     }
+
+    @Test
+    fun `sans autorisation, la ligne Météo dit ce qui sera envoyé, et à qui`() {
+        val line = weatherSourceLine(allowed = false)
+
+        assertThat(line.title).isEqualTo("Lieu des prévisions")
+        assertThat(line.detail)
+            .isEqualTo("Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo")
+        assertThat(line.touchable).isTrue()
+    }
+
+    @Test
+    fun `une fois la position autorisée, la ligne Météo dit d'où viennent les prévisions et à quel rythme`() {
+        val line = weatherSourceLine(allowed = true)
+
+        assertThat(line.detail)
+            .isEqualTo("Ta position approximative · Open-Meteo, une fois par heure au plus")
+        assertThat(line.touchable).isFalse()
+    }
 }

@@ -73,6 +73,12 @@ fun SettingsScreen(
                 }
             )
         }
+        BcSectionLabel("Météo")
+        BcSettingRow(
+            title = state.weather.title,
+            subtitle = state.weather.detail,
+            onClick = if (state.weather.touchable) ({ onAskAccess(Access.Location) }) else null
+        )
         BcSectionLabel("Tiroir")
         BcSettingRow("Tiroir", subtitle = "État de départ") {
             BcSegmented(

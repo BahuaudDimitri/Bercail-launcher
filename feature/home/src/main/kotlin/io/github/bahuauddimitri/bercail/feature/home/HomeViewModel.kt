@@ -36,10 +36,10 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
-import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
+import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
-import io.github.bahuauddimitri.bercail.core.domain.weather.weatherLine
+import io.github.bahuauddimitri.bercail.core.domain.weather.weatherAt
 import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -110,12 +110,12 @@ class HomeViewModel(
     private val day: Flow<Day> = combine(
         clock.minutes,
         clock.minutes.map { it.toLocalDate() }.distinctUntilChanged().flatMapLatest(agenda::eventsOn),
-        weather.weather,
+        weather.forecast,
         access.granted
-    ) { now, events, weather, granted ->
+    ) { now, events, forecast, granted ->
         // Without the user's agreement, nothing of the calendar is shown, whatever the source says.
         val allowed = Access.Calendar in granted
-        Day(now, if (allowed) events else emptyList(), weather, allowed)
+        Day(now, if (allowed) events else emptyList(), forecast, allowed)
     }.onEach { shown = it }
 
     private val drawer: Flow<Drawer> = combine(messages.conversations, home.controls, settings.settings, ::Drawer)
@@ -179,10 +179,11 @@ class HomeViewModel(
     private fun stateOf(day: Day, drawer: Drawer, media: MediaState, choices: Choices): HomeUiState {
         val part = DayPart.at(day.now.toLocalTime())
         val favorites = drawer.settings.favoritePeople
+        val weather = day.forecast?.let { weatherAt(day.now, it) }
         return HomeUiState(
             glance = if (day.agendaAllowed) glanceAt(day.now, day.events) else closedGlance,
-            weatherLine = day.weather?.let { weatherLine(it, part) },
-            weather = day.weather?.condition ?: WeatherCondition.Clear,
+            weatherLine = weather?.line,
+            weather = weather?.condition ?: WeatherCondition.Clear,
             dayPart = part,
             dayLine = dayLineAt(day.now, day.events),
             timeline = drawer.settings.timeline,
@@ -206,7 +207,7 @@ class HomeViewModel(
     private data class Day(
         val now: LocalDateTime,
         val events: List<AgendaEvent>,
-        val weather: Weather?,
+        val forecast: Forecast?,
         val agendaAllowed: Boolean
     )
 

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal val Access.permission: String
     get() = when (this) {
         Access.Calendar -> Manifest.permission.READ_CALENDAR
+        Access.Location -> Manifest.permission.ACCESS_COARSE_LOCATION
     }
 
 /**

@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.map
 internal fun waiting(): Waiting {
     val prototype = FakeWorld()
     return Waiting(
-        weather = prototype.weather,
         messages = prototype.messages,
         home = prototype.home,
         // A player whose time moves, so that the remote can be tried.

@@ -3,7 +3,7 @@ package io.github.bahuauddimitri.bercail.core.domain.access
 import kotlinx.coroutines.flow.Flow
 
 /** What Bercail reads on the phone only once the user has agreed, on the screen Android shows for it. */
-enum class Access { Calendar }
+enum class Access { Calendar, Location }
 
 interface AccessSource {
     /** What the user has agreed to so far. It changes when they agree, or change their mind in Android's settings. */
@@ -20,3 +20,11 @@ fun agendaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
 }
 
 private const val AGENDA = "Agenda du téléphone"
+
+fun weatherSourceLine(allowed: Boolean): SourceLine = if (allowed) {
+    SourceLine(WEATHER, "Ta position approximative · Open-Meteo, une fois par heure au plus", false)
+} else {
+    SourceLine(WEATHER, "Toucher pour autoriser ta position approximative, envoyée arrondie à Open-Meteo", true)
+}
+
+private const val WEATHER = "Lieu des prévisions"

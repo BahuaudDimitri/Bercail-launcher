@@ -102,9 +102,23 @@ class HomeViewModelTest {
         show(morning)
         show(evening)
 
-        assertThat(morning.state.value.weatherLine).isEqualTo("11° · Ciel dégagé ce matin")
-        assertThat(evening.state.value.weatherLine).isEqualTo("12° · Vent cette nuit")
+        assertThat(morning.state.value.weatherLine).isEqualTo("11° · Ciel dégagé, 17° cet après-midi")
+        assertThat(evening.state.value.weatherLine).isEqualTo("12° · Vent 35 km/h cette nuit")
         assertThat(evening.state.value.weather).isEqualTo(WeatherCondition.Wind)
+    }
+
+    @Test
+    fun `la ligne météo suit l'heure qui avance, sans nouvelle prévision`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Trajet)
+        val home = homeOf(world)
+        show(home)
+        assertThat(home.state.value.weatherLine).isEqualTo("14° · Pluie fine jusqu'à 16 h")
+        assertThat(home.state.value.weather).isEqualTo(WeatherCondition.Rain)
+
+        world.clock.advanceMinutes(150)
+
+        assertThat(home.state.value.weatherLine).isEqualTo("14° · Ciel couvert cet après-midi")
+        assertThat(home.state.value.weather).isEqualTo(WeatherCondition.Clear)
     }
 
     @Test
@@ -572,7 +586,7 @@ class HomeViewModelTest {
 
     /** How many of the four observable fake sources (weather, messages, house, settings) are being listened to. */
     private fun FakeWorld.listeners(): Int = listOf(
-        weather.weather.subscriptionCount.value,
+        weather.forecast.subscriptionCount.value,
         messages.conversations.subscriptionCount.value,
         home.controls.subscriptionCount.value,
         settings.settings.subscriptionCount.value

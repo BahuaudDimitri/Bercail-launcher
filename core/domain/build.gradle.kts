@@ -16,6 +16,7 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.assertk)
+    testImplementation(libs.kotlinx.coroutines.test)
     // The fakes of the sources, shared with the screens' tests.
     testImplementation(project(":core:testing"))
 }

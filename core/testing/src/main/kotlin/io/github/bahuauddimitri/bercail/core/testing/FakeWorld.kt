@@ -9,8 +9,7 @@ import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
-import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
-import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
+import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration.Companion.seconds
@@ -18,13 +17,13 @@ import kotlin.time.Duration.Companion.seconds
 /** The three moments of the prototype: each one is a data set (time, weather, who wrote). */
 enum class Moment(
     internal val time: LocalTime,
-    internal val weather: Weather,
+    internal val forecast: Forecast,
     internal val unread: Map<String, Int>,
     internal val playlist: List<MediaContent>
 ) {
-    Matin(LocalTime.of(8, 10), Weather(11, WeatherCondition.Clear), mapOf("lea" to 1, "tom" to 1), Samples.spotify),
-    Trajet(LocalTime.of(13, 35), Weather(14, WeatherCondition.Rain), mapOf("lea" to 1, "team" to 1), Samples.spotify),
-    Soir(LocalTime.of(20, 40), Weather(12, WeatherCondition.Wind), mapOf("mum" to 1, "julien" to 2), Samples.youtube)
+    Matin(LocalTime.of(8, 10), Skies.clear, mapOf("lea" to 1, "tom" to 1), Samples.spotify),
+    Trajet(LocalTime.of(13, 35), Skies.rain, mapOf("lea" to 1, "team" to 1), Samples.spotify),
+    Soir(LocalTime.of(20, 40), Skies.wind, mapOf("mum" to 1, "julien" to 2), Samples.youtube)
 }
 
 /** Every source of the home screen, faked and filled with the prototype's data at a given [moment]. */
@@ -32,7 +31,7 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val clock = FakeClock(Samples.day.atTime(moment.time))
     val access = FakeAccess()
     val agenda = FakeAgendaSource(Samples.eventsOn(Samples.day))
-    val weather = FakeWeatherSource(moment.weather)
+    val weather = FakeWeatherSource(moment.forecast)
     val messages = FakeMessagesSource(Samples.conversations(moment.unread))
     val home = FakeHomeSource()
     val media = FakeMediaSource(moment.playlist, playing = playing, position = Samples.position)

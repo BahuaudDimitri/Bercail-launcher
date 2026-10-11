@@ -7,8 +7,6 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
-import io.github.bahuauddimitri.bercail.core.domain.weather.Weather
-import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlinx.coroutines.flow.Flow
@@ -51,14 +49,6 @@ class FakeAgendaSource(events: List<AgendaEvent> = emptyList()) : AgendaSource {
 
     fun set(events: List<AgendaEvent>) {
         this.events.value = events
-    }
-}
-
-class FakeWeatherSource(weather: Weather? = null) : WeatherSource {
-    override val weather = MutableStateFlow(weather)
-
-    fun set(weather: Weather?) {
-        this.weather.value = weather
     }
 }
 
