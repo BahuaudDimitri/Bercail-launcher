@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":data:agenda"))
     implementation(project(":data:apps"))
+    implementation(project(":data:media"))
     implementation(project(":data:settings"))
     implementation(project(":data:update"))
     implementation(project(":data:weather"))

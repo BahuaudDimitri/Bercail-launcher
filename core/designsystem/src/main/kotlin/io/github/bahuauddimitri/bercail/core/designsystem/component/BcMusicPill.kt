@@ -35,7 +35,8 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * The music pill on the home screen: round cover, "Title · Artist" and an equalizer, frozen when paused.
+ * The music pill on the home screen: round cover, "Title · Artist" (the title alone when the artist is not
+ * known) and an equalizer, frozen when paused.
  * Without [cover] image, the disc is a blend of [coverColors], or a note when there are none.
  * With [still], the equalizer keeps its pose: the screen is at rest, even though the music plays.
  */
@@ -76,7 +77,7 @@ fun BcMusicPill(
             }
         }
         BcText(
-            "$title · $artist",
+            if (artist.isEmpty()) title else "$title · $artist",
             modifier = Modifier.weight(1f, fill = false),
             style = BcTextStyle.Label,
             maxLines = 1

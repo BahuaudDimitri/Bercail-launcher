@@ -35,9 +35,16 @@ import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
+import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import io.github.bahuauddimitri.bercail.core.testing.Samples
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,12 +63,11 @@ class HomeScreenUiTest {
         override fun onOpenConversation(id: String) = opened.add("conversation $id").let {}
         override fun onOpenMessagesApp() = opened.add("app de messages").let {}
         override fun onOpenHomeApp() = opened.add("app de la maison").let {}
-        override fun onOpenMediaApps() = opened.add("apps média").let {}
-        override fun onOpenMediaApp(app: String) = opened.add("app $app").let {}
+        override fun onOpenAppSettings() = opened.add("page de Bercail dans les Paramètres").let {}
     }
 
-    private fun show(world: FakeWorld = FakeWorld(Moment.Matin)): FakeWorld {
-        val home = world.homeViewModel()
+    private fun show(world: FakeWorld = FakeWorld(Moment.Matin), media: MediaSource = world.media): FakeWorld {
+        val home = world.homeViewModel(media)
         compose.setContent { BcTheme { HomeRoute(home, links = links) } }
         return world
     }
@@ -69,6 +75,7 @@ class HomeScreenUiTest {
     private fun silent(moment: Moment = Moment.Matin) = FakeWorld(moment).apply { media.stop() }
 
     private val inTheDaySheet = hasAnyAncestor(hasTestTag(DAY_TAG))
+    private val inTheListenSheet = hasAnyAncestor(hasTestTag(LISTEN_TAG))
 
     private fun searchBarBottom() = compose.onNodeWithContentDescription("Chercher").getUnclippedBoundsInRoot().bottom
 
@@ -354,12 +361,65 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `sans contenu, la pastille propose « Écouter… » et demande les apps média`() {
+    fun `sans contenu, la pastille propose « Écouter… » et ouvre la feuille Écouter`() {
         show(silent())
 
         compose.onNodeWithText("Écouter…").performClick()
 
-        assertThat(opened).containsExactly("apps média")
+        compose.onNode(hasText("Écouter") and inTheListenSheet).assertExists()
+        compose.onNode(hasText("Rien ne joue pour l'instant", substring = true) and inTheListenSheet).assertExists()
+    }
+
+    @Test
+    fun `sous la feuille Écouter, l'accueil n'est plus lu, et le geste retour la referme`() {
+        show(silent())
+        compose.onNodeWithText("Écouter…").performClick()
+        compose.onNodeWithText("Écouter…").assertDoesNotExist()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+
+        compose.onNodeWithText("Écouter…").assertExists()
+    }
+
+    @Test
+    fun `sans l'accès aux notifications, la feuille Écouter dit pourquoi le donner et le demande à Android`() {
+        show(silent().apply { access.refuse(Access.Notifications) })
+        compose.onNodeWithText("Écouter…").performClick()
+
+        compose.onNode(hasText("Bercail ne lit aucune notification", substring = true)).assertExists()
+        compose.onNodeWithText("Autoriser dans Android").performClick()
+
+        assertThat(opened).containsExactly("demande d'accès Notifications")
+    }
+
+    @Test
+    fun `si Android refuse l'accès, la feuille mène à la page de Bercail dans les Paramètres`() {
+        show(silent().apply { access.refuse(Access.Notifications) })
+        compose.onNodeWithText("Écouter…").performClick()
+
+        compose.onNode(hasText("Paramètre restreint", substring = true)).assertExists()
+        compose.onNodeWithText("Page de Bercail dans les Paramètres").performClick()
+
+        assertThat(opened).containsExactly("page de Bercail dans les Paramètres")
+    }
+
+    @Test
+    fun `sans l'accès aux notifications, la musique qui joue n'est pas montrée`() {
+        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Notifications) })
+
+        compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
+        compose.onNodeWithText("Écouter…").assertExists()
+    }
+
+    @Test
+    fun `dès qu'une musique démarre, la feuille Écouter se referme et la pastille la montre`() {
+        val world = show(silent())
+        compose.onNodeWithText("Écouter…").performClick()
+
+        world.media.load(Samples.spotify)
+
+        compose.onNodeWithTag(LISTEN_TAG).assertDoesNotExist()
+        compose.onNodeWithText("Looped · Kiasmos").assertExists()
     }
 
     @Test
@@ -464,13 +524,48 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `« Ouvrir dans Spotify » demande l'app qui joue`() {
-        show()
+    fun `« Ouvrir dans Spotify » montre le contenu dans son app`() {
+        val world = show()
         compose.onNodeWithText("Looped · Kiasmos").performClick()
 
         compose.onNodeWithText("Ouvrir dans Spotify").performClick()
 
-        assertThat(opened).containsExactly("app Spotify")
+        assertThat(world.media.appOpenings).isEqualTo(1)
+    }
+
+    @Test
+    fun `la télécommande de YouTube n'a pas de bouton Précédent, les autres restent`() {
+        val youtube = FakeMediaSource(
+            Samples.youtube,
+            playing = true,
+            actions = setOf(MediaAction.Next, MediaAction.Seek)
+        )
+        show(media = youtube)
+        compose.onNodeWithText("Ramen maison en 20 minutes · Cuisine du soir").performClick()
+
+        compose.onNodeWithContentDescription("Précédent").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Pause").assertExists()
+        compose.onNodeWithContentDescription("Suivant").assertExists()
+    }
+
+    @Test
+    fun `un direct n'a pas de fin, sa télécommande n'a pas de barre de progression`() {
+        val live = MediaContent("Le 7/9", "France Inter", "Radio France", duration = Duration.ZERO)
+        show(media = FakeMediaSource(listOf(live), playing = true))
+        compose.onNodeWithText("Le 7/9 · France Inter").performClick()
+
+        compose.onNodeWithText("0:00").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Pause").assertExists()
+    }
+
+    @Test
+    fun `une vidéo sans artiste connu s'affiche avec son seul titre`() {
+        val video = MediaContent("Tiny Desk Concert", artist = "", app = "YouTube", duration = 1080.seconds)
+        show(media = FakeMediaSource(listOf(video), playing = true))
+
+        compose.onNodeWithText("Tiny Desk Concert").performClick()
+
+        compose.onNodeWithText("Ouvrir dans YouTube").assertExists()
     }
 
     @Test

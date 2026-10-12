@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.SystemClock
@@ -10,14 +11,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
+import io.github.bahuauddimitri.bercail.data.media.MediaAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** The Android permission behind each thing Bercail asks to read. */
-internal val Access.permission: String
+/**
+ * The Android permission behind each thing Bercail asks to read. The "notification access" has none: Android
+ * gives it on a page of its own settings.
+ */
+internal val Access.permission: String?
     get() = when (this) {
         Access.Calendar -> Manifest.permission.READ_CALENDAR
         Access.Location -> Manifest.permission.ACCESS_COARSE_LOCATION
+        Access.Notifications -> null
     }
 
 /**
@@ -33,9 +39,12 @@ class DeviceAccess(private val context: Context) : AccessSource {
         known.value = read()
     }
 
-    private fun read(): Set<Access> = Access.entries
-        .filter { context.checkSelfPermission(it.permission) == PackageManager.PERMISSION_GRANTED }
-        .toSet()
+    private fun read(): Set<Access> = Access.entries.filter(::has).toSet()
+
+    private fun has(access: Access): Boolean {
+        val permission = access.permission ?: return MediaAccess.granted(context)
+        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    }
 }
 
 /**
@@ -44,9 +53,9 @@ class DeviceAccess(private val context: Context) : AccessSource {
  * place left to agree, so Bercail opens it. [android] is where the question goes; the tests answer it themselves.
  */
 internal class AccessQuestions(
-    activity: ComponentActivity,
+    private val activity: ComponentActivity,
     private val access: () -> DeviceAccess,
-    phone: () -> Phone,
+    private val phone: () -> Phone,
     android: ActivityResultRegistry = activity.activityResultRegistry
 ) {
     private var askedAt = 0L
@@ -59,8 +68,22 @@ internal class AccessQuestions(
         }
 
     fun ask(what: Access) {
+        val permission = what.permission ?: return openNotificationAccess()
         askedAt = SystemClock.elapsedRealtime()
-        question.launch(what.permission)
+        question.launch(permission)
+    }
+
+    /**
+     * The "notification access" is given on a page of Android's settings: Bercail opens the one that is about
+     * itself. The answer is read when the home screen comes back.
+     */
+    private fun openNotificationAccess() {
+        try {
+            activity.startActivity(MediaAccess.question(activity))
+        } catch (_: ActivityNotFoundException) {
+            // This phone has no such page: the page of Bercail is the closest place.
+            phone().openAppSettings()
+        }
     }
 
     private companion object {

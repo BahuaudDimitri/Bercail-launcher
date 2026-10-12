@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -43,13 +44,7 @@ import kotlin.math.abs
  * Sliding left opens Écoute, sliding right comes back. With [resting], the pill's equalizer keeps still.
  */
 @Composable
-internal fun HomeMiddle(
-    state: HomeUiState,
-    resting: Boolean,
-    actions: HomeActions,
-    links: HomeLinks,
-    modifier: Modifier = Modifier
-) {
+internal fun HomeMiddle(state: HomeUiState, resting: Boolean, actions: HomeActions, modifier: Modifier = Modifier) {
     val fade = BcTheme.motion.fadeMillis
     val onSwipe by rememberUpdatedState { left: Boolean ->
         actions.onPageWanted(if (left) HomePage.Listen else HomePage.Home)
@@ -76,14 +71,15 @@ internal fun HomeMiddle(
                         media = loaded,
                         resting = resting,
                         onOpenListen = { actions.onPageWanted(HomePage.Listen) },
-                        onOpenMediaApps = links::onOpenMediaApps,
+                        onOpenMediaApps = { actions.onListenOpenChange(true) },
                         modifier = Modifier.align(Alignment.BottomStart).padding(start = SIDE, bottom = PILL_BOTTOM)
                     )
 
                     HomePage.Listen -> if (loaded != null) {
                         Listening(
                             content = loaded.content,
-                            onOpenApp = { links.onOpenMediaApp(loaded.content.app) },
+                            fallback = state.dayPart.brume,
+                            onOpenApp = actions::onOpenMediaApp,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .padding(start = SIDE, end = SIDE, bottom = LISTEN_BOTTOM)
@@ -123,25 +119,37 @@ private fun MusicPill(
         BcMusicPill(
             title = media.content.title,
             artist = media.content.artist,
-            cover = null,
+            cover = media.content.cover.asImage(),
             playing = media.playing,
             onClick = onOpenListen,
             modifier = modifier,
-            coverColors = media.content.colors.pair,
+            coverColors = media.content.colors?.pair,
             still = resting
         )
     }
 }
 
-/** The Listen screen: large cover with its halo, title on two lines at most, artist, and the way to its app. */
+/**
+ * The Listen screen: large cover with its halo, title on two lines at most, artist, and the way to its app.
+ * A content without cover takes the colors Brume has at that moment ([fallback]).
+ */
 @Composable
-private fun Listening(content: MediaContent, onOpenApp: () -> Unit, modifier: Modifier = Modifier) {
+private fun Listening(
+    content: MediaContent,
+    fallback: BcBrumeColors,
+    onOpenApp: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(BcSpacing.s)
     ) {
-        BcCover(image = null, colors = content.colors.pair, contentDescription = "Pochette de ${content.title}")
+        BcCover(
+            image = content.cover.asImage(),
+            colors = content.colors?.pair ?: (fallback.first to fallback.second),
+            contentDescription = "Pochette de ${content.title}"
+        )
         BcText(
             content.title,
             modifier = Modifier.padding(top = TITLE_GAP),
@@ -149,7 +157,9 @@ private fun Listening(content: MediaContent, onOpenApp: () -> Unit, modifier: Mo
             maxLines = 2,
             textAlign = TextAlign.Center
         )
-        BcText(content.artist, style = BcTextStyle.BodySmall, color = BcTextColor.Muted, maxLines = 1)
+        if (content.artist.isNotEmpty()) {
+            BcText(content.artist, style = BcTextStyle.BodySmall, color = BcTextColor.Muted, maxLines = 1)
+        }
         BcButton("Ouvrir dans ${content.app}", onClick = onOpenApp)
     }
 }

@@ -10,10 +10,12 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +44,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.media.asTrackTime
 import io.github.bahuauddimitri.bercail.core.domain.media.progress
@@ -174,25 +177,34 @@ private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLink
     }
 }
 
-/** The drawer as a remote: where the content is (touch to move), previous, play or pause, next. */
+/**
+ * The drawer as a remote: where the content is (touch to move), previous, play or pause, next. Only the buttons
+ * the app accepts are there: YouTube, for one, has no "previous".
+ */
 @Composable
 private fun Remote(media: MediaState, position: StateFlow<Duration>, actions: HomeActions) {
     val loaded = media as? MediaState.Loaded ?: return
-    // Followed here only: the position costs nothing while the remote is not on screen.
-    val now by position.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TIME_GAP)) {
-            BcText(now.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
-            BcProgress(progress(now, loaded.content.duration), onSeek = actions::onSeek, modifier = Modifier.weight(1f))
-            BcText(loaded.content.duration.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
-        }
+        // A live stream has no end: nothing to measure the progress against.
+        if (loaded.content.duration > Duration.ZERO) Progress(loaded, position, actions)
         Row(
             Modifier.fillMaxWidth().padding(horizontal = BcSpacing.s),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             val quiet = BcButtonVariant.Ghost
-            BcIconButton(BcIcons.Previous, "Précédent", actions::onPrevious, variant = quiet, size = SIDE_BUTTON)
+            // A missing button leaves its room empty: play and pause stay in the middle.
+            Box(Modifier.size(SIDE_BUTTON)) {
+                if (MediaAction.Previous in loaded.actions) {
+                    BcIconButton(
+                        BcIcons.Previous,
+                        "Précédent",
+                        actions::onPrevious,
+                        variant = quiet,
+                        size = SIDE_BUTTON
+                    )
+                }
+            }
             BcIconButton(
                 icon = if (loaded.playing) BcIcons.Pause else BcIcons.Play,
                 contentDescription = if (loaded.playing) "Pause" else "Lecture",
@@ -200,8 +212,25 @@ private fun Remote(media: MediaState, position: StateFlow<Duration>, actions: Ho
                 variant = BcButtonVariant.Light,
                 size = MAIN_BUTTON
             )
-            BcIconButton(BcIcons.Next, "Suivant", actions::onNext, variant = quiet, size = SIDE_BUTTON)
+            Box(Modifier.size(SIDE_BUTTON)) {
+                if (MediaAction.Next in loaded.actions) {
+                    BcIconButton(BcIcons.Next, "Suivant", actions::onNext, variant = quiet, size = SIDE_BUTTON)
+                }
+            }
         }
+    }
+}
+
+/** Where the content is. Touching the bar moves in the content, if its app lets the remote do it. */
+@Composable
+private fun Progress(loaded: MediaState.Loaded, position: StateFlow<Duration>, actions: HomeActions) {
+    // Followed here only: the position costs nothing while the remote is not on screen.
+    val now by position.collectAsStateWithLifecycle()
+    val seek: ((Float) -> Unit)? = if (MediaAction.Seek in loaded.actions) actions::onSeek else null
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TIME_GAP)) {
+        BcText(now.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
+        BcProgress(progress(now, loaded.content.duration), onSeek = seek, modifier = Modifier.weight(1f))
+        BcText(loaded.content.duration.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
     }
 }
 

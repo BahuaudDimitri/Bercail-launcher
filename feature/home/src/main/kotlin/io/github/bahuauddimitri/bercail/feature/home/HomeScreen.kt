@@ -33,9 +33,10 @@ internal const val DRAWER_TAG = "home-drawer"
 internal const val BRUME_TAG = "home-brume"
 internal const val VEIL_TAG = "home-veil"
 internal const val DAY_TAG = "home-day"
+internal const val LISTEN_TAG = "home-listen"
 
 /** What the home screen does by itself. */
-interface HomeActions {
+interface HomeActions : ListenActions {
     fun onDrawerExpandedChange(expanded: Boolean)
     fun onPageWanted(page: HomePage)
 
@@ -48,10 +49,6 @@ interface HomeActions {
     /** Shows today in the phone's calendar app. */
     fun onOpenCalendar()
     fun onToggleControl(id: String)
-    fun onPlayPause()
-    fun onNext()
-    fun onPrevious()
-    fun onSeek(fraction: Float)
 }
 
 /** What the home screen asks others to open. Each one arrives with its wave; until then, nothing happens. */
@@ -61,8 +58,9 @@ interface HomeLinks {
     fun onOpenConversation(id: String) = Unit
     fun onOpenMessagesApp() = Unit
     fun onOpenHomeApp() = Unit
-    fun onOpenMediaApps() = Unit
-    fun onOpenMediaApp(app: String) = Unit
+
+    /** The page of Bercail in the phone settings: where a right Android refuses to give can be unlocked. */
+    fun onOpenAppSettings() = Unit
 
     object None : HomeLinks
 }
@@ -107,25 +105,26 @@ fun HomeScreen(
     search: HomeSearch? = null
 ) {
     val brume = rememberBcBrumeState()
-    // The sheet of the day is tinted glass: what it covers fades away, so that nothing shows through it.
+    // A sheet is tinted glass: what it covers fades away, so that nothing shows through it.
+    val covered = state.dayOpen || state.listenOpen
     val uncovered by animateFloatAsState(
-        targetValue = if (state.dayOpen) 0f else 1f,
+        targetValue = if (covered) 0f else 1f,
         animationSpec = tween(BcTheme.motion.fadeMillis),
-        label = "under the day sheet"
+        label = "under a sheet"
     )
     val fading = Modifier.graphicsLayer { alpha = uncovered }
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
             HomeBackdrop(state, brume)
-            // Under the sheet, a screen reader must not read the screen either.
-            Box(if (state.dayOpen) Modifier.clearAndSetSemantics {} else Modifier) {
+            // Under a sheet, a screen reader must not read the screen either.
+            Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
                 DrawerOverScreen(
                     searching = search?.open == true,
                     screen = {
                         Box(Modifier.fillMaxSize()) {
                             Column(Modifier.fillMaxSize()) {
                                 HomeHeader(state, onOpenDay = { actions.onDayOpenChange(true) })
-                                HomeMiddle(state, !brume.isAnimating, actions, links, Modifier.weight(1f).then(fading))
+                                HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
                             }
                             VerticalTimeline(state, Modifier.align(Alignment.TopEnd).then(fading))
                         }
@@ -134,6 +133,7 @@ fun HomeScreen(
                 )
             }
             DaySheet(state, actions, links)
+            ListenSheet(state, actions, links)
         }
     }
 }

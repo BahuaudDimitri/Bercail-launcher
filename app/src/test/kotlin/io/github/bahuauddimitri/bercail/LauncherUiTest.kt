@@ -78,7 +78,6 @@ class LauncherUiTest {
     fun `la version de mise au point montre les données du prototype pour ce qui n'est pas encore branché`() {
         awaitText("2 non lus · Léa, Tom")
         compose.onNodeWithText("Salon 60 %, Volets ouverts").assertExists()
-        compose.onNodeWithText("Looped · Kiasmos").assertExists()
     }
 
     @Test
@@ -149,17 +148,6 @@ class LauncherUiTest {
         awaitText("2 non lus · Léa, Tom")
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
         compose.onNodeWithText("Fond d'écran").assertDoesNotExist()
-    }
-
-    @Test
-    fun `le bouton Accueil ramène de l'écran Écoute à l'Accueil`() {
-        awaitText("Looped · Kiasmos")
-        compose.onNodeWithText("Looped · Kiasmos").performClick()
-        awaitText("Ouvrir dans Spotify")
-
-        pressHome()
-
-        awaitText("Looped · Kiasmos")
     }
 
     @Test

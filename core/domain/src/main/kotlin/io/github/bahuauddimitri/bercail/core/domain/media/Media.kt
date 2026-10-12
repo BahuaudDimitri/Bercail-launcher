@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.domain.media
 
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.Flow
@@ -11,10 +12,17 @@ data class CoverColors(val first: Int, val second: Int)
 data class MediaContent(
     val title: String,
     val artist: String,
+    /** The name of the app that holds it, as the phone writes it. */
     val app: String,
+    /** Zero when the app does not say: a live stream has no end. */
     val duration: Duration,
-    val colors: CoverColors
+    /** The two colors of the cover. Without them, Brume takes the colors of the moment. */
+    val colors: CoverColors? = null,
+    val cover: Picture? = null
 )
+
+/** What a media app accepts from a remote, besides play and pause. YouTube, for one, has no "previous". */
+enum class MediaAction { Previous, Next, Seek }
 
 /** The three media states: nothing, paused, playing. */
 sealed interface MediaState {
@@ -26,11 +34,23 @@ sealed interface MediaState {
         override val isPlaying = false
     }
 
-    data class Loaded(val content: MediaContent, val playing: Boolean) : MediaState {
+    data class Loaded(
+        val content: MediaContent,
+        val playing: Boolean,
+        /** The buttons the remote may show for this app. */
+        val actions: Set<MediaAction> = MediaAction.entries.toSet()
+    ) : MediaState {
         override val isLoaded get() = true
         override val isPlaying get() = playing
     }
 }
+
+/**
+ * What Bercail shows when several apps have something loaded. The [sessions] come as Android gives them, the one
+ * that played last first: the one that plays wins, otherwise the one that played last.
+ */
+fun shownAmong(sessions: List<MediaState.Loaded>): MediaState =
+    sessions.firstOrNull { it.playing } ?: sessions.firstOrNull() ?: MediaState.None
 
 interface MediaSource {
     /** What is loaded and whether it plays, emitted again on every change. */
@@ -44,6 +64,9 @@ interface MediaSource {
     fun next()
     fun previous()
     fun seekTo(position: Duration)
+
+    /** Shows what is loaded in its own app. */
+    fun openApp()
 }
 
 enum class PreviousAction { Restart, PreviousTrack }

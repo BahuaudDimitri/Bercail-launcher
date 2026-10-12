@@ -61,15 +61,6 @@ class LauncherDeviceTest {
     }
 
     @Test
-    fun `toucher la pastille musique ouvre l’écran Écoute et sa télécommande`() {
-        awaitText("Looped · Kiasmos")
-        compose.onNodeWithText("Looped · Kiasmos").performClick()
-
-        compose.onNodeWithText("Ouvrir dans Spotify").assertExists()
-        compose.onNodeWithContentDescription("Pause").assertExists()
-    }
-
-    @Test
     fun `toucher la barre Chercher ouvre la liste des apps du téléphone`() {
         awaitDescription("Chercher")
         compose.onNodeWithContentDescription("Chercher").performClick()

@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
             settingsOpen = false
             search.onOpenChange(false)
             home.onDayOpenChange(false)
+            home.onListenOpenChange(false)
             home.onPageWanted(HomePage.Home)
         }
     }
@@ -97,6 +98,7 @@ class MainActivity : ComponentActivity() {
         }
         val homeLinks = object : HomeLinks {
             override fun onAskAccess(access: Access) = questions.ask(access)
+            override fun onOpenAppSettings() = sources.phone.openAppSettings()
         }
         Box {
             HomeRoute(

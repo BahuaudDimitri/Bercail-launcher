@@ -9,6 +9,8 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
@@ -16,6 +18,7 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
+import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import io.github.bahuauddimitri.bercail.core.testing.Samples
@@ -46,7 +49,7 @@ class HomeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun homeOf(world: FakeWorld) = world.homeViewModel()
+    private fun homeOf(world: FakeWorld, media: MediaSource = world.media) = world.homeViewModel(media)
 
     /** The home screen is visible: someone listens to its state. */
     private fun TestScope.show(home: HomeViewModel): Job = backgroundScope.launch(dispatcher) { home.state.collect {} }
@@ -410,6 +413,90 @@ class HomeViewModelTest {
 
         assertThat(home.position.value).isEqualTo(72.seconds)
     }
+
+    // ---------- the access to what plays, and the « Écouter » sheet ----------
+
+    @Test
+    fun `sans l'accès aux notifications, rien de ce qui joue n'est montré`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.access.refuse(Access.Notifications)
+        val home = homeOf(world)
+        show(home)
+
+        assertThat(home.state.value.mediaAllowed).isFalse()
+        assertThat(home.state.value.media).isEqualTo(MediaState.None)
+        assertThat(home.state.value.background).isEqualTo(HomeBackground.Wallpaper)
+    }
+
+    @Test
+    fun `dès que l'accès est donné, ce qui joue apparaît`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.access.refuse(Access.Notifications)
+        val home = homeOf(world)
+        show(home)
+
+        world.access.grant(Access.Notifications)
+
+        assertThat(home.state.value.mediaAllowed).isTrue()
+        assertThat(home.state.value.media.isPlaying).isTrue()
+    }
+
+    @Test
+    fun `la feuille Écouter est fermée au départ, s'ouvre et se referme à la demande`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        val home = homeOf(world)
+        show(home)
+        assertThat(home.state.value.listenOpen).isFalse()
+
+        home.onListenOpenChange(true)
+        assertThat(home.state.value.listenOpen).isTrue()
+
+        home.onListenOpenChange(false)
+        assertThat(home.state.value.listenOpen).isFalse()
+    }
+
+    @Test
+    fun `la feuille Écouter se referme d'elle-même dès qu'un contenu est chargé`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        val home = homeOf(world)
+        show(home)
+        home.onListenOpenChange(true)
+
+        world.media.load(Samples.spotify)
+
+        assertThat(home.state.value.listenOpen).isFalse()
+        assertThat(home.state.value.media.isPlaying).isTrue()
+    }
+
+    @Test
+    fun `« Ouvrir dans l'app » montre le contenu dans son app`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        val home = homeOf(world)
+        show(home)
+
+        home.onOpenMediaApp()
+
+        assertThat(world.media.appOpenings).isEqualTo(1)
+    }
+
+    @Test
+    fun `Précédent passe au morceau d'avant, même après 5 secondes, si l'app ne sait pas revenir au début`() =
+        runTest(dispatcher) {
+            val media = FakeMediaSource(
+                Samples.spotify,
+                playing = true,
+                position = 72.seconds,
+                actions = setOf(MediaAction.Previous, MediaAction.Next)
+            )
+            val home = homeOf(FakeWorld(Moment.Matin), media)
+            show(home)
+
+            home.onPrevious()
+
+            assertThat((home.state.value.media as MediaState.Loaded).content.title).isEqualTo("Avril 14th")
+        }
 
     // ---------- background ----------
 

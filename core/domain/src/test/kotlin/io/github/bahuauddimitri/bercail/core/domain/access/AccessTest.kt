@@ -58,4 +58,22 @@ class AccessTest {
         assertThat(weatherSourceLine(allowed = false).detail)
             .isEqualTo("Toucher pour choisir : ta position approximative ou une ville")
     }
+
+    @Test
+    fun `sans l'accès aux notifications, la ligne Musique invite à le donner et nomme le droit comme Android`() {
+        val line = mediaSourceLine(allowed = false)
+
+        assertThat(line.title).isEqualTo("Musique en cours")
+        assertThat(line.detail)
+            .isEqualTo("Toucher pour autoriser · Android range ce droit sous « Accès aux notifications »")
+        assertThat(line.touchable).isTrue()
+    }
+
+    @Test
+    fun `une fois l'accès donné, la ligne Musique dit ce que Bercail en fait et ne demande plus rien`() {
+        val line = mediaSourceLine(allowed = true)
+
+        assertThat(line.detail).isEqualTo("Bercail voit ce qui joue et le pilote, sans lire aucune notification")
+        assertThat(line.touchable).isFalse()
+    }
 }

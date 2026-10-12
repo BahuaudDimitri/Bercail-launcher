@@ -101,6 +101,17 @@ class BcConversationUiTest {
     }
 
     @Test
+    fun `sans artiste connu, la pastille musique n'écrit que le titre`() {
+        compose.setContent {
+            BcTheme {
+                BcMusicPill(title = "Tiny Desk Concert", artist = "", cover = null, playing = true, onClick = {})
+            }
+        }
+
+        compose.onNodeWithText("Tiny Desk Concert").assertExists()
+    }
+
+    @Test
     fun `toucher la pastille musique ouvre l'écran Écoute`() {
         var opened = 0
         compose.setContent {

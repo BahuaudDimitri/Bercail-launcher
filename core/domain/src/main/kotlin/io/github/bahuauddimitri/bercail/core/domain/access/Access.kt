@@ -2,8 +2,11 @@ package io.github.bahuauddimitri.bercail.core.domain.access
 
 import kotlinx.coroutines.flow.Flow
 
-/** What Bercail reads on the phone only once the user has agreed, on the screen Android shows for it. */
-enum class Access { Calendar, Location }
+/**
+ * What Bercail reads on the phone only once the user has agreed, on the screen Android shows for it.
+ * [Notifications] is what Android calls "notification access": the only way to know what the media apps play.
+ */
+enum class Access { Calendar, Location, Notifications }
 
 interface AccessSource {
     /** What the user has agreed to so far. It changes when they agree, or change their mind in Android's settings. */
@@ -36,3 +39,16 @@ fun weatherSourceLine(allowed: Boolean, city: String? = null): SourceLine {
 }
 
 private const val WEATHER = "Lieu des prévisions"
+
+/** What plays in the media apps: Android only tells it to an app that has its "notification access". */
+fun mediaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
+    SourceLine(MEDIA, "Bercail voit ce qui joue et le pilote, sans lire aucune notification", touchable = false)
+} else {
+    SourceLine(
+        MEDIA,
+        "Toucher pour autoriser · Android range ce droit sous « Accès aux notifications »",
+        touchable = true
+    )
+}
+
+private const val MEDIA = "Musique en cours"

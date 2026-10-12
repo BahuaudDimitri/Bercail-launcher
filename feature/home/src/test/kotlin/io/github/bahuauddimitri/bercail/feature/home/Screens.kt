@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
 import io.github.bahuauddimitri.bercail.core.domain.Unconnected
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
 import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeClock
@@ -13,7 +14,8 @@ import io.github.bahuauddimitri.bercail.core.testing.Samples
 const val PIXEL_9 = "w411dp-h923dp-420dpi"
 
 /** The home screen fed by every fake source of this world. */
-fun FakeWorld.homeViewModel() = HomeViewModel(clock, agenda, weather, messages, home, media, settings, access)
+fun FakeWorld.homeViewModel(media: MediaSource = this.media) =
+    HomeViewModel(clock, agenda, weather, messages, home, media, settings, access)
 
 /**
  * The home screen as the released app shows it right after it is installed: only the time is known. Nothing has

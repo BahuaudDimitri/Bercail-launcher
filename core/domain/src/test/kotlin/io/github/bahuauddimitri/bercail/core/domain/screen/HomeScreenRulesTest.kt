@@ -40,6 +40,13 @@ class HomeScreenRulesTest {
     }
 
     @Test
+    fun `sans pochette, Brume prend les couleurs du moment`() {
+        val bare = MediaState.Loaded(MediaContent("Direct", "France Inter", "Radio", 0.seconds), playing = true)
+
+        assertThat(backgroundFor(bare, IdleBackground.Wallpaper)).isEqualTo(HomeBackground.Brume(cover = null))
+    }
+
+    @Test
     fun `sans contenu, le fond est l'image de l'utilisateur`() {
         assertThat(backgroundFor(MediaState.None, IdleBackground.Wallpaper)).isEqualTo(HomeBackground.Wallpaper)
     }

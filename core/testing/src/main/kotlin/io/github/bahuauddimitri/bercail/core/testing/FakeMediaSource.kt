@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.testing
 
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
@@ -18,14 +19,20 @@ import kotlinx.coroutines.launch
 
 /**
  * A player with a playlist. Without [playlist], nothing is loaded. With [ticking], time moves by itself,
- * one second per second, only while playing and while someone watches the position.
+ * one second per second, only while playing and while someone watches the position. Its remote has the
+ * buttons listed in [actions].
  */
 class FakeMediaSource(
     playlist: List<MediaContent> = emptyList(),
     playing: Boolean = false,
     position: Duration = Duration.ZERO,
-    private val ticking: Boolean = false
+    private val ticking: Boolean = false,
+    private val actions: Set<MediaAction> = MediaAction.entries.toSet()
 ) : MediaSource {
+    /** How many times its app was asked to open. */
+    var appOpenings = 0
+        private set
+
     private data class Playback(
         val playlist: List<MediaContent>,
         val index: Int,
@@ -40,7 +47,7 @@ class FakeMediaSource(
     private val playback = MutableStateFlow(Playback(playlist, index = 0, playing = playing, position = position))
 
     override val state: Flow<MediaState> = playback
-        .map { it.content?.let { content -> MediaState.Loaded(content, it.playing) } ?: MediaState.None }
+        .map { it.content?.let { content -> MediaState.Loaded(content, it.playing, actions) } ?: MediaState.None }
         .distinctUntilChanged()
 
     override val position: Flow<Duration> = flow {
@@ -66,6 +73,10 @@ class FakeMediaSource(
     override fun previous() = whenLoaded { it.moved(-1) }
 
     override fun seekTo(position: Duration) = whenLoaded { it.copy(position = position) }
+
+    override fun openApp() {
+        appOpenings++
+    }
 
     /** The media app closes its session: nothing is loaded any more. */
     fun stop() = playback.update {

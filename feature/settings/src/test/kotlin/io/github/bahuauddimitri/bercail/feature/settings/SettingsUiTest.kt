@@ -109,6 +109,28 @@ class SettingsUiTest {
         compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
     }
 
+    // ---------- what plays ----------
+
+    @Test
+    fun `sans l'accès aux notifications, la ligne « Musique en cours » le demande à Android d'un toucher`() {
+        world.access.refuse(Access.Notifications)
+        show()
+        compose.onNodeWithText("Toucher pour autoriser · Android range ce droit sous « Accès aux notifications »")
+            .assertExists()
+
+        compose.onNodeWithText("Musique en cours").performScrollTo().performClick()
+
+        assertThat(asked).containsExactly(Access.Notifications)
+    }
+
+    @Test
+    fun `une fois l'accès donné, la ligne « Musique en cours » dit ce que Bercail en fait et ne se touche plus`() {
+        show()
+
+        compose.onNodeWithText("Bercail voit ce qui joue et le pilote, sans lire aucune notification").assertExists()
+        compose.onNodeWithText("Musique en cours").performScrollTo().assertHasNoClickAction()
+    }
+
     // ---------- the place of the weather ----------
 
     private fun openPlace() {

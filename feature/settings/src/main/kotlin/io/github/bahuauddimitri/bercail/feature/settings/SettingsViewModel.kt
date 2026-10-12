@@ -6,6 +6,7 @@ import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.access.agendaSourceLine
+import io.github.bahuauddimitri.bercail.core.domain.access.mediaSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.access.weatherSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
@@ -37,7 +38,9 @@ data class SettingsUiState(
     val agenda: SourceLine = agendaSourceLine(allowed = false),
     /** Whether Bercail may know roughly where the phone is, for the weather. */
     val weather: SourceLine = weatherSourceLine(allowed = false),
-    val locationAllowed: Boolean = false
+    val locationAllowed: Boolean = false,
+    /** Whether Bercail may see what the media apps play, and how to let it. */
+    val media: SourceLine = mediaSourceLine(allowed = false)
 ) {
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
@@ -81,7 +84,8 @@ class SettingsViewModel(
                 update = updateLine(updates.current, update),
                 agenda = agendaSourceLine(allowed = Access.Calendar in granted),
                 weather = weatherSourceLine(Access.Location in granted, current.weatherCity?.name),
-                locationAllowed = Access.Location in granted
+                locationAllowed = Access.Location in granted,
+                media = mediaSourceLine(allowed = Access.Notifications in granted)
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 

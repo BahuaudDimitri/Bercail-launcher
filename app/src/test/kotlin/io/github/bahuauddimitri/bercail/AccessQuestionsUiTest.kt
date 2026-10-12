@@ -2,6 +2,8 @@ package io.github.bahuauddimitri.bercail
 
 import android.Manifest
 import android.app.Application
+import android.app.NotificationManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContract
@@ -14,6 +16,7 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.testing.FakePhone
+import io.github.bahuauddimitri.bercail.data.media.MediaAccess
 import java.time.Duration
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,6 +100,28 @@ class AccessQuestionsUiTest {
         android.answers(agreed = false)
 
         assertThat(phone.visits).containsExactly("app settings")
+    }
+
+    @Test
+    fun `pour ce qui joue, Bercail ouvre la page de son accès dans les réglages d'Android, sans autre question`() {
+        questions.ask(Access.Notifications)
+
+        val opened = shadowOf(app).nextStartedActivity
+        assertThat(opened.action).isEqualTo(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+        assertThat(opened.getStringExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME))
+            .isEqualTo(MediaAccess.listener(app).flattenToString())
+        assertThat(android.asked).isEmpty()
+    }
+
+    @Test
+    fun `l'accès donné dans les réglages d'Android est vu au retour sur l'accueil`() {
+        shadowOf(app.getSystemService(NotificationManager::class.java))
+            .setNotificationListenerAccessGranted(MediaAccess.listener(app), true)
+        assertThat(access.granted.value).isEmpty()
+
+        access.refresh()
+
+        assertThat(access.granted.value).isEqualTo(setOf(Access.Notifications))
     }
 
     /** Android's permission screen: it remembers what it was asked, and answers when the test says so. */

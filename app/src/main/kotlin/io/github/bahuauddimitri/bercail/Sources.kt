@@ -17,6 +17,7 @@ import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherWatch
 import io.github.bahuauddimitri.bercail.data.agenda.DeviceAgenda
 import io.github.bahuauddimitri.bercail.data.apps.DeviceApps
 import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
+import io.github.bahuauddimitri.bercail.data.media.DeviceMedia
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
 import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
@@ -48,19 +49,21 @@ class BercailApplication : Application() {
 }
 
 /** The sources whose wave has not come yet. What stands in for them depends on the build: see [waiting]. */
-internal class Waiting(val messages: MessagesSource, val home: HomeSource, val media: MediaSource)
+internal class Waiting(val messages: MessagesSource, val home: HomeSource)
 
 /**
  * Every source of Bercail, plugged once. Real today: the clock, the installed apps, the links to the phone, the
- * stored settings, the update of Bercail itself, what the user lets it read, the calendar and the weather. The
- * others wait for their wave (media in 7, messages in 8, house in 9). The tests plug their own parts.
+ * stored settings, the update of Bercail itself, what the user lets it read, the calendar, the weather and what
+ * plays in the media apps. The others wait for their wave (messages in 8, house in 9). The tests plug their own
+ * parts.
  */
 class Sources(
     context: Context,
     update: UpdateParts? = null,
     agenda: AgendaSource? = null,
     clock: Clock? = null,
-    weather: WeatherSource? = null
+    weather: WeatherSource? = null,
+    media: MediaSource? = null
 ) {
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val waiting = waiting()
@@ -87,6 +90,9 @@ class Sources(
         onFailure = { Log.w(LOG_TAG, "The weather of Bercail stumbled", it) }
     )
 
+    /** What plays in the media apps, followed only while the home screen is shown and once the user has agreed. */
+    val media: MediaSource = media ?: DeviceMedia(context, access)
+
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
     /** Bercail updating itself as the home screen comes and goes. */
@@ -100,7 +106,7 @@ class Sources(
         weather = weather,
         messages = waiting.messages,
         home = waiting.home,
-        media = waiting.media,
+        media = media,
         settings = settings,
         access = access
     )

@@ -1,10 +1,16 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import android.graphics.Bitmap
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
@@ -45,6 +51,12 @@ internal fun pastelOf(personId: String, favoriteIds: List<String>): BcPastel = B
 internal val CoverColors.pair: Pair<Color, Color> get() = Color(first) to Color(second)
 
 internal val CoverColors.brume: BcBrumeColors get() = BcBrumeColors.of(Color(first), Color(second))
+
+/** The cover as a picture ready to draw, made once for each cover. */
+@Composable
+internal fun Picture?.asImage(): ImageBitmap? = remember(this) {
+    this?.let { Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888).asImageBitmap() }
+}
 
 /** Brume without a cover takes the colors of the moment: peach in the morning, blue-green by day, lavender later. */
 internal val DayPart.brume: BcBrumeColors

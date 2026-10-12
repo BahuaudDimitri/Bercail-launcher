@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail
 
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
-import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Samples
 import kotlinx.coroutines.flow.Flow
@@ -14,12 +13,7 @@ import kotlinx.coroutines.flow.map
  */
 internal fun waiting(): Waiting {
     val prototype = FakeWorld()
-    return Waiting(
-        messages = prototype.messages,
-        home = prototype.home,
-        // A player whose time moves, so that the remote can be tried.
-        media = FakeMediaSource(Samples.spotify, playing = true, position = Samples.position, ticking = true)
-    )
+    return Waiting(messages = prototype.messages, home = prototype.home)
 }
 
 /** The prototype's people are the favorites until real ones can be chosen (wave 8). */
