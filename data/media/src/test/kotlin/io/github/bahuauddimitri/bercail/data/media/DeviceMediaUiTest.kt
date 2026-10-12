@@ -167,6 +167,13 @@ class DeviceMediaUiTest {
         assertThat(shown.content.app).isEqualTo("YouTube")
     }
 
+    @Test
+    fun `ce que Spotify ajoute après l'artiste n'est pas affiché`() = runTest(dispatcher) {
+        apps.open(SPOTIFY, "Looped", artist = "Kiasmos, Ólafur Arnalds • À partir de la lecture aléatoire intelligente")
+
+        assertThat(watch().content.artist).isEqualTo("Kiasmos, Ólafur Arnalds")
+    }
+
     // ---------- several apps ----------
 
     @Test

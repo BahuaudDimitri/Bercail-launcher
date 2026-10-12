@@ -124,7 +124,8 @@ internal class SessionReader(private val context: Context) {
             val cover = COVER_KEYS.firstNotNullOfOrNull(metadata::getBitmap)?.asCover()
             MediaContent(
                 title = title,
-                artist = artist.orEmpty(),
+                // Spotify adds where the track comes from after the artist: "Kiasmos • À partir de…".
+                artist = artist.orEmpty().substringBefore(NOT_THE_ARTIST).trim(),
                 app = names.getOrPut(app) { nameOf(app) },
                 duration = metadata.duration,
                 colors = cover?.colors,
@@ -148,6 +149,8 @@ internal class SessionReader(private val context: Context) {
             MediaMetadata.METADATA_KEY_ART,
             MediaMetadata.METADATA_KEY_DISPLAY_ICON
         )
+
+        const val NOT_THE_ARTIST = " • "
     }
 }
 
