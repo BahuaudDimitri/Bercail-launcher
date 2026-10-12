@@ -4,7 +4,9 @@ import io.github.bahuauddimitri.bercail.core.domain.Unconnected
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
 import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
+import io.github.bahuauddimitri.bercail.core.testing.FakeAppsSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeClock
+import io.github.bahuauddimitri.bercail.core.testing.FakeMediaAppsSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeSettingsSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWeatherSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -15,7 +17,7 @@ const val PIXEL_9 = "w411dp-h923dp-420dpi"
 
 /** The home screen fed by every fake source of this world. */
 fun FakeWorld.homeViewModel(media: MediaSource = this.media) =
-    HomeViewModel(clock, agenda, weather, messages, home, media, settings, access)
+    HomeViewModel(clock, agenda, weather, messages, home, ListenSources(media, mediaApps, apps), settings, access)
 
 /**
  * The home screen as the released app shows it right after it is installed: only the time is known. Nothing has
@@ -27,7 +29,7 @@ fun unconnectedHomeViewModel(hour: Int = 9) = HomeViewModel(
     weather = FakeWeatherSource(),
     messages = Unconnected.messages,
     home = Unconnected.home,
-    media = Unconnected.media,
+    listen = ListenSources(Unconnected.media, FakeMediaAppsSource(), FakeAppsSource()),
     settings = FakeSettingsSource(),
     access = FakeAccess(granted = emptySet())
 )

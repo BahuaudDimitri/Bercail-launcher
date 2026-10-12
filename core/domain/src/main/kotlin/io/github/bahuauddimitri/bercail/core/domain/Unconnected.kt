@@ -35,5 +35,6 @@ object Unconnected {
         override fun previous() = Unit
         override fun seekTo(position: Duration) = Unit
         override fun openApp() = Unit
+        override fun resume() = Unit
     }
 }

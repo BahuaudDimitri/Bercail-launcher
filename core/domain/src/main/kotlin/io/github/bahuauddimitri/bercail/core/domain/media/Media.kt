@@ -18,7 +18,9 @@ data class MediaContent(
     val duration: Duration,
     /** The two colors of the cover. Without them, Brume takes the colors of the moment. */
     val colors: CoverColors? = null,
-    val cover: Picture? = null
+    val cover: Picture? = null,
+    /** The app that holds it, named as the installed apps are; empty when it cannot be opened from a launcher. */
+    val appId: String = ""
 )
 
 /** What a media app accepts from a remote, besides play and pause. YouTube, for one, has no "previous". */
@@ -67,6 +69,12 @@ interface MediaSource {
 
     /** Shows what is loaded in its own app. */
     fun openApp()
+
+    /**
+     * Asks the app that played last to play again, as the button of a headset does. Nothing is loaded yet: if
+     * that app is gone, nothing happens.
+     */
+    fun resume()
 }
 
 enum class PreviousAction { Restart, PreviousTrack }

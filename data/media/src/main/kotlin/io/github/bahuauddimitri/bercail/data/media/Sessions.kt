@@ -88,6 +88,7 @@ internal class Followed(private val main: Handler, private val tell: (List<Heard
 internal class SessionReader(private val context: Context) {
     private val contents = IdentityHashMap<MediaMetadata, MediaContent?>()
     private val names = HashMap<String, String>()
+    private val ids = HashMap<String, String>()
 
     /** Forgets what was read from the sessions that are gone, and their covers with it. */
     fun keepOnly(heard: List<Heard>) {
@@ -129,10 +130,15 @@ internal class SessionReader(private val context: Context) {
                 app = names.getOrPut(app) { nameOf(app) },
                 duration = metadata.duration,
                 colors = cover?.colors,
-                cover = cover?.picture
+                cover = cover?.picture,
+                appId = ids.getOrPut(app) { idOf(app) }
             )
         }
     }
+
+    /** The app as the list of installed apps names it: by what its icon opens. Empty for an app without icon. */
+    private fun idOf(app: String): String =
+        context.packageManager.getLaunchIntentForPackage(app)?.component?.flattenToShortString().orEmpty()
 
     /** The name of the app as the phone writes it; its technical name if Android does not let Bercail see it. */
     private fun nameOf(app: String): String = try {

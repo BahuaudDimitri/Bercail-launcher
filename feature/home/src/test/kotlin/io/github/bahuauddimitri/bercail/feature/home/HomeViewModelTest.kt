@@ -9,6 +9,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
+import io.github.bahuauddimitri.bercail.core.domain.media.LastHeard
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
@@ -31,7 +32,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -497,6 +500,111 @@ class HomeViewModelTest {
 
             assertThat((home.state.value.media as MediaState.Loaded).content.title).isEqualTo("Avril 14th")
         }
+
+    // ---------- the media apps of the « Écouter » sheet ----------
+
+    @Test
+    fun `la feuille Écouter liste les apps média, Spotify en tête tant qu'aucune autre n'est choisie`() =
+        runTest(dispatcher) {
+            val world = FakeWorld(Moment.Matin)
+            world.media.stop()
+            val home = homeOf(world)
+            show(home)
+
+            home.onListenOpenChange(true)
+
+            val rows = home.state.value.mediaApps
+            assertThat(rows.map { it.app.name }).containsExactly("Spotify", "Netflix", "Pocket Casts", "YouTube")
+            assertThat(rows.first().main).isTrue()
+        }
+
+    @Test
+    fun `l'app média principale choisie dans les réglages passe en tête de la feuille`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        world.settings.change { it.copy(mainMediaApp = "youtube") }
+        val home = homeOf(world)
+        show(home)
+
+        home.onListenOpenChange(true)
+
+        assertThat(home.state.value.mediaApps.first().app.name).isEqualTo("YouTube")
+    }
+
+    @Test
+    fun `feuille fermée, les apps média du téléphone ne sont pas écoutées`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        val home = homeOf(world)
+        show(home)
+        assertThat(world.mediaApps.apps.subscriptionCount.value).isEqualTo(0)
+
+        home.onListenOpenChange(true)
+        assertThat(world.mediaApps.apps.subscriptionCount.value).isEqualTo(1)
+
+        home.onListenOpenChange(false)
+        assertThat(world.mediaApps.apps.subscriptionCount.value).isEqualTo(0)
+        assertThat(home.state.value.mediaApps).isEmpty()
+    }
+
+    @Test
+    fun `ce qui joue est retenu, et l'app principale propose ensuite de le reprendre`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        val home = homeOf(world)
+        show(home)
+        assertThat(world.mediaApps.lastHeard.value).isEqualTo(LastHeard("spotify", "Looped"))
+
+        world.media.stop()
+        home.onListenOpenChange(true)
+
+        assertThat(home.state.value.mediaApps.first().resume).isEqualTo("Reprendre « Looped »")
+    }
+
+    @Test
+    fun `choisir une app dans la feuille Écouter l'ouvre`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        val home = homeOf(world)
+        show(home)
+
+        home.onOpenApp("youtube")
+
+        assertThat(world.apps.opened).containsExactly("youtube")
+    }
+
+    @Test
+    fun `le bouton lecture de l'app principale relance la musique sans quitter l'accueil`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        world.media.lastPlayed = Samples.spotify
+        val home = homeOf(world)
+        show(home)
+        home.onListenOpenChange(true)
+
+        home.onResume("spotify")
+        advanceTimeBy(5.seconds)
+        runCurrent()
+
+        assertThat(home.state.value.media.isPlaying).isTrue()
+        assertThat(home.state.value.listenOpen).isFalse()
+        assertThat(world.apps.opened).isEmpty()
+    }
+
+    @Test
+    fun `si rien ne repart dans les deux secondes, l'app principale s'ouvre`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin)
+        world.media.stop()
+        val home = homeOf(world)
+        show(home)
+        home.onListenOpenChange(true)
+
+        home.onResume("spotify")
+        assertThat(world.apps.opened).isEmpty()
+        advanceTimeBy(2.seconds)
+        runCurrent()
+
+        assertThat(world.apps.opened).containsExactly("spotify")
+    }
 
     // ---------- background ----------
 

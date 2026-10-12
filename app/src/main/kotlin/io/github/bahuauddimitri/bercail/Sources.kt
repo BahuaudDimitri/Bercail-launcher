@@ -7,6 +7,7 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
@@ -18,6 +19,8 @@ import io.github.bahuauddimitri.bercail.data.agenda.DeviceAgenda
 import io.github.bahuauddimitri.bercail.data.apps.DeviceApps
 import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.media.DeviceMedia
+import io.github.bahuauddimitri.bercail.data.media.DeviceMediaApps
+import io.github.bahuauddimitri.bercail.data.media.listeningStore
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
 import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
@@ -26,6 +29,7 @@ import io.github.bahuauddimitri.bercail.data.weather.PhonePosition
 import io.github.bahuauddimitri.bercail.data.weather.StoredForecast
 import io.github.bahuauddimitri.bercail.data.weather.forecastStore
 import io.github.bahuauddimitri.bercail.feature.home.HomeViewModel
+import io.github.bahuauddimitri.bercail.feature.home.ListenSources
 import io.github.bahuauddimitri.bercail.feature.search.SearchViewModel
 import io.github.bahuauddimitri.bercail.feature.settings.SettingsViewModel
 import java.io.File
@@ -93,6 +97,10 @@ class Sources(
     /** What plays in the media apps, followed only while the home screen is shown and once the user has agreed. */
     val media: MediaSource = media ?: DeviceMedia(context, access)
 
+    /** The apps that can play, looked for only while the « Écouter » sheet or the settings show them. */
+    val mediaApps: MediaAppsSource =
+        DeviceMediaApps(context, apps, listeningStore(File(context.filesDir, LISTENING_FILE), background))
+
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
     /** Bercail updating itself as the home screen comes and goes. */
@@ -106,7 +114,7 @@ class Sources(
         weather = weather,
         messages = waiting.messages,
         home = waiting.home,
-        media = media,
+        listen = ListenSources(media, mediaApps, apps),
         settings = settings,
         access = access
     )
@@ -114,7 +122,7 @@ class Sources(
     fun searchViewModel() =
         SearchViewModel(apps, phone, clock, agenda, waiting.messages, waiting.home, settings, updater)
 
-    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access, OpenMeteoCities())
+    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access, OpenMeteoCities(), mediaApps)
 
     /** The home screen just went away: a version that is ready may take over. */
     fun onHomeHidden() {
@@ -129,6 +137,7 @@ class Sources(
     private companion object {
         const val SETTINGS_FILE = "datastore/settings.preferences_pb"
         const val WEATHER_FILE = "datastore/weather.preferences_pb"
+        const val LISTENING_FILE = "datastore/listening.preferences_pb"
         const val LOG_TAG = "Bercail"
     }
 }

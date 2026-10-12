@@ -38,7 +38,15 @@ class SettingsScreenshotTest {
         val world = FakeWorld()
         world.updates.status.value = update
         val settings =
-            SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
+            SettingsViewModel(
+                world.settings,
+                world.apps,
+                world.phone,
+                world.updates,
+                world.access,
+                world.cities,
+                world.mediaApps
+            )
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.base)) { SettingsRoute(settings, onBack = {}) } }
         }

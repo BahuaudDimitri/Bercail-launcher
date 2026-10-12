@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- The apps that can play answer the buttons of a headset: that is how Bercail finds them. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MEDIA_BUTTON" />
+        </intent>
+    </queries>
+
     <application>
         <!-- Android only tells what the media apps play to an app the user gave "notification access" to, and
              that access needs a listener to exist. This one reads nothing: it asks to be disconnected at once. -->

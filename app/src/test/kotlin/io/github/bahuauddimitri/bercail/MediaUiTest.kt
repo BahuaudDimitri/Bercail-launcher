@@ -157,6 +157,17 @@ class MediaUiTest {
     }
 
     @Test
+    fun `avec l'accès et sans app de musique sur le téléphone, la feuille Écouter le dit`() {
+        allowToSeeWhatPlays()
+        showHome()
+        awaitText("Écouter…")
+
+        compose.onNodeWithText("Écouter…").performClick()
+
+        awaitText(NO_MEDIA_APP)
+    }
+
+    @Test
     fun `le bouton Accueil ramène de l'écran Écoute à l'Accueil`() {
         allowToSeeWhatPlays()
         spotifyPlays()
@@ -185,6 +196,8 @@ class MediaUiTest {
 
     private companion object {
         const val SPOTIFY = "com.spotify.music"
+        const val NO_MEDIA_APP =
+            "Aucune app de musique ou de vidéo n'est installée. Dès qu'une app joue quelque chose, elle apparaît ici."
         const val TIMEOUT = 5_000L
     }
 }

@@ -78,6 +78,13 @@ class FakeMediaSource(
         appOpenings++
     }
 
+    /** What the app that played last plays again when asked to resume. Empty: that app is gone, nothing answers. */
+    var lastPlayed: List<MediaContent> = emptyList()
+
+    override fun resume() {
+        if (lastPlayed.isNotEmpty()) load(lastPlayed)
+    }
+
     /** The media app closes its session: nothing is loaded any more. */
     fun stop() = playback.update {
         it.copy(playlist = emptyList(), index = 0, playing = false, position = Duration.ZERO)

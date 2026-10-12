@@ -43,7 +43,15 @@ class SettingsUiTest {
 
     private fun show() {
         val settings =
-            SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
+            SettingsViewModel(
+                world.settings,
+                world.apps,
+                world.phone,
+                world.updates,
+                world.access,
+                world.cities,
+                world.mediaApps
+            )
         compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }, onAskAccess = { asked += it }) } }
     }
 
@@ -129,6 +137,35 @@ class SettingsUiTest {
 
         compose.onNodeWithText("Bercail voit ce qui joue et le pilote, sans lire aucune notification").assertExists()
         compose.onNodeWithText("Musique en cours").performScrollTo().assertHasNoClickAction()
+    }
+
+    @Test
+    fun `l'app média principale est Spotify tant qu'on n'en choisit pas d'autre`() {
+        show()
+
+        compose.onNodeWithText("App média principale").performScrollTo().assertExists()
+        compose.onNodeWithText("Spotify · en tête quand tu touches « Écouter… »").assertExists()
+    }
+
+    @Test
+    fun `choisir une autre app média principale l'enregistre et ramène aux réglages`() {
+        show()
+        compose.onNodeWithText("App média principale").performScrollTo().performClick()
+        listOf("Netflix", "Pocket Casts", "Spotify", "YouTube").forEach { compose.onNodeWithText(it).assertExists() }
+
+        compose.onNodeWithText("YouTube").performClick()
+
+        assertThat(stored.mainMediaApp).isEqualTo("youtube")
+        compose.onNodeWithText("YouTube · en tête quand tu touches « Écouter… »").assertExists()
+    }
+
+    @Test
+    fun `sans app de musique ou de vidéo installée, la ligne le dit et ne se touche pas`() {
+        world.mediaApps.apps.value = emptyList()
+        show()
+
+        compose.onNodeWithText("Aucune app de musique ou de vidéo installée").assertExists()
+        compose.onNodeWithText("App média principale").performScrollTo().assertHasNoClickAction()
     }
 
     // ---------- the place of the weather ----------
@@ -302,7 +339,15 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la liste des apps n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
+        SettingsViewModel(
+            world.settings,
+            world.apps,
+            world.phone,
+            world.updates,
+            world.access,
+            world.cities,
+            world.mediaApps
+        )
 
         assertThat(world.apps.apps.subscriptionCount.value).isEqualTo(0)
     }
@@ -347,7 +392,15 @@ class SettingsUiTest {
 
     @Test
     fun `tant que les réglages ne sont pas affichés, la mise à jour n'est pas écoutée`() {
-        SettingsViewModel(world.settings, world.apps, world.phone, world.updates, world.access, world.cities)
+        SettingsViewModel(
+            world.settings,
+            world.apps,
+            world.phone,
+            world.updates,
+            world.access,
+            world.cities,
+            world.mediaApps
+        )
 
         assertThat(world.updates.status.subscriptionCount.value).isEqualTo(0)
     }

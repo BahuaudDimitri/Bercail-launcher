@@ -11,6 +11,8 @@ import io.github.bahuauddimitri.bercail.core.domain.access.weatherSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
+import io.github.bahuauddimitri.bercail.core.domain.media.mainMediaApp
 import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
@@ -40,8 +42,14 @@ data class SettingsUiState(
     val weather: SourceLine = weatherSourceLine(allowed = false),
     val locationAllowed: Boolean = false,
     /** Whether Bercail may see what the media apps play, and how to let it. */
-    val media: SourceLine = mediaSourceLine(allowed = false)
+    val media: SourceLine = mediaSourceLine(allowed = false),
+
+    /** The installed apps that can play sound or video, from A to Z. */
+    val mediaApps: List<App> = emptyList()
 ) {
+    /** The media app the « Écouter » sheet shows first: the chosen one, otherwise Spotify or the first one. */
+    val mainMediaApp: App? get() = mainMediaApp(mediaApps, settings.mainMediaApp)
+
     /** The favorite apps by name, as their row lists them. */
     val favoriteAppNames: String
         get() = settings.favoriteApps
@@ -56,6 +64,7 @@ interface SettingsActions {
     fun onTimeline(orientation: TimelineOrientation)
     fun onDrawerExpandedAtStart(expanded: Boolean)
     fun onToggleFavoriteApp(appId: String)
+    fun onMainMediaApp(appId: String)
 
     /** Looks for a newer version, fetches it or installs it: whatever the update row offers. */
     fun onUpdateTouched()
@@ -70,15 +79,23 @@ class SettingsViewModel(
     private val phone: Phone,
     private val updates: Updates,
     access: AccessSource,
-    cities: CitySearch
+    cities: CitySearch,
+    mediaApps: MediaAppsSource
 ) : ViewModel(),
     SettingsActions {
     /** The choice of the place of the weather, with its search for a city. */
     val place = PlacePicker(settings, cities, viewModelScope)
 
     val state: StateFlow<SettingsUiState> =
-        combine(settings.settings, apps.apps, updates.status, access.granted) { current, installed, update, granted ->
+        combine(
+            settings.settings,
+            apps.apps,
+            updates.status,
+            access.granted,
+            mediaApps.apps
+        ) { current, installed, update, granted, players ->
             SettingsUiState(
+                mediaApps = players,
                 settings = current,
                 apps = appDirectory(installed, emptyList()).sections.flatMap { it.apps },
                 update = updateLine(updates.current, update),
@@ -96,6 +113,8 @@ class SettingsViewModel(
     override fun onDrawerExpandedAtStart(expanded: Boolean) = change { it.copy(drawerExpandedAtStart = expanded) }
 
     override fun onToggleFavoriteApp(appId: String) = change { it.withFavoriteAppToggled(appId) }
+
+    override fun onMainMediaApp(appId: String) = change { it.copy(mainMediaApp = appId) }
 
     override fun onUpdateTouched() {
         viewModelScope.launch { updates.proceed() }

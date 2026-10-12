@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.media.AudioManager
 import android.media.session.PlaybackState
+import android.view.KeyEvent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -475,6 +477,35 @@ class DeviceMediaUiTest {
         val opened = shadowOf(phone).nextStartedActivity
         assertThat(opened.component).isEqualTo(icon)
         assertThat(opened.categories.orEmpty()).contains(Intent.CATEGORY_LAUNCHER)
+    }
+
+    @Test
+    fun `le contenu dit quelle app le joue, nommée comme les apps installées`() = runTest(dispatcher) {
+        val icon = ComponentName(SPOTIFY, "$SPOTIFY.MainActivity")
+        shadowOf(phone.packageManager).addActivityIfNotPresent(icon)
+        shadowOf(phone.packageManager).addIntentFilterForActivity(
+            icon,
+            IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+        )
+        apps.open(SPOTIFY)
+
+        assertThat(watch().content.appId).isEqualTo("$SPOTIFY/.MainActivity")
+    }
+
+    @Test
+    fun `une app sans icône à ouvrir n'est le nom d'aucune app installée`() = runTest(dispatcher) {
+        apps.open(SPOTIFY)
+
+        assertThat(watch().content.appId).isEqualTo("")
+    }
+
+    @Test
+    fun `reprendre appuie sur le bouton lecture du téléphone, comme le fait un casque`() = runTest(dispatcher) {
+        media.resume()
+
+        val pressed = shadowOf(phone.getSystemService(AudioManager::class.java)).dispatchedMediaKeyEvents
+        assertThat(pressed.map { it.keyCode }).containsExactly(KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY)
+        assertThat(pressed.map { it.action }).containsExactly(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP)
     }
 
     @Test

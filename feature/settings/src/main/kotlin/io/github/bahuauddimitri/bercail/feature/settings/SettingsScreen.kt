@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
@@ -37,6 +38,16 @@ fun SettingsRoute(
     when (shown) {
         Shown.Apps -> FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, backToSettings, modifier)
 
+        Shown.MediaApp -> MediaAppScreen(
+            state = state,
+            onChoose = {
+                viewModel.onMainMediaApp(it)
+                backToSettings()
+            },
+            onBack = backToSettings,
+            modifier = modifier
+        )
+
         Shown.Place -> PlaceScreen(
             state = state,
             place = place,
@@ -53,13 +64,14 @@ fun SettingsRoute(
             onPickApps = { shown = Shown.Apps },
             modifier = modifier,
             onAskAccess = onAskAccess,
-            onPickPlace = { shown = Shown.Place }
+            onPickPlace = { shown = Shown.Place },
+            onPickMediaApp = { shown = Shown.MediaApp }
         )
     }
 }
 
 /** What the settings panel shows: itself, or one of the lists it opens. */
-private enum class Shown { Settings, Apps, Place }
+private enum class Shown { Settings, Apps, Place, MediaApp }
 
 /** What Bercail reads only once allowed: its row says where it stands, and a touch asks Android for it. */
 @Composable
@@ -79,7 +91,8 @@ fun SettingsScreen(
     onPickApps: () -> Unit,
     modifier: Modifier = Modifier,
     onAskAccess: (Access) -> Unit = {},
-    onPickPlace: () -> Unit = {}
+    onPickPlace: () -> Unit = {},
+    onPickMediaApp: () -> Unit = {}
 ) {
     val settings = state.settings
     BcPanel("Réglages de Bercail", onBack, backDescription = "Retour à la recherche", modifier = modifier) {
@@ -91,8 +104,7 @@ fun SettingsScreen(
                 onSelect = { actions.onIdleBackground(if (it == 0) IdleBackground.Brume else IdleBackground.Wallpaper) }
             )
         }
-        BcSectionLabel("Écoute")
-        SourceRow(state.media, onAsk = { onAskAccess(Access.Notifications) })
+        ListenRows(state, onAsk = { onAskAccess(Access.Notifications) }, onPickMediaApp)
         BcSectionLabel("Agenda")
         SourceRow(state.agenda, onAsk = { onAskAccess(Access.Calendar) })
         BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {
@@ -156,3 +168,38 @@ fun FavoriteAppsScreen(
         }
     }
 }
+
+/** What plays: the access Android asks for, and the media app the « Écouter » sheet shows first. */
+@Composable
+private fun ListenRows(state: SettingsUiState, onAsk: () -> Unit, onPickMediaApp: () -> Unit) {
+    val main = state.mainMediaApp
+    BcSectionLabel("Écoute")
+    SourceRow(state.media, onAsk)
+    BcSettingRow(
+        title = "App média principale",
+        subtitle = main?.let { "${it.name} · en tête quand tu touches « Écouter… »" } ?: NO_MEDIA_APP,
+        onClick = if (main != null) onPickMediaApp else null
+    )
+}
+
+/** The apps that can play sound or video: touching one makes it the main media app. */
+@Composable
+fun MediaAppScreen(
+    state: SettingsUiState,
+    onChoose: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BcPanel("App média principale", onBack, backDescription = "Retour aux réglages", modifier = modifier) {
+        state.mediaApps.forEach { app ->
+            BcListRow(
+                title = app.name,
+                onClick = { onChoose(app.id) },
+                leading = BcLeading.Initials(app.name.take(1).uppercase()),
+                emphasis = if (app == state.mainMediaApp) BcRowEmphasis.Highlighted else BcRowEmphasis.Normal
+            )
+        }
+    }
+}
+
+private const val NO_MEDIA_APP = "Aucune app de musique ou de vidéo installée"

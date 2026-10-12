@@ -1,21 +1,29 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import io.github.bahuauddimitri.bercail.core.domain.Picture
+import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.media.PreviousAction
 import io.github.bahuauddimitri.bercail.core.domain.media.positionAt
 import io.github.bahuauddimitri.bercail.core.domain.media.previousAction
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** What the home screen does about what plays: the remote, the way to the app, the « Écouter » sheet. */
+/** What the home screen needs to listen: what plays, the apps that can play, and the way to open them. */
+class ListenSources(val media: MediaSource, val mediaApps: MediaAppsSource, val apps: AppsSource)
+
+/** What the home screen does about what plays: the remote, the way to the apps, the « Écouter » sheet. */
 interface ListenActions {
     fun onPlayPause()
     fun onNext()
@@ -27,12 +35,25 @@ interface ListenActions {
 
     /** Shows what is loaded in its own app. */
     fun onOpenMediaApp()
+
+    /** Opens a media app chosen in the « Écouter » sheet. */
+    fun onOpenApp(appId: String)
+
+    /**
+     * Asks the main media app to play again what it last played, without leaving the home screen. If nothing
+     * plays a moment later, the app is opened instead: the touch always does something.
+     */
+    fun onResume(appId: String)
+
+    /** The icon of a media app, drawn when its line first shows. */
+    suspend fun iconOf(appId: String): Picture?
 }
 
 /** The remote of the home screen. Its buttons are about [shown], what the screen shows at that moment. */
-internal class HomeRemote(val media: MediaSource) :
+internal class HomeRemote(private val sources: ListenSources) :
     ListenActions,
     AutoCloseable {
+    private val media get() = sources.media
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     /** Whether the « Écouter » sheet is open. */
@@ -67,5 +88,22 @@ internal class HomeRemote(val media: MediaSource) :
 
     override fun onOpenMediaApp() = media.openApp()
 
+    override fun onOpenApp(appId: String) = sources.apps.open(appId)
+
+    override fun onResume(appId: String) {
+        media.resume()
+        scope.launch {
+            delay(RESUME_WAIT)
+            if (!shown.isLoaded) sources.apps.open(appId)
+        }
+    }
+
+    override suspend fun iconOf(appId: String): Picture? = sources.apps.icon(appId)
+
     override fun close() = scope.cancel()
+
+    private companion object {
+        /** How long an app may take to start playing again before Bercail opens it instead. */
+        val RESUME_WAIT = 2.seconds
+    }
 }

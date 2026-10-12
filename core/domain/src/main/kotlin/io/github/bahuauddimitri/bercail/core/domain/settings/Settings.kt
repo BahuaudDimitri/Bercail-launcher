@@ -16,7 +16,9 @@ data class Settings(
     val drawerExpandedAtStart: Boolean = false,
     val idleBackground: IdleBackground = IdleBackground.Wallpaper,
     /** The city whose weather is shown, or nothing for the place where the phone is. */
-    val weatherCity: City? = null
+    val weatherCity: City? = null,
+    /** The media app shown first in the « Écouter » sheet; without a choice, Spotify if it is there. */
+    val mainMediaApp: String? = null
 ) {
     /** Adds the app to the favorites, or removes it if it already is one. */
     fun withFavoriteAppToggled(appId: String): Settings =

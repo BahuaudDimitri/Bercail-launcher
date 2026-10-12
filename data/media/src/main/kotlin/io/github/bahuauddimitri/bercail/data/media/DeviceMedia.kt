@@ -5,11 +5,13 @@ import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.view.KeyEvent
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
@@ -111,6 +113,14 @@ class DeviceMedia internal constructor(
 
     override fun openApp() {
         shown.value?.session?.let(context::show)
+    }
+
+    /** The play button of the phone itself: Android hands it to the app that played last, as for a headset. */
+    override fun resume() {
+        val audio = checkNotNull(context.getSystemService(AudioManager::class.java))
+        listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP).forEach {
+            audio.dispatchMediaKeyEvent(KeyEvent(it, KeyEvent.KEYCODE_MEDIA_PLAY))
+        }
     }
 
     private fun press(button: MediaButtons.() -> Unit) {

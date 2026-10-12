@@ -111,6 +111,17 @@ class HomeScreenshotTest {
     }
 
     @Test
+    fun `la feuille « Écouter » et ses apps média, quand la musique s'est tue, correspond à sa capture`() {
+        val world = FakeWorld(Moment.Matin)
+        show(world)
+        // The music was heard, then its app went away: the main app offers to play it again.
+        world.media.stop()
+        compose.onNodeWithText("Écouter…").performClick()
+
+        capture("home_listen_sheet")
+    }
+
+    @Test
     fun `la feuille « Écouter » sans l'accès aux notifications correspond à sa capture`() {
         show(
             FakeWorld(Moment.Matin).apply {

@@ -38,6 +38,7 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val media = FakeMediaSource(moment.playlist, playing = playing, position = Samples.position)
     val settings = FakeSettingsSource(Samples.settings)
     val apps = FakeAppsSource(Samples.apps)
+    val mediaApps = FakeMediaAppsSource(Samples.mediaApps)
     val phone = FakePhone()
     val updates = FakeUpdates()
     val cities = FakeCitySearch(Samples.cities)
@@ -84,10 +85,13 @@ object Samples {
         HomeControl.Heating("chauf", "Chauffage", target = 18, comfort = false)
     )
 
+    /** The apps of the prototype's phone that can play sound or video. */
+    val mediaApps: List<App> = apps.filter { it.name in setOf("Netflix", "Pocket Casts", "Spotify", "YouTube") }
+
     val spotify = listOf(
-        MediaContent("Looped", "Kiasmos", "Spotify", 245.seconds, CoverColors(CORAL, LAVENDER)),
-        MediaContent("Says", "Nils Frahm", "Spotify", 528.seconds, CoverColors(BLUE, INDIGO)),
-        MediaContent("Avril 14th", "Aphex Twin", "Spotify", 125.seconds, CoverColors(MINT, APRICOT))
+        MediaContent("Looped", "Kiasmos", "Spotify", 245.seconds, CoverColors(CORAL, LAVENDER), appId = "spotify"),
+        MediaContent("Says", "Nils Frahm", "Spotify", 528.seconds, CoverColors(BLUE, INDIGO), appId = "spotify"),
+        MediaContent("Avril 14th", "Aphex Twin", "Spotify", 125.seconds, CoverColors(MINT, APRICOT), appId = "spotify")
     )
 
     val youtube = listOf(

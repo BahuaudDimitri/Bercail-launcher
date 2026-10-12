@@ -17,8 +17,11 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.inWords
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
 import io.github.bahuauddimitri.bercail.core.domain.home.homeSummary
-import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
+import io.github.bahuauddimitri.bercail.core.domain.media.LastHeard
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppRow
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
+import io.github.bahuauddimitri.bercail.core.domain.media.mediaAppRows
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSummary
@@ -47,6 +50,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -75,6 +79,9 @@ data class HomeUiState(
     val mediaAllowed: Boolean = true,
     /** The « Écouter » sheet, where the music pill leads while nothing is loaded. */
     val listenOpen: Boolean = false,
+
+    /** The lines of the « Écouter » sheet while it is open: the main media app first. */
+    val mediaApps: List<MediaAppRow> = emptyList(),
     val page: HomePage = HomePage.Home,
     val drawerExpanded: Boolean = false,
     val background: HomeBackground = HomeBackground.Wallpaper,
@@ -94,6 +101,7 @@ class HomeViewModel private constructor(
     private val home: HomeSource,
     settings: SettingsSource,
     access: AccessSource,
+    private val listen: ListenSources,
     private val remote: HomeRemote
 ) : ViewModel(),
     HomeActions,
@@ -104,10 +112,10 @@ class HomeViewModel private constructor(
         weather: WeatherSource,
         messages: MessagesSource,
         home: HomeSource,
-        media: MediaSource,
+        listen: ListenSources,
         settings: SettingsSource,
         access: AccessSource
-    ) : this(clock, agenda, weather, messages, home, settings, access, HomeRemote(media))
+    ) : this(clock, agenda, weather, messages, home, settings, access, listen, HomeRemote(listen))
 
     init {
         addCloseable(remote)
@@ -140,22 +148,37 @@ class HomeViewModel private constructor(
      * What plays, once the user has agreed to let Bercail see it. When the content goes away, the Listen page goes
      * with it, and does not come back by itself; when a content comes, the « Écouter » sheet has done its job.
      */
-    private val listening: Flow<Listening> = combine(remote.media.state, access.granted) { playing, granted ->
+    private val listening: Flow<Listening> = combine(listen.media.state, access.granted) { playing, granted ->
         val allowed = Access.Notifications in granted
         Listening(if (allowed) playing else MediaState.None, allowed)
     }.onEach {
         remote.shown = it.media
         if (it.media.isLoaded) remote.sheetOpen.value = false else wantedPage.value = HomePage.Home
+        (it.media as? MediaState.Loaded)?.content?.let(::remember)
+    }
+
+    /** What was last noted as heard: the same content is not written twice. */
+    private var noted: LastHeard? = null
+
+    /** The media apps of the phone, looked for only while the « Écouter » sheet is open. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val mediaApps: Flow<List<MediaAppRow>> = remote.sheetOpen.flatMapLatest { open ->
+        val chosen = settings.settings.map { it.mainMediaApp }.distinctUntilChanged()
+        if (open) {
+            combine(listen.mediaApps.apps, chosen, listen.mediaApps.lastHeard, ::mediaAppRows)
+        } else {
+            flowOf(emptyList())
+        }
     }
 
     private val choices: Flow<Choices> = combine(wantedPage, drawerChoice, daySheet, remote.sheetOpen, ::Choices)
 
-    val state: StateFlow<HomeUiState> = combine(day, drawer, listening, choices, ::stateOf)
+    val state: StateFlow<HomeUiState> = combine(day, drawer, listening, choices, mediaApps, ::stateOf)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), HomeUiState())
 
     /** Where the content is. Only the remote of the Listen page collects it. */
     val position: StateFlow<Duration> =
-        remote.media.position.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), Duration.ZERO)
+        listen.media.position.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), Duration.ZERO)
 
     override fun onDrawerExpandedChange(expanded: Boolean) {
         drawerChoice.value = expanded
@@ -181,7 +204,21 @@ class HomeViewModel private constructor(
         viewModelScope.launch { home.toggle(id) }
     }
 
-    private fun stateOf(day: Day, drawer: Drawer, listening: Listening, choices: Choices): HomeUiState {
+    /** Keeps what plays for the day its app is gone: the main app will offer to play it again. */
+    private fun remember(content: MediaContent) {
+        val heard = LastHeard(content.appId, content.title)
+        if (content.appId.isEmpty() || heard == noted) return
+        noted = heard
+        viewModelScope.launch { listen.mediaApps.remember(heard) }
+    }
+
+    private fun stateOf(
+        day: Day,
+        drawer: Drawer,
+        listening: Listening,
+        choices: Choices,
+        mediaApps: List<MediaAppRow>
+    ): HomeUiState {
         val media = listening.media
         val part = DayPart.at(day.now.toLocalTime())
         val favorites = drawer.settings.favoritePeople
@@ -205,6 +242,7 @@ class HomeViewModel private constructor(
             media = media,
             mediaAllowed = listening.allowed,
             listenOpen = choices.listen,
+            mediaApps = mediaApps,
             page = choices.page.allowedWith(media),
             drawerExpanded = choices.drawerExpanded ?: drawer.settings.drawerExpandedAtStart,
             background = backgroundFor(media, drawer.settings.idleBackground),

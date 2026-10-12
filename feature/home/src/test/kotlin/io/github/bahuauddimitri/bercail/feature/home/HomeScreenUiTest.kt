@@ -367,7 +367,42 @@ class HomeScreenUiTest {
         compose.onNodeWithText("Écouter…").performClick()
 
         compose.onNode(hasText("Écouter") and inTheListenSheet).assertExists()
-        compose.onNode(hasText("Rien ne joue pour l'instant", substring = true) and inTheListenSheet).assertExists()
+        listOf("Spotify", "Netflix", "Pocket Casts", "YouTube").forEach {
+            compose.onNode(hasText(it) and inTheListenSheet).assertExists()
+        }
+    }
+
+    @Test
+    fun `toucher une app de la feuille Écouter l'ouvre`() {
+        val world = show(silent())
+        compose.onNodeWithText("Écouter…").performClick()
+
+        compose.onNode(hasText("YouTube") and inTheListenSheet).performClick()
+
+        assertThat(world.apps.opened).containsExactly("youtube")
+    }
+
+    @Test
+    fun `l'app principale propose de reprendre le dernier morceau, et son bouton lecture le relance`() {
+        val world = show()
+        world.media.stop()
+        world.media.lastPlayed = Samples.spotify
+        compose.onNodeWithText("Écouter…").performClick()
+        compose.onNodeWithText("Reprendre « Looped »").assertExists()
+
+        compose.onNodeWithContentDescription("Reprendre dans Spotify").performClick()
+
+        compose.onNodeWithText("Looped · Kiasmos").assertExists()
+        compose.onNodeWithTag(LISTEN_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `sans app de musique installée, la feuille Écouter le dit`() {
+        show(silent().apply { mediaApps.apps.value = emptyList() })
+
+        compose.onNodeWithText("Écouter…").performClick()
+
+        compose.onNode(hasText("Aucune app de musique ou de vidéo", substring = true)).assertExists()
     }
 
     @Test

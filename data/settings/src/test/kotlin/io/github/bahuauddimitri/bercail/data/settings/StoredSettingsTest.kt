@@ -95,6 +95,15 @@ class StoredSettingsTest {
     }
 
     @Test
+    fun `sans choix, il n'y a pas d'app média principale, et celle qui est choisie est gardée`() {
+        assertThat(withSettings { it.settings.first() }.mainMediaApp).isNull()
+
+        withSettings { it.update { current -> current.copy(mainMediaApp = "com.google.android.youtube/.Home") } }
+
+        assertThat(withSettings { it.settings.first() }.mainMediaApp).isEqualTo("com.google.android.youtube/.Home")
+    }
+
+    @Test
     fun `l'ordre des favoris est conservé`() {
         withSettings { it.update { current -> current.copy(favoriteApps = listOf("c", "a", "b")) } }
 
