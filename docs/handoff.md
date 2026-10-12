@@ -515,6 +515,7 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 ### Vague 10 — Finitions et v1.0
 
 - Effets météo sur Brume, profils de démarrage, mesures Macrobenchmark et énergie, accessibilité (TalkBack, tailles de police), relevé batterie final, version 1.0.
+- **Ajouté le 12 octobre 2026 (demande de Dimitri)** : retravailler l'animation de l'alphabet de la recherche (la ligne de lettres), dans l'esprit de celle de Niagara Launcher, mise au point ensemble sur le téléphone ; puis une passe sur toutes les animations pour que l'ensemble soit le plus fluide possible. Les règles batterie restent la limite (rien ne bouge accueil caché, animations continues à 20 images/s au plus).
 
 ## Annexe : lire un test Kotlin
 
