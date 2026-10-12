@@ -124,6 +124,29 @@ class AccessQuestionsUiTest {
         assertThat(access.granted.value).isEqualTo(setOf(Access.Notifications))
     }
 
+    @Test
+    fun `pour les messages, Bercail demande à Android les deux droits que donne Beeper, lire et envoyer`() {
+        questions.ask(Access.Messages)
+
+        assertThat(android.asked).containsExactly(
+            "com.beeper.android.permission.READ_PERMISSION",
+            "com.beeper.android.permission.SEND_PERMISSION"
+        )
+    }
+
+    @Test
+    fun `Beeper n'est relié qu'une fois ses deux droits accordés`() {
+        questions.ask(Access.Messages)
+
+        shadowOf(app).grantPermissions("com.beeper.android.permission.READ_PERMISSION")
+        android.answers(agreed = true)
+        assertThat(access.granted.value).isEmpty()
+
+        shadowOf(app).grantPermissions("com.beeper.android.permission.SEND_PERMISSION")
+        access.refresh()
+        assertThat(access.granted.value).isEqualTo(setOf(Access.Messages))
+    }
+
     /** Android's permission screen: it remembers what it was asked, and answers when the test says so. */
     private class AndroidAsked : ActivityResultRegistry() {
         val asked = mutableListOf<String>()
@@ -135,12 +158,13 @@ class AccessQuestionsUiTest {
             input: I,
             options: ActivityOptionsCompat?
         ) {
-            asked += input.toString()
+            @Suppress("UNCHECKED_CAST")
+            asked += (input as Array<String>)
             question = requestCode
         }
 
         fun answers(agreed: Boolean) {
-            dispatchResult(question, agreed)
+            dispatchResult(question, asked.associateWith { agreed })
         }
     }
 }

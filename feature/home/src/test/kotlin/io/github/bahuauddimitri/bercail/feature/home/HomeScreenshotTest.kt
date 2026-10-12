@@ -111,6 +111,14 @@ class HomeScreenshotTest {
     }
 
     @Test
+    fun `le tiroir ouvert, tant que Beeper n'est pas relié, correspond à sa capture`() {
+        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) })
+        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+
+        capture("home_drawer_unlinked")
+    }
+
+    @Test
     fun `la feuille « Écouter » et ses apps média, quand la musique s'est tue, correspond à sa capture`() {
         val world = FakeWorld(Moment.Matin)
         show(world)

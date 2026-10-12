@@ -76,16 +76,16 @@ class LauncherUiTest {
 
     @Test
     fun `la version de mise au point montre les données du prototype pour ce qui n'est pas encore branché`() {
-        awaitText("2 non lus · Léa, Tom")
-        compose.onNodeWithText("Salon 60 %, Volets ouverts").assertExists()
+        awaitText("Salon 60 %, Volets ouverts")
     }
 
     @Test
-    fun `le tiroir s'ouvre sur les favoris et la maison`() {
+    fun `le tiroir s'ouvre sur les messages, à relier d'abord, et la maison`() {
         awaitDescription("Déplier le tiroir")
+        compose.onNodeWithText("Beeper n'est pas relié").assertExists()
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
 
-        compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
+        compose.onNodeWithText("Relier Beeper").assertExists()
         compose.onNodeWithContentDescription("Salon").assertExists()
     }
 
@@ -94,7 +94,7 @@ class LauncherUiTest {
         openSearch()
 
         compose.onNodeWithText("Réglages de Bercail").assertExists()
-        compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
+        compose.onNodeWithText("Salon 60 %, Volets ouverts").assertDoesNotExist()
     }
 
     @Test
@@ -103,7 +103,7 @@ class LauncherUiTest {
 
         pressBack()
 
-        awaitText("2 non lus · Léa, Tom")
+        awaitText("Salon 60 %, Volets ouverts")
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
     }
 
@@ -128,7 +128,7 @@ class LauncherUiTest {
         pressHome()
 
         awaitDescription("Replier le tiroir")
-        compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
+        compose.onNodeWithContentDescription("Salon").assertExists()
     }
 
     @Test
@@ -145,7 +145,7 @@ class LauncherUiTest {
 
         pressHome()
 
-        awaitText("2 non lus · Léa, Tom")
+        awaitText("Salon 60 %, Volets ouverts")
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
         compose.onNodeWithText("Fond d'écran").assertDoesNotExist()
     }

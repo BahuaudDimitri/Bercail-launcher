@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.domain.settings
 
+import io.github.bahuauddimitri.bercail.core.domain.messages.MAX_FAVORITE_PEOPLE
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import kotlinx.coroutines.flow.Flow
 
@@ -23,6 +24,13 @@ data class Settings(
     /** Adds the app to the favorites, or removes it if it already is one. */
     fun withFavoriteAppToggled(appId: String): Settings =
         copy(favoriteApps = if (appId in favoriteApps) favoriteApps - appId else favoriteApps + appId)
+
+    /** Adds the conversation to the favorite people, unless they are already four, or removes it if it is one. */
+    fun withFavoritePersonToggled(id: String): Settings = when {
+        id in favoritePeople -> copy(favoritePeople = favoritePeople - id)
+        favoritePeople.size < MAX_FAVORITE_PEOPLE -> copy(favoritePeople = favoritePeople + id)
+        else -> this
+    }
 }
 
 interface SettingsSource {

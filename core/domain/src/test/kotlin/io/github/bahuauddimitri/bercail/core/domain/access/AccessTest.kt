@@ -76,4 +76,21 @@ class AccessTest {
         assertThat(line.detail).isEqualTo("Bercail voit ce qui joue et le pilote, sans lire aucune notification")
         assertThat(line.touchable).isFalse()
     }
+
+    @Test
+    fun `sans l'accès à Beeper, la ligne Messages invite à le donner et dit ce que Bercail en fera`() {
+        val line = messagesSourceLine(allowed = false)
+
+        assertThat(line.title).isEqualTo("Messages de Beeper")
+        assertThat(line.detail).isEqualTo("Toucher pour autoriser Bercail à lire tes conversations et à y répondre")
+        assertThat(line.touchable).isTrue()
+    }
+
+    @Test
+    fun `une fois Beeper relié, la ligne Messages dit que rien ne quitte le téléphone`() {
+        val line = messagesSourceLine(allowed = true)
+
+        assertThat(line.detail).isEqualTo("Bercail lit tes conversations dans Beeper, sur le téléphone seulement")
+        assertThat(line.touchable).isFalse()
+    }
 }

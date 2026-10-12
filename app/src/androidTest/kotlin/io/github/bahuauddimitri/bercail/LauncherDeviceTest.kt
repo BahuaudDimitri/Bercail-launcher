@@ -47,17 +47,17 @@ class LauncherDeviceTest {
     @Test
     fun `l’accueil s’affiche au lancement`() {
         compose.onNodeWithTag(HOME_TAG).assertExists()
-        awaitText("2 non lus · Léa, Tom")
+        awaitText("Salon 60 %, Volets ouverts")
     }
 
     @Test
     fun `toucher la poignée déplie le tiroir puis le replie`() {
         awaitDescription("Déplier le tiroir")
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
-        compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
+        compose.onNodeWithContentDescription("Salon").assertExists()
 
         compose.onNodeWithContentDescription("Replier le tiroir").performClick()
-        compose.onNodeWithText("2 non lus · Léa, Tom").assertExists()
+        compose.onNodeWithText("Salon 60 %, Volets ouverts").assertExists()
     }
 
     @Test

@@ -50,7 +50,8 @@ class SettingsUiTest {
                 world.updates,
                 world.access,
                 world.cities,
-                world.mediaApps
+                world.mediaApps,
+                world.messages
             )
         compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }, onAskAccess = { asked += it }) } }
     }
@@ -115,6 +116,70 @@ class SettingsUiTest {
         world.access.grant(Access.Calendar)
 
         compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
+    }
+
+    // ---------- messages ----------
+
+    @Test
+    fun `sans l'accès à Beeper, la ligne « Messages de Beeper » le demande à Android d'un toucher`() {
+        world.access.refuse(Access.Messages)
+        show()
+        compose.onNodeWithText("Toucher pour autoriser Bercail à lire tes conversations et à y répondre")
+            .assertExists()
+
+        compose.onNodeWithText("Messages de Beeper").performScrollTo().performClick()
+
+        assertThat(asked).containsExactly(Access.Messages)
+    }
+
+    @Test
+    fun `tant que Beeper n'est pas relié, il n'y a pas de favoris à choisir`() {
+        world.access.refuse(Access.Messages)
+        show()
+
+        compose.onNodeWithText("Personnes favorites").performScrollTo().assertHasNoClickAction()
+        compose.onNodeWithText("À choisir une fois Beeper relié").assertExists()
+    }
+
+    @Test
+    fun `la ligne « Personnes favorites » nomme celles qui sont choisies`() {
+        show()
+
+        compose.onNodeWithText("Personnes favorites").performScrollTo().assertExists()
+        compose.onNodeWithText("Léa, Tom, Équipe, Maman").assertExists()
+    }
+
+    @Test
+    fun `sans favori choisi, la ligne dit que ce sont les dernières conversations`() {
+        world.settings.change { it.copy(favoritePeople = emptyList()) }
+        show()
+
+        compose.onNodeWithText("Les quatre dernières conversations, tant que tu n'as pas choisi")
+            .performScrollTo()
+            .assertExists()
+    }
+
+    @Test
+    fun `on choisit ses personnes favorites parmi ses conversations, chacune avec son réseau`() {
+        show()
+        compose.onNodeWithText("Personnes favorites").performScrollTo().performClick()
+        compose.onNodeWithText("Instagram").assertExists()
+
+        compose.onNodeWithText("Tom").performScrollTo().performClick()
+        compose.onNodeWithText("Julien").performScrollTo().performClick()
+
+        assertThat(stored.favoritePeople).containsExactly("lea", "team", "mum", "julien")
+    }
+
+    @Test
+    fun `avec quatre favoris, une cinquième personne ne s'ajoute pas`() {
+        show()
+        compose.onNodeWithText("Personnes favorites").performScrollTo().performClick()
+        compose.onNodeWithText("Quatre au plus : retire une personne pour en ajouter une autre").assertExists()
+
+        compose.onNodeWithText("Julien").performScrollTo().performClick()
+
+        assertThat(stored.favoritePeople).containsExactly("lea", "tom", "team", "mum")
     }
 
     // ---------- what plays ----------
@@ -285,7 +350,7 @@ class SettingsUiTest {
         show()
         assertThat(stored.drawerExpandedAtStart).isFalse()
 
-        compose.onNodeWithText("Ouvert").performClick()
+        compose.onNodeWithText("Ouvert").performScrollTo().performClick()
 
         assertThat(stored.drawerExpandedAtStart).isTrue()
     }
@@ -346,7 +411,8 @@ class SettingsUiTest {
             world.updates,
             world.access,
             world.cities,
-            world.mediaApps
+            world.mediaApps,
+            world.messages
         )
 
         assertThat(world.apps.apps.subscriptionCount.value).isEqualTo(0)
@@ -399,7 +465,8 @@ class SettingsUiTest {
             world.updates,
             world.access,
             world.cities,
-            world.mediaApps
+            world.mediaApps,
+            world.messages
         )
 
         assertThat(world.updates.status.subscriptionCount.value).isEqualTo(0)

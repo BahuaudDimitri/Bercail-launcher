@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import org.junit.Test
 
 /** The messages line of the folded drawer, and the favorite tiles of the open drawer. */
@@ -14,6 +15,7 @@ class MessagesSummaryTest {
     private val team = Conversation("team", "Équipe", "Slack")
     private val mum = Conversation("mum", "Maman", "SMS")
     private val julien = Conversation("julien", "Julien", "Instagram", unread = 2)
+    private val neighbours = Conversation("group", "Les voisins", "WhatsApp", unread = 40, muted = true)
 
     @Test
     fun `le résumé compte les non-lus et nomme ceux qui ont écrit`() {
@@ -87,6 +89,44 @@ class MessagesSummaryTest {
         assertThat(lea.description).isEqualTo("Léa, 1 non lu")
         assertThat(julien.description).isEqualTo("Julien, 2 non lus")
         assertThat(team.description).isEqualTo("Équipe")
+    }
+
+    @Test
+    fun `une conversation en sourdine ne compte pas dans le résumé et n'y est pas nommée`() {
+        val summary = messagesSummary(listOf(lea, neighbours))
+
+        assertThat(summary.headline).isEqualTo("1 non lu")
+        assertThat(summary.detail).isEqualTo("Léa")
+    }
+
+    @Test
+    fun `la tuile « Tous » ne compte pas les conversations en sourdine`() {
+        val others = unreadOutsideFavorites(listOf(lea, julien, neighbours), favoriteIds = listOf("lea"))
+
+        assertThat(others).isEqualTo(2)
+    }
+
+    @Test
+    fun `tant qu'aucun favori n'est choisi, ce sont les quatre premières conversations sans sourdine`() {
+        val favorites = favoritesAmong(listOf(neighbours, julien, mum, lea, tom, team), favoriteIds = emptyList())
+
+        assertThat(favorites.map { it.name }).containsExactly("Julien", "Maman", "Léa", "Tom")
+    }
+
+    @Test
+    fun `une conversation en sourdine choisie comme favorite garde sa tuile`() {
+        val favorites = favoritesAmong(listOf(neighbours, lea), favoriteIds = listOf("group"))
+
+        assertThat(favorites.map { it.name }).containsExactly("Les voisins")
+    }
+
+    @Test
+    fun `quatre favoris au plus, un cinquième n'est pas ajouté, et un favori touché de nouveau est retiré`() {
+        val four = listOf("lea", "tom", "team", "mum").fold(Settings()) { all, id -> all.withFavoritePersonToggled(id) }
+
+        assertThat(four.favoritePeople).containsExactly("lea", "tom", "team", "mum")
+        assertThat(four.withFavoritePersonToggled("julien").favoritePeople).containsExactly("lea", "tom", "team", "mum")
+        assertThat(four.withFavoritePersonToggled("tom").favoritePeople).containsExactly("lea", "team", "mum")
     }
 
     @Test

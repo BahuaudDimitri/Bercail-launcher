@@ -70,6 +70,9 @@ data class HomeUiState(
     val dayDate: String = "",
     val dayRows: List<DayRow> = emptyList(),
     val messages: MessagesSummary = MessagesSummary(unread = 0, senders = emptyList()),
+
+    /** False until the user lets Bercail read Beeper: the drawer then offers to link it. */
+    val messagesAllowed: Boolean = true,
     val favorites: List<Conversation> = emptyList(),
     val otherUnread: Int = 0,
     val controls: List<HomeControl> = emptyList(),
@@ -142,7 +145,16 @@ class HomeViewModel private constructor(
         Day(now, if (allowed) events else emptyList(), forecast, allowed)
     }.onEach { shown = it }
 
-    private val drawer: Flow<Drawer> = combine(messages.conversations, home.controls, settings.settings, ::Drawer)
+    private val drawer: Flow<Drawer> = combine(
+        messages.conversations,
+        home.controls,
+        settings.settings,
+        access.granted
+    ) { conversations, controls, current, granted ->
+        // Without the user's agreement, nothing of the conversations is shown, whatever the source says.
+        val allowed = Access.Messages in granted
+        Drawer(if (allowed) conversations else emptyList(), controls, current, allowed)
+    }
 
     /**
      * What plays, once the user has agreed to let Bercail see it. When the content goes away, the Listen page goes
@@ -221,7 +233,7 @@ class HomeViewModel private constructor(
     ): HomeUiState {
         val media = listening.media
         val part = DayPart.at(day.now.toLocalTime())
-        val favorites = drawer.settings.favoritePeople
+        val favorites = favoritesAmong(drawer.conversations, drawer.settings.favoritePeople)
         val weather = day.forecast?.let { weatherAt(day.now, it) }
         return HomeUiState(
             glance = if (day.agendaAllowed) glanceAt(day.now, day.events) else closedGlance,
@@ -235,8 +247,9 @@ class HomeViewModel private constructor(
             dayDate = day.now.toLocalDate().inWords(),
             dayRows = dayRowsAt(day.now, day.events, choices.day.focus),
             messages = messagesSummary(drawer.conversations),
-            favorites = favoritesAmong(drawer.conversations, favorites),
-            otherUnread = unreadOutsideFavorites(drawer.conversations, favorites),
+            messagesAllowed = drawer.messagesAllowed,
+            favorites = favorites,
+            otherUnread = unreadOutsideFavorites(drawer.conversations, favorites.map { it.id }),
             controls = drawer.controls,
             homeSummary = homeSummary(drawer.controls),
             media = media,
@@ -260,7 +273,8 @@ class HomeViewModel private constructor(
     private data class Drawer(
         val conversations: List<Conversation>,
         val controls: List<HomeControl>,
-        val settings: Settings
+        val settings: Settings,
+        val messagesAllowed: Boolean
     )
 
     /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment the search pointed at. */

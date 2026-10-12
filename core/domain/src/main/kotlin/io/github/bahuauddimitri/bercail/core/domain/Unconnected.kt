@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.flowOf
 object Unconnected {
     val messages: MessagesSource = object : MessagesSource {
         override val conversations: Flow<List<Conversation>> = flowOf(emptyList())
+
+        override fun openApp() = Unit
     }
 
     val home: HomeSource = object : HomeSource {

@@ -99,6 +99,7 @@ class MainActivity : ComponentActivity() {
         val homeLinks = object : HomeLinks {
             override fun onAskAccess(access: Access) = questions.ask(access)
             override fun onOpenAppSettings() = sources.phone.openAppSettings()
+            override fun onOpenMessagesApp() = sources.messages.openApp()
         }
         Box {
             HomeRoute(

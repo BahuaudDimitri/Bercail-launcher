@@ -79,7 +79,7 @@ class FakeWorldTest {
         assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())
 
         world.access.refuse(Access.Calendar)
-        assertThat(world.access.granted.first()).isEqualTo(setOf(Access.Location, Access.Notifications))
+        assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet() - Access.Calendar)
 
         world.access.grant(Access.Calendar)
         assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())

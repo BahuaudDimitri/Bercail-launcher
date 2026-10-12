@@ -33,7 +33,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDrawer
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcHomeToggle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
@@ -48,7 +47,6 @@ import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.media.asTrackTime
 import io.github.bahuauddimitri.bercail.core.domain.media.progress
-import io.github.bahuauddimitri.bercail.core.domain.messages.allMessagesDescription
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.StateFlow
@@ -117,15 +115,8 @@ private fun ClosesSearch(search: HomeSearch?) {
 /** Folded drawer: who wrote, and what is on in the house. Touching a line opens the drawer. */
 @Composable
 private fun Summary(state: HomeUiState, onExpand: () -> Unit) {
-    val favoriteIds = state.favorites.map { it.id }
     Column(Modifier.fillMaxWidth()) {
-        BcSummaryRow(
-            text = state.messages.detail,
-            strong = state.messages.headline,
-            leading = BcSummaryLeading.Dots(state.messages.senders.map { pastelOf(it.id, favoriteIds) }),
-            onClick = onExpand,
-            onClickLabel = OPEN_DRAWER
-        )
+        MessagesLine(state, onClick = onExpand, onClickLabel = OPEN_DRAWER)
         BcSummaryRow(
             text = state.homeSummary,
             leading = BcSummaryLeading.Icon(BcIcons.House),
@@ -138,29 +129,8 @@ private fun Summary(state: HomeUiState, onExpand: () -> Unit) {
 /** Open drawer: the favorite people and "Tous", the home controls and "Tout". */
 @Composable
 private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
-    val favoriteIds = state.favorites.map { it.id }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ROW_GAP)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            state.favorites.forEach { person ->
-                BcPersonTile(
-                    name = person.name,
-                    initials = person.initials,
-                    pastel = pastelOf(person.id, favoriteIds),
-                    unread = person.unread,
-                    onClick = { links.onOpenConversation(person.id) },
-                    description = person.description
-                )
-            }
-            BcPersonTile(
-                name = "Tous",
-                initials = "",
-                pastel = null,
-                unread = state.otherUnread,
-                onClick = links::onOpenMessagesApp,
-                description = allMessagesDescription(state.otherUnread),
-                icon = BcIcons.Chat
-            )
-        }
+        PeopleRow(state, links)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             state.controls.forEach { control ->
                 BcHomeToggle(

@@ -21,6 +21,7 @@ import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.media.DeviceMedia
 import io.github.bahuauddimitri.bercail.data.media.DeviceMediaApps
 import io.github.bahuauddimitri.bercail.data.media.listeningStore
+import io.github.bahuauddimitri.bercail.data.messages.BeeperMessages
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
 import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
@@ -52,14 +53,14 @@ class BercailApplication : Application() {
         }
 }
 
-/** The sources whose wave has not come yet. What stands in for them depends on the build: see [waiting]. */
-internal class Waiting(val messages: MessagesSource, val home: HomeSource)
+/** The source whose wave has not come yet. What stands in for it depends on the build: see [waiting]. */
+internal class Waiting(val home: HomeSource)
 
 /**
  * Every source of Bercail, plugged once. Real today: the clock, the installed apps, the links to the phone, the
- * stored settings, the update of Bercail itself, what the user lets it read, the calendar, the weather and what
- * plays in the media apps. The others wait for their wave (messages in 8, house in 9). The tests plug their own
- * parts.
+ * stored settings, the update of Bercail itself, what the user lets it read, the calendar, the weather, what plays
+ * in the media apps and the conversations Beeper keeps. The house waits for its wave (9). The tests plug their
+ * own parts.
  */
 class Sources(
     context: Context,
@@ -67,7 +68,8 @@ class Sources(
     agenda: AgendaSource? = null,
     clock: Clock? = null,
     weather: WeatherSource? = null,
-    media: MediaSource? = null
+    media: MediaSource? = null,
+    messages: MessagesSource? = null
 ) {
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val waiting = waiting()
@@ -76,7 +78,7 @@ class Sources(
     val apps: AppsSource = DeviceApps(context)
     val phone: Phone = DevicePhone(context)
     val settings: SettingsSource =
-        StoredSettings(settingsStore(File(context.filesDir, SETTINGS_FILE), background)).forThisBuild()
+        StoredSettings(settingsStore(File(context.filesDir, SETTINGS_FILE), background))
 
     /** What the user has let Bercail read so far. */
     val access = DeviceAccess(context)
@@ -101,6 +103,9 @@ class Sources(
     val mediaApps: MediaAppsSource =
         DeviceMediaApps(context, apps, listeningStore(File(context.filesDir, LISTENING_FILE), background))
 
+    /** The conversations of every network, read in Beeper only while the home screen or the search shows them. */
+    val messages: MessagesSource = messages ?: BeeperMessages(context, access)
+
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
     /** Bercail updating itself as the home screen comes and goes. */
@@ -112,17 +117,17 @@ class Sources(
         clock = clock,
         agenda = agenda,
         weather = weather,
-        messages = waiting.messages,
+        messages = messages,
         home = waiting.home,
         listen = ListenSources(media, mediaApps, apps),
         settings = settings,
         access = access
     )
 
-    fun searchViewModel() =
-        SearchViewModel(apps, phone, clock, agenda, waiting.messages, waiting.home, settings, updater)
+    fun searchViewModel() = SearchViewModel(apps, phone, clock, agenda, messages, waiting.home, settings, updater)
 
-    fun settingsViewModel() = SettingsViewModel(settings, apps, phone, updater, access, OpenMeteoCities(), mediaApps)
+    fun settingsViewModel() =
+        SettingsViewModel(settings, apps, phone, updater, access, OpenMeteoCities(), mediaApps, messages)
 
     /** The home screen just went away: a version that is ready may take over. */
     fun onHomeHidden() {

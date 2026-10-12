@@ -5,8 +5,9 @@ import kotlinx.coroutines.flow.Flow
 /**
  * What Bercail reads on the phone only once the user has agreed, on the screen Android shows for it.
  * [Notifications] is what Android calls "notification access": the only way to know what the media apps play.
+ * [Messages] is the right Beeper gives to read the conversations it keeps, and to answer in them.
  */
-enum class Access { Calendar, Location, Notifications }
+enum class Access { Calendar, Location, Notifications, Messages }
 
 interface AccessSource {
     /** What the user has agreed to so far. It changes when they agree, or change their mind in Android's settings. */
@@ -52,3 +53,12 @@ fun mediaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
 }
 
 private const val MEDIA = "Musique en cours"
+
+/** The conversations: Beeper keeps them, and lets another app read them and answer once the user has agreed. */
+fun messagesSourceLine(allowed: Boolean): SourceLine = if (allowed) {
+    SourceLine(MESSAGES, "Bercail lit tes conversations dans Beeper, sur le téléphone seulement", touchable = false)
+} else {
+    SourceLine(MESSAGES, "Toucher pour autoriser Bercail à lire tes conversations et à y répondre", touchable = true)
+}
+
+private const val MESSAGES = "Messages de Beeper"

@@ -315,6 +315,19 @@ class HomeScreenUiTest {
     }
 
     @Test
+    fun `sans l'accès à Beeper, la ligne des messages le dit et le tiroir ouvert propose de le relier`() {
+        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) })
+        compose.onNodeWithText("Beeper n'est pas relié").assertExists()
+        compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
+
+        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.onNodeWithContentDescription("Léa, 1 non lu").assertDoesNotExist()
+        compose.onNodeWithText("Relier Beeper").performClick()
+
+        assertThat(opened).containsExactly("demande d'accès Messages")
+    }
+
+    @Test
     fun `toucher une commande maison la bascule sur place`() {
         show()
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
@@ -667,7 +680,7 @@ class HomeScreenUiTest {
 
         compose.onNodeWithText("Agenda pas encore relié").assertExists()
         compose.onNodeWithText("Relier l'agenda").assertExists()
-        compose.onNodeWithText("Aucun message").assertExists()
+        compose.onNodeWithText("Beeper n'est pas relié").assertExists()
         compose.onNodeWithText("Maison au repos").assertExists()
         compose.onNodeWithText("Écouter…").assertExists()
         compose.onNodeWithTag(BRUME_TAG).assertDoesNotExist()

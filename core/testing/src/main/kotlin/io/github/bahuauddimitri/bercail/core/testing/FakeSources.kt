@@ -55,6 +55,14 @@ class FakeAgendaSource(events: List<AgendaEvent> = emptyList()) : AgendaSource {
 class FakeMessagesSource(conversations: List<Conversation> = emptyList()) : MessagesSource {
     override val conversations = MutableStateFlow(conversations)
 
+    /** How many times the messaging app was asked for. */
+    var appOpenings = 0
+        private set
+
+    override fun openApp() {
+        appOpenings++
+    }
+
     /** One more unread message from this person. */
     fun receive(id: String) = change(id) { it.copy(unread = it.unread + 1) }
 

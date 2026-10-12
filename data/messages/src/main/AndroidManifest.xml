@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Beeper keeps the conversations of every network, and lets another app read them and answer in them once
+         the user has agreed, on Android's own screen. Nothing leaves the phone. -->
+    <uses-permission android:name="com.beeper.android.permission.READ_PERMISSION" />
+    <uses-permission android:name="com.beeper.android.permission.SEND_PERMISSION" />
+
+    <!-- Android hides the other apps from Bercail unless it names the ones it talks to. -->
+    <queries>
+        <package android:name="com.beeper.android" />
+        <provider android:authorities="com.beeper.api" />
+    </queries>
+</manifest>

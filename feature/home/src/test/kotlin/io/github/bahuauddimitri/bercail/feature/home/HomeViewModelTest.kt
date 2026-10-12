@@ -199,6 +199,46 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `sans l'accès à Beeper, aucune conversation n'est montrée, quoi que dise la source`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) }
+        val home = homeOf(world)
+        show(home)
+
+        val state = home.state.value
+
+        assertThat(state.messagesAllowed).isFalse()
+        assertThat(state.messages.senders).isEmpty()
+        assertThat(state.favorites).isEmpty()
+        assertThat(state.otherUnread).isEqualTo(0)
+    }
+
+    @Test
+    fun `dès que Beeper est relié, les conversations arrivent`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) }
+        val home = homeOf(world)
+        show(home)
+
+        world.access.grant(Access.Messages)
+
+        assertThat(home.state.value.messagesAllowed).isTrue()
+        assertThat(home.state.value.messages.detail).isEqualTo("Léa, Tom")
+    }
+
+    @Test
+    fun `tant qu'aucun favori n'est choisi, les tuiles sont les quatre conversations les plus récentes`() =
+        runTest(dispatcher) {
+            val world = FakeWorld(Moment.Soir).apply { settings.change { it.copy(favoritePeople = emptyList()) } }
+            val home = homeOf(world)
+            show(home)
+
+            val state = home.state.value
+
+            assertThat(state.favorites.map { it.name }).containsExactly("Léa", "Tom", "Équipe", "Maman")
+            // Julien, who wrote twice, is not among them: « Tous » counts his messages.
+            assertThat(state.otherUnread).isEqualTo(2)
+        }
+
+    @Test
     fun `le tiroir démarre replié, et retient ce qu'on en fait`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Matin))
         show(home)

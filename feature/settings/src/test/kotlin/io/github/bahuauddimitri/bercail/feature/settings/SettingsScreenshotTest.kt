@@ -45,7 +45,8 @@ class SettingsScreenshotTest {
                 world.updates,
                 world.access,
                 world.cities,
-                world.mediaApps
+                world.mediaApps,
+                world.messages
             )
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.base)) { SettingsRoute(settings, onBack = {}) } }
@@ -80,6 +81,14 @@ class SettingsScreenshotTest {
         compose.onNodeWithText("Apps favorites").performScrollTo().performClick()
 
         capture("settings_favorite_apps")
+    }
+
+    @Test
+    fun `la liste des personnes favorites correspond à sa capture`() {
+        show()
+        compose.onNodeWithText("Personnes favorites").performScrollTo().performClick()
+
+        capture("settings_favorite_people")
     }
 
     @Test

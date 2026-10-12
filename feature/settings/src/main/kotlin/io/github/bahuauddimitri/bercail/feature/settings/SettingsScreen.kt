@@ -38,6 +38,8 @@ fun SettingsRoute(
     when (shown) {
         Shown.Apps -> FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, backToSettings, modifier)
 
+        Shown.People -> FavoritePeopleScreen(state, viewModel::onToggleFavoritePerson, backToSettings, modifier)
+
         Shown.MediaApp -> MediaAppScreen(
             state = state,
             onChoose = {
@@ -65,13 +67,14 @@ fun SettingsRoute(
             modifier = modifier,
             onAskAccess = onAskAccess,
             onPickPlace = { shown = Shown.Place },
-            onPickMediaApp = { shown = Shown.MediaApp }
+            onPickMediaApp = { shown = Shown.MediaApp },
+            onPickPeople = { shown = Shown.People }
         )
     }
 }
 
 /** What the settings panel shows: itself, or one of the lists it opens. */
-private enum class Shown { Settings, Apps, Place, MediaApp }
+private enum class Shown { Settings, Apps, Place, MediaApp, People }
 
 /** What Bercail reads only once allowed: its row says where it stands, and a touch asks Android for it. */
 @Composable
@@ -80,8 +83,8 @@ private fun SourceRow(line: SourceLine, onAsk: () -> Unit) {
 }
 
 /**
- * Bercail's settings: only what already works, the sources to allow and the update of Bercail itself. The favorite
- * people, the home controls and the media app will join them with their waves.
+ * Bercail's settings: only what already works, the sources to allow and the update of Bercail itself. The home
+ * controls will join them with their wave.
  */
 @Composable
 fun SettingsScreen(
@@ -92,7 +95,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onAskAccess: (Access) -> Unit = {},
     onPickPlace: () -> Unit = {},
-    onPickMediaApp: () -> Unit = {}
+    onPickMediaApp: () -> Unit = {},
+    onPickPeople: () -> Unit = {}
 ) {
     val settings = state.settings
     BcPanel("Réglages de Bercail", onBack, backDescription = "Retour à la recherche", modifier = modifier) {
@@ -105,6 +109,7 @@ fun SettingsScreen(
             )
         }
         ListenRows(state, onAsk = { onAskAccess(Access.Notifications) }, onPickMediaApp)
+        MessagesRows(state, onAsk = { onAskAccess(Access.Messages) }, onPickPeople)
         BcSectionLabel("Agenda")
         SourceRow(state.agenda, onAsk = { onAskAccess(Access.Calendar) })
         BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {

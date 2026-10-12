@@ -12,18 +12,20 @@ import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import io.github.bahuauddimitri.bercail.data.media.MediaAccess
+import io.github.bahuauddimitri.bercail.data.messages.BeeperAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The Android permission behind each thing Bercail asks to read. The "notification access" has none: Android
- * gives it on a page of its own settings.
+ * The Android permissions behind each thing Bercail asks to read. The "notification access" has none: Android
+ * gives it on a page of its own settings. Beeper gives two, to read the conversations and to answer in them.
  */
-internal val Access.permission: String?
+internal val Access.permissions: List<String>
     get() = when (this) {
-        Access.Calendar -> Manifest.permission.READ_CALENDAR
-        Access.Location -> Manifest.permission.ACCESS_COARSE_LOCATION
-        Access.Notifications -> null
+        Access.Calendar -> listOf(Manifest.permission.READ_CALENDAR)
+        Access.Location -> listOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+        Access.Notifications -> emptyList()
+        Access.Messages -> BeeperAccess.permissions
     }
 
 /**
@@ -42,8 +44,8 @@ class DeviceAccess(private val context: Context) : AccessSource {
     private fun read(): Set<Access> = Access.entries.filter(::has).toSet()
 
     private fun has(access: Access): Boolean {
-        val permission = access.permission ?: return MediaAccess.granted(context)
-        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        val permissions = access.permissions.ifEmpty { return MediaAccess.granted(context) }
+        return permissions.all { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
     }
 }
 
@@ -61,16 +63,17 @@ internal class AccessQuestions(
     private var askedAt = 0L
 
     private val question =
-        activity.registerForActivityResult(ActivityResultContracts.RequestPermission(), android) { agreed ->
+        activity.registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions(), android) { answers ->
+            val agreed = answers.values.all { it }
             access().refresh()
             val unasked = SystemClock.elapsedRealtime() - askedAt < SHORTEST_READING_MS
             if (!agreed && unasked) phone().openAppSettings()
         }
 
     fun ask(what: Access) {
-        val permission = what.permission ?: return openNotificationAccess()
+        val permissions = what.permissions.ifEmpty { return openNotificationAccess() }
         askedAt = SystemClock.elapsedRealtime()
-        question.launch(permission)
+        question.launch(permissions.toTypedArray())
     }
 
     /**
