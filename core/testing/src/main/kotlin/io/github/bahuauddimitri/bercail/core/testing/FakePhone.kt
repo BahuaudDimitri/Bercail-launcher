@@ -1,7 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.testing
 
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
-import io.github.bahuauddimitri.bercail.core.domain.apps.AppIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,16 +16,16 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 
     /** The apps whose icon was asked for so far, in order. */
     val iconRequests = mutableListOf<String>()
-    private val icons = mutableMapOf<String, AppIcon>()
+    private val icons = mutableMapOf<String, Picture>()
 
-    override suspend fun icon(appId: String): AppIcon? {
+    override suspend fun icon(appId: String): Picture? {
         iconRequests += appId
         return icons[appId]
     }
 
     /** Gives an app a plain square icon of one color (ARGB). */
     fun paintIcon(appId: String, color: Int, size: Int = 4) {
-        icons[appId] = AppIcon(size, size, IntArray(size * size) { color })
+        icons[appId] = Picture(size, size, IntArray(size * size) { color })
     }
 
     override fun open(appId: String) {

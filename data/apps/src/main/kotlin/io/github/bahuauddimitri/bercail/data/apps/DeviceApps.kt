@@ -11,8 +11,8 @@ import android.graphics.Canvas
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
-import io.github.bahuauddimitri.bercail.core.domain.apps.AppIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineDispatcher
@@ -52,7 +52,7 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         awaitClose { launcher.unregisterCallback(changes) }
     }.conflate().map { withContext(background) { installed() } }.distinctUntilChanged()
 
-    override suspend fun icon(appId: String): AppIcon? = withContext(background) {
+    override suspend fun icon(appId: String): Picture? = withContext(background) {
         val component = ComponentName.unflattenFromString(appId) ?: return@withContext null
         val drawable = try {
             packages.getActivityIcon(component)
@@ -66,7 +66,7 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         val pixels = IntArray(size * size)
         bitmap.getPixels(pixels, 0, size, 0, 0, size, size)
         bitmap.recycle()
-        AppIcon(width = size, height = size, pixels = pixels)
+        Picture(width = size, height = size, pixels = pixels)
     }
 
     override fun open(appId: String) {
