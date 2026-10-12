@@ -25,38 +25,49 @@ import org.json.JSONObject
 class OpenMeteo(
     private val forecastUrl: String = FORECAST,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
-    private val background: CoroutineDispatcher = Dispatchers.IO
+    private val background: CoroutineDispatcher = Dispatchers.IO,
+    private val onFailure: (Exception) -> Unit = {}
 ) : ForecastService {
     override suspend fun forecastAt(place: Place): Forecast? = runInterruptible(background) {
         try {
-            read(place)?.let(::forecastIn)
-        } catch (_: IOException) {
-            null
-        } catch (_: JSONException) {
-            null
+            forecastIn(read(place))
+        } catch (failure: IOException) {
+            unread(failure)
+        } catch (failure: JSONException) {
+            unread(failure)
         }
     }
 
-    private fun read(place: Place): String? {
+    /** No forecast this time. Why is told to [onFailure]: otherwise a missing weather line explains nothing. */
+    private fun unread(failure: Exception): Forecast? {
+        onFailure(failure)
+        return null
+    }
+
+    private fun read(place: Place): String {
         // Always a point for the decimals, whatever the language of the phone.
         val where = "latitude=%.2f&longitude=%.2f".format(Locale.ROOT, place.latitude, place.longitude)
         val connection = URL("$forecastUrl?$where&$WANTED").openHttp()
         try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
+            val code = connection.responseCode
+            if (code != HttpURLConnection.HTTP_OK) throw IOException("Open-Meteo answered $code")
             val answer = connection.inputStream.use { it.readNBytes(LONGEST_ANSWER + 1) }
-            return answer.takeIf { it.size <= LONGEST_ANSWER }?.decodeToString()
+            if (answer.size > LONGEST_ANSWER) throw IOException("Open-Meteo's answer is too long")
+            return answer.decodeToString()
         } finally {
             connection.disconnect()
         }
     }
 
     /** The hours of the answer, at the time of the phone. A list shorter than the others means no forecast. */
-    private fun forecastIn(answer: String): Forecast? {
+    private fun forecastIn(answer: String): Forecast {
         val hourly = JSONObject(answer).getJSONObject("hourly")
         val times = hourly.getJSONArray("time")
         val lists = listOf("temperature_2m", "weather_code", "wind_speed_10m", "wind_gusts_10m")
             .map(hourly::getJSONArray)
-        if (times.length() == 0 || lists.any { it.length() != times.length() }) return null
+        if (times.length() == 0 || lists.any { it.length() != times.length() }) {
+            throw JSONException("The hours and what is forecast for them do not match")
+        }
         val (temperatures, codes, winds) = lists
         val gusts = lists.last()
         val zone = zone()

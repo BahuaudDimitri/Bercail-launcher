@@ -25,6 +25,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -57,6 +59,12 @@ class WeatherWatchTest {
 
     /** The home screen is shown: someone listens to the weather. */
     private fun TestScope.showHome(): Job = backgroundScope.launch(dispatcher) { watch.forecast.collect { seen += it } }
+
+    /** The few seconds Bercail leaves between a request that failed and its second try go by. */
+    private fun TestScope.waitForTheSecondTry() {
+        advanceTimeBy(BEFORE_THE_SECOND_TRY.toMillis())
+        runCurrent()
+    }
 
     // ---------- the user's agreement ----------
 
@@ -183,23 +191,73 @@ class WeatherWatchTest {
         service.reachable = false
 
         showHome()
+        waitForTheSecondTry()
 
         assertThat(seen.last()).isEqualTo(sunny)
         assertThat(journal.notes.failedAt).isEqualTo(morning)
     }
 
     @Test
-    fun `après un échec, Bercail attend un quart d'heure avant de redemander`() = runTest(dispatcher) {
+    fun `si la demande échoue, Bercail réessaie une seule fois, cinq secondes plus tard`() = runTest(dispatcher) {
         service.reachable = false
         showHome()
         assertThat(service.asked).hasSize(1)
 
-        repeat(14) { clock.advanceMinutes(1) }
+        service.reachable = true
+        advanceTimeBy(4_999)
+        runCurrent()
         assertThat(service.asked).hasSize(1)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertThat(service.asked).hasSize(2)
+        assertThat(seen.last()).isEqualTo(sunny)
+        assertThat(journal.notes.failedAt).isNull()
+    }
+
+    @Test
+    fun `un échec n'est noté qu'après le second essai`() = runTest(dispatcher) {
+        service.reachable = false
+
+        showHome()
+        assertThat(journal.notes.failedAt).isNull()
+
+        waitForTheSecondTry()
+        assertThat(service.asked).hasSize(2)
+        assertThat(journal.notes.failedAt).isEqualTo(morning)
+    }
+
+    @Test
+    fun `si l'accueil se cache avant le second essai, rien n'est retenté et la demande repart au retour`() =
+        runTest(dispatcher) {
+            service.reachable = false
+            val home = showHome()
+
+            home.cancel()
+            waitForTheSecondTry()
+            assertThat(service.asked).hasSize(1)
+            assertThat(journal.notes.failedAt).isNull()
+
+            service.reachable = true
+            showHome()
+            assertThat(service.asked).hasSize(2)
+            assertThat(seen.last()).isEqualTo(sunny)
+        }
+
+    @Test
+    fun `après deux essais manqués, Bercail attend un quart d'heure avant de redemander`() = runTest(dispatcher) {
+        service.reachable = false
+        showHome()
+        waitForTheSecondTry()
+        assertThat(service.asked).hasSize(2)
+
+        repeat(14) { clock.advanceMinutes(1) }
+        runCurrent()
+        assertThat(service.asked).hasSize(2)
 
         service.reachable = true
         clock.advanceMinutes(1)
-        assertThat(service.asked).hasSize(2)
+        assertThat(service.asked).hasSize(3)
         assertThat(seen.last()).isEqualTo(sunny)
         assertThat(journal.notes.failedAt).isNull()
     }

@@ -81,7 +81,7 @@ class Sources(
         access = access,
         settings = settings,
         position = PhonePosition(context),
-        service = OpenMeteo(),
+        service = OpenMeteo(onFailure = { Log.w(LOG_TAG, "The forecast could not be read", it) }),
         journal = StoredForecast(forecastStore(File(context.filesDir, WEATHER_FILE), background)),
         background = Dispatchers.IO,
         onFailure = { Log.w(LOG_TAG, "The weather of Bercail stumbled", it) }

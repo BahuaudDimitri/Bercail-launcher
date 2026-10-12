@@ -8,6 +8,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -61,7 +62,8 @@ interface ForecastJournal {
 }
 
 /**
- * Bercail asks for a forecast once an hour at most. After a request that failed, it waits a quarter of an hour.
+ * Bercail asks for a forecast once an hour at most. After a request that failed twice in a row, it waits a
+ * quarter of an hour.
  * A clock that went back never blocks the next request.
  */
 fun isForecastDue(notes: ForecastNotes, now: LocalDateTime): Boolean {
@@ -80,6 +82,7 @@ fun ForecastNotes.usableAt(now: LocalDateTime): Forecast? {
 internal val BETWEEN_FORECASTS: Duration = Duration.ofHours(1)
 internal val AFTER_A_FAILED_FORECAST: Duration = Duration.ofMinutes(15)
 internal val FORECAST_LIFE: Duration = Duration.ofHours(6)
+internal val BEFORE_THE_SECOND_TRY: Duration = Duration.ofSeconds(5)
 
 /**
  * The weather of the city the user chose, or of the place where the phone is. Everything happens while someone
@@ -121,12 +124,22 @@ class WeatherWatch(
 
     /** The notes after one request: a new forecast, or the old one with the time of the failure. */
     private suspend fun asked(known: ForecastNotes, now: LocalDateTime): ForecastNotes {
-        val received = (known.city ?: position.current())?.let { service.forecastAt(it) }
+        val received = (known.city ?: position.current())?.let { service.forecastAt(it) ?: askedAgain(it) }
         return if (received != null) {
             ForecastNotes(received, fetchedAt = now, city = known.city)
         } else {
             known.copy(failedAt = now)
         }
+    }
+
+    /**
+     * The second and last try. The home screen shows at the very moment the phone wakes up, when the network is
+     * not always back yet: one hiccup must not cost a quarter of an hour without weather. If the home screen goes
+     * away in the meantime, the wait is dropped with the rest, and the request starts again when it comes back.
+     */
+    private suspend fun askedAgain(place: Place): Forecast? {
+        delay(BEFORE_THE_SECOND_TRY.toMillis())
+        return service.forecastAt(place)
     }
 
     /** What decides of the weather at one moment: the user's agreement, the chosen city, the time. */

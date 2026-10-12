@@ -2,7 +2,10 @@ package io.github.bahuauddimitri.bercail.data.weather
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
 import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -29,6 +32,9 @@ class OpenMeteoUiTest {
     private val nantes = Place(47.21725, -1.55336)
     private val locale = Locale.getDefault()
 
+    /** Why the requests failed, as Bercail writes it in the journal of the phone. */
+    private val failures = mutableListOf<Exception>()
+
     @Before
     fun start() = openMeteo.start()
 
@@ -39,7 +45,7 @@ class OpenMeteoUiTest {
     }
 
     private fun service(zone: String = "Europe/Paris") =
-        OpenMeteo(openMeteo.url("/v1/forecast").toString(), zone = { ZoneId.of(zone) })
+        OpenMeteo(openMeteo.url("/v1/forecast").toString(), zone = { ZoneId.of(zone) }, onFailure = { failures += it })
 
     private fun forecast(body: String, code: Int = 200, zone: String = "Europe/Paris"): Forecast? {
         openMeteo.enqueue(MockResponse(code = code, body = body))
@@ -148,5 +154,43 @@ class OpenMeteoUiTest {
     @Test
     fun `une réponse démesurée est ignorée`() {
         assertThat(forecast(recorded + " ".repeat(300_000))).isNull()
+    }
+
+    @Test
+    fun `une prévision bien lue ne laisse aucune trace`() {
+        forecast(recorded)
+
+        assertThat(failures).isEmpty()
+    }
+
+    @Test
+    fun `chaque requête manquée laisse une trace qui dit pourquoi`() {
+        forecast("{\"error\":true,\"reason\":\"Too many requests\"}", code = 429)
+        forecast("<html>Portail wifi</html>")
+        forecast(recorded.replace("\"weather_code\":[80,", "\"weather_code\":["))
+        forecast(recorded + " ".repeat(300_000))
+
+        assertThat(failures).hasSize(4)
+        assertThat(failures.first().message.orEmpty()).contains("429")
+    }
+
+    @Test
+    fun `sans réseau aussi, la trace dit pourquoi`() {
+        val unreachable = service()
+        openMeteo.close()
+
+        runBlocking { unreachable.forecastAt(nantes) }
+
+        assertThat(failures).hasSize(1)
+    }
+
+    @Test
+    fun `la trace ne dit jamais où est le téléphone`() {
+        forecast("{}", code = 500)
+        forecast("{}")
+
+        val written = failures.joinToString { it.toString() }
+        assertThat(written).doesNotContain("47.2")
+        assertThat(written).doesNotContain("1.55")
     }
 }
