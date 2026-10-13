@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
@@ -222,7 +223,7 @@ private fun Handle(description: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(HANDLE_TOUCH_WIDTH, BcSizes.minTouch)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center
     ) {

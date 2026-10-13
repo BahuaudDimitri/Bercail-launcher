@@ -133,7 +133,7 @@ fun BcSwitch(
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = SWITCH_TOUCH_WIDTH, minHeight = BcSizes.minTouch)
-            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
+            .toggleable(checked, null, indication = null, enabled, Role.Switch, onCheckedChange)
             .semantics { if (contentDescription != null) this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center
     ) {

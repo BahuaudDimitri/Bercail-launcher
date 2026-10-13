@@ -93,7 +93,7 @@ internal fun HomeDrawer(
             label = "drawer content"
         ) { shown ->
             when (shown) {
-                DrawerContent.Summary -> Summary(state, onExpand = { actions.onDrawerExpandedChange(true) })
+                DrawerContent.Summary -> Summary(state, links, onExpand = { actions.onDrawerExpandedChange(true) })
                 DrawerContent.Essentials -> Essentials(state, actions, links)
                 DrawerContent.Remote -> Remote(state.media, position, actions)
                 DrawerContent.Search -> search?.list?.invoke()
@@ -112,11 +112,14 @@ private fun ClosesSearch(search: HomeSearch?) {
     LaunchedEffect(open) { if (!open) focus.clearFocus() }
 }
 
-/** Folded drawer: who wrote, and what is on in the house. Touching a line opens the drawer. */
+/**
+ * Folded drawer: who wrote, and what is on in the house. Touching a line opens the drawer; sliding the messages
+ * line to the right shows the messaging app at once.
+ */
 @Composable
-private fun Summary(state: HomeUiState, onExpand: () -> Unit) {
+private fun Summary(state: HomeUiState, links: HomeLinks, onExpand: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
-        MessagesLine(state, onClick = onExpand, onClickLabel = OPEN_DRAWER)
+        MessagesLine(state, onClick = onExpand, onClickLabel = OPEN_DRAWER, onOpenApp = links::onOpenMessagesApp)
         BcSummaryRow(
             text = state.homeSummary,
             leading = BcSummaryLeading.Icon(BcIcons.House),

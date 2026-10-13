@@ -30,6 +30,10 @@ object BcColors {
     /** Light edge on top of glass surfaces. */
     val glassEdge = Color.White.copy(alpha = 0.1f)
 
+    /** Veil over what is being touched, on a dark surface and on the light primary one. */
+    val pressVeil = Color.White.copy(alpha = 0.1f)
+    val pressVeilOnLight = Color.Black.copy(alpha = 0.12f)
+
     /** Translucent tile: switched-off buttons, chips. */
     val tile = Color.White.copy(alpha = 0.075f)
     val tileEdge = Color.White.copy(alpha = 0.1f)

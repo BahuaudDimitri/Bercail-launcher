@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberAnimationSeconds
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 
@@ -65,7 +66,7 @@ fun BcUndoButton(remaining: Float, onUndo: () -> Unit, modifier: Modifier = Modi
         modifier = modifier
             .defaultMinSize(minHeight = BcSizes.minTouch)
             .background(BcColors.tile, BcShapes.pill)
-            .clickable(role = Role.Button, onClick = onUndo)
+            .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onUndo)
             .padding(start = UNDO_START, end = UNDO_END),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(UNDO_GAP)

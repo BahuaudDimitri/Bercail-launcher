@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberAnimationSeconds
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import kotlin.math.PI
@@ -56,7 +57,7 @@ fun BcMusicPill(
             .widthIn(max = MAX_WIDTH)
             .defaultMinSize(minHeight = BcSizes.minTouch)
             .background(BcColors.tile, BcShapes.pill)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onClick)
             .semantics { stateDescription = if (playing) "En lecture" else "En pause" }
             .padding(start = START_PADDING, end = END_PADDING),
         verticalAlignment = Alignment.CenterVertically,

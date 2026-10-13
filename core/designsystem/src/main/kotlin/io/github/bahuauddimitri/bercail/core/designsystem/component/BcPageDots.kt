@@ -35,7 +35,7 @@ fun BcPageDots(pages: List<String>, selected: Int, onSelect: (Int) -> Unit, modi
             Box(
                 modifier = Modifier
                     .size(TOUCH_WIDTH, BcSizes.minTouch)
-                    .selectable(selected = current, role = Role.Tab, onClick = { onSelect(index) })
+                    .selectable(current, null, indication = null, role = Role.Tab, onClick = { onSelect(index) })
                     .semantics { contentDescription = "Écran $page" },
                 contentAlignment = Alignment.Center
             ) {

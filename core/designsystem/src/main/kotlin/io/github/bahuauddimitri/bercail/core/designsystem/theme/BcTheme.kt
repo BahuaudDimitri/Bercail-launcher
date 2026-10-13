@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.theme
 
 import android.provider.Settings
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -15,7 +16,10 @@ internal val LocalBcMotion = staticCompositionLocalOf { BcMotion.forAnimatorScal
 internal val LocalBcContentColor = compositionLocalOf { BcColors.text }
 internal val LocalBcTextStyle = compositionLocalOf<TextStyle> { BcType.body }
 
-/** Root of every Bercail screen: provides the motion settings and the default text color and style. */
+/**
+ * Root of every Bercail screen: provides the motion settings, the default text color and style, and the veil shown
+ * over whatever is being touched.
+ */
 @Composable
 fun BcTheme(content: @Composable () -> Unit) {
     val resolver = LocalContext.current.contentResolver
@@ -26,6 +30,7 @@ fun BcTheme(content: @Composable () -> Unit) {
         LocalBcMotion provides motion,
         LocalBcContentColor provides BcColors.text,
         LocalBcTextStyle provides BcType.body,
+        LocalIndication provides BcPressVeil.OnDark,
         content = content
     )
 }

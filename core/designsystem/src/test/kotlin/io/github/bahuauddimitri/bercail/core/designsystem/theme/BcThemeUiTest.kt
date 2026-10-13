@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.theme
 
 import android.provider.Settings
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -43,5 +44,14 @@ class BcThemeUiTest {
         compose.setContent { BcTheme { isDefault = LocalBcContentColor.current == BcColors.text } }
 
         assertThat(isDefault).isEqualTo(true)
+    }
+
+    @Test
+    fun `tout ce qui se touche montre le voile de Bercail, pas le rectangle par défaut`() {
+        var veil: Any? = null
+
+        compose.setContent { BcTheme { veil = LocalIndication.current } }
+
+        assertThat(veil).isEqualTo(BcPressVeil.OnDark)
     }
 }

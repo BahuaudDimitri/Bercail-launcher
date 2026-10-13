@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
@@ -49,7 +50,7 @@ fun BcButton(
         modifier = modifier
             .defaultMinSize(minHeight = BcSizes.minTouch)
             .surface(variant, BcShapes.pill, enabled)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(null, variant.veil, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = BcSpacing.l),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(BcSpacing.s)
@@ -79,7 +80,7 @@ fun BcIconButton(
         modifier = modifier
             .size(size)
             .surface(variant, BcShapes.pill, enabled)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            .clickable(null, variant.veil, enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(LocalBcContentColor provides variant.content) {
@@ -91,6 +92,10 @@ fun BcIconButton(
 
 private val SMALL_ICON = 18.dp
 private val LARGE_ICON = 22.dp
+
+/** The veil over a touched button: dark on the light one, where a light veil would not show. */
+private val BcButtonVariant.veil: BcPressVeil
+    get() = if (this == BcButtonVariant.Light) BcPressVeil.OnLight else BcPressVeil.OnDark
 
 internal fun Modifier.surface(variant: BcButtonVariant, shape: Shape, enabled: Boolean = true): Modifier = this
     .alpha(if (enabled) 1f else DISABLED_ALPHA)
