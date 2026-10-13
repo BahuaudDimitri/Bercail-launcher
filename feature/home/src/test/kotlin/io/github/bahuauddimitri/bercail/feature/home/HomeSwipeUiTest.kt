@@ -17,6 +17,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import org.junit.Rule
@@ -24,7 +25,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-/** The lines of the folded drawer slid to the right, on a simulated phone: the messages line opens Beeper. */
+/**
+ * What is slid to the right on the home screen, on a simulated phone: the messages line of the folded drawer opens
+ * Beeper, the music pill opens the app that plays.
+ */
 @RunWith(AndroidJUnit4::class)
 @Config(qualifiers = PIXEL_9)
 class HomeSwipeUiTest {
@@ -85,5 +89,39 @@ class HomeSwipeUiTest {
         assertThat(opened).isEmpty()
         val house = compose.onNodeWithText("Salon", substring = true).fetchSemanticsNode()
         assertThat(house.config.getOrNull(SemanticsActions.CustomActions)).isNull()
+    }
+
+    @Test
+    fun `glisser la pastille musique vers la droite ouvre l'app qui joue, sans quitter l'accueil`() {
+        val world = FakeWorld(Moment.Trajet)
+        show(world)
+
+        slideRight("Looped")
+
+        assertThat(world.media.appOpenings).isEqualTo(1)
+        assertThat(home.state.value.page).isEqualTo(HomePage.Home)
+    }
+
+    @Test
+    fun `glisser vers la gauche depuis la pastille musique mène toujours à l'écran Écoute`() {
+        val world = FakeWorld(Moment.Trajet)
+        show(world)
+
+        compose.onNodeWithText("Looped", substring = true).performTouchInput {
+            swipe(start = Offset(centerX, centerY), end = Offset(centerX - 150.dp.toPx(), centerY))
+        }
+
+        assertThat(world.media.appOpenings).isEqualTo(0)
+        assertThat(home.state.value.page).isEqualTo(HomePage.Listen)
+    }
+
+    @Test
+    fun `la pastille musique dit aux lecteurs d'écran quelle app elle ouvre`() {
+        show(FakeWorld(Moment.Trajet))
+
+        val actions = compose.onNodeWithText("Looped", substring = true)
+            .fetchSemanticsNode().config[SemanticsActions.CustomActions]
+
+        assertThat(actions.map { it.label }).containsExactly("Ouvrir Spotify")
     }
 }

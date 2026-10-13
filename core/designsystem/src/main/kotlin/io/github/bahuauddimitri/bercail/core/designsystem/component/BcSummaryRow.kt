@@ -1,10 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,20 +12,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -37,18 +22,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 import kotlin.math.roundToInt
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.launch
 
 /** What opens a summary line: one dot per person who wrote, or an icon. */
 sealed interface BcSummaryLeading {
@@ -76,10 +57,7 @@ fun BcSummaryRow(
     onClickLabel: String? = null,
     swipe: BcRowSwipe? = null
 ) {
-    val slide = remember { Animatable(0f) }
-    val threshold = with(LocalDensity.current) { SWIPE_THRESHOLD.toPx() }
-    val sliding by remember { derivedStateOf { slide.value > 0f } }
-    val armed by remember(threshold) { derivedStateOf { slide.value >= threshold } }
+    val slide = rememberSlide()
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -87,15 +65,7 @@ fun BcSummaryRow(
             .then(if (swipe != null) Modifier.slidesRight(slide, swipe) else Modifier),
         contentAlignment = Alignment.CenterStart
     ) {
-        if (swipe != null && sliding) {
-            BcText(
-                text = swipe.label,
-                style = BcTextStyle.Label,
-                color = if (armed) BcTextColor.Primary else BcTextColor.Muted,
-                maxLines = 1,
-                modifier = Modifier.followsTheLine(slide, threshold)
-            )
-        }
+        if (swipe != null) SlideHint(swipe, slide)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,58 +103,6 @@ private fun SummaryText(text: String, strong: String?) {
     )
 }
 
-/**
- * Lets a finger slide the line to the right, up to [SWIPE_LIMIT]. A slide up or down is left to whatever is
- * behind: the drawer still unfolds from a line. Lifting the finger past [SWIPE_THRESHOLD] does what the line says.
- */
-@Composable
-private fun Modifier.slidesRight(slide: Animatable<Float, *>, swipe: BcRowSwipe): Modifier {
-    val scope = rememberCoroutineScope()
-    val action by rememberUpdatedState(swipe)
-    val haptics by rememberUpdatedState(LocalHapticFeedback.current)
-    val back = tween<Float>(BcTheme.motion.fadeMillis)
-    return pointerInput(Unit) {
-        val threshold = SWIPE_THRESHOLD.toPx()
-        val limit = SWIPE_LIMIT.toPx()
-        var travelled = 0f
-        detectHorizontalDragGestures(
-            onDragStart = { travelled = 0f },
-            onDragEnd = {
-                if (slide.value >= threshold) action.onSwipe()
-                scope.launch { slide.animateTo(0f, back) }
-            },
-            onDragCancel = { scope.launch { slide.animateTo(0f, back) } },
-            onHorizontalDrag = { change, amount ->
-                travelled += amount
-                val wanted = travelled.coerceIn(0f, limit)
-                if (wanted > 0f || slide.value > 0f) change.consume()
-                if (slide.value < threshold && wanted >= threshold) {
-                    haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                }
-                scope.launch(start = CoroutineStart.UNDISPATCHED) { slide.snapTo(wanted) }
-            }
-        )
-    }
-}
-
-/** Places what the slide opens just before the line, coming in from the edge with it and growing clearer. */
-private fun Modifier.followsTheLine(slide: Animatable<Float, *>, threshold: Float): Modifier = this
-    .layout { measurable, _ ->
-        val hint = measurable.measure(Constraints())
-        // It takes no room of its own: it stands where the line was.
-        layout(0, hint.height) { hint.place((slide.value - HINT_GAP.toPx() - hint.width).roundToInt(), 0) }
-    }
-    .graphicsLayer { alpha = (slide.value / threshold).coerceIn(0f, 1f) }
-
-/** What sliding a line to the right does; [label] says it while the line slides: "Ouvrir Beeper". */
-class BcRowSwipe(val label: String, val onSwipe: () -> Unit) {
-    /** The same thing, offered to a screen reader, which cannot slide a line. */
-    internal fun asAction() = CustomAccessibilityAction(label) {
-        onSwipe()
-        true
-    }
-}
-
 /** One dot per person, in their pastel; a single dim dot when nobody wrote. */
 @Composable
 private fun Dots(pastels: List<BcPastel>) {
@@ -202,8 +120,3 @@ private val LEADING_WIDTH = 28.dp
 private val ICON = 16.dp
 private val DOT = 9.dp
 private val DOT_GAP = 4.dp
-
-/** How far a line must be slid for the slide to count, and how far it can go. */
-private val SWIPE_THRESHOLD = 64.dp
-private val SWIPE_LIMIT = 112.dp
-private val HINT_GAP = 12.dp

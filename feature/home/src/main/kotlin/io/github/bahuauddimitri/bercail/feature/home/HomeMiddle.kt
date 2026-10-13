@@ -29,6 +29,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
@@ -72,6 +73,7 @@ internal fun HomeMiddle(state: HomeUiState, resting: Boolean, actions: HomeActio
                         resting = resting,
                         onOpenListen = { actions.onPageWanted(HomePage.Listen) },
                         onOpenMediaApps = { actions.onListenOpenChange(true) },
+                        onOpenApp = actions::onOpenMediaApp,
                         modifier = Modifier.align(Alignment.BottomStart).padding(start = SIDE, bottom = PILL_BOTTOM)
                     )
 
@@ -104,13 +106,17 @@ internal fun HomeMiddle(state: HomeUiState, resting: Boolean, actions: HomeActio
     }
 }
 
-/** With a content: its cover, "Title · Artist" and the equalizer. Without: "Écouter…", which opens the media apps. */
+/**
+ * With a content: its cover, "Title · Artist" and the equalizer; sliding it to the right shows the content in its
+ * app. Without: "Écouter…", which opens the media apps.
+ */
 @Composable
 private fun MusicPill(
     media: MediaState.Loaded?,
     resting: Boolean,
     onOpenListen: () -> Unit,
     onOpenMediaApps: () -> Unit,
+    onOpenApp: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (media == null) {
@@ -124,7 +130,8 @@ private fun MusicPill(
             onClick = onOpenListen,
             modifier = modifier,
             coverColors = media.content.colors?.pair,
-            still = resting
+            still = resting,
+            swipe = BcRowSwipe("Ouvrir ${media.content.app}", onOpenApp)
         )
     }
 }

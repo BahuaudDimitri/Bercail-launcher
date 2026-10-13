@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -24,8 +25,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberAnimationSeconds
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
@@ -33,6 +36,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -40,6 +44,8 @@ import kotlin.math.sin
  * known) and an equalizer, frozen when paused.
  * Without [cover] image, the disc is a blend of [coverColors], or a note when there are none.
  * With [still], the equalizer keeps its pose: the screen is at rest, even though the music plays.
+ * With [swipe], the pill can be slid to the right, to open the app that plays; to the left, the finger is left to
+ * the screen behind it.
  */
 @Composable
 fun BcMusicPill(
@@ -50,15 +56,42 @@ fun BcMusicPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     coverColors: Pair<Color, Color>? = null,
-    still: Boolean = false
+    still: Boolean = false,
+    swipe: BcRowSwipe? = null
+) {
+    val slide = rememberSlide()
+    Box(
+        modifier = modifier.then(if (swipe != null) Modifier.slidesRight(slide, swipe) else Modifier),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        if (swipe != null) SlideHint(swipe, slide)
+        Pill(title, artist, cover, coverColors, playing, still, onClick, swipe, slide)
+    }
+}
+
+@Composable
+private fun Pill(
+    title: String,
+    artist: String,
+    cover: ImageBitmap?,
+    coverColors: Pair<Color, Color>?,
+    playing: Boolean,
+    still: Boolean,
+    onClick: () -> Unit,
+    swipe: BcRowSwipe?,
+    slide: Slide
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
+            .offset { IntOffset(slide.value.roundToInt(), 0) }
             .widthIn(max = MAX_WIDTH)
             .defaultMinSize(minHeight = BcSizes.minTouch)
             .background(BcColors.tile, BcShapes.pill)
             .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onClick)
-            .semantics { stateDescription = if (playing) "En lecture" else "En pause" }
+            .semantics {
+                stateDescription = if (playing) "En lecture" else "En pause"
+                if (swipe != null) customActions = listOf(swipe.asAction())
+            }
             .padding(start = START_PADDING, end = END_PADDING),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(GAP)
