@@ -73,7 +73,9 @@ class AccessTest {
     fun `une fois l'accès donné, la ligne Musique dit ce que Bercail en fait et ne demande plus rien`() {
         val line = mediaSourceLine(allowed = true)
 
-        assertThat(line.detail).isEqualTo("Bercail voit ce qui joue et le pilote, sans lire aucune notification")
+        assertThat(
+            line.detail
+        ).isEqualTo("Bercail voit ce qui joue et sait qu'un message arrive, sans lire aucune notification")
         assertThat(line.touchable).isFalse()
     }
 
@@ -91,6 +93,15 @@ class AccessTest {
         val line = messagesSourceLine(allowed = true)
 
         assertThat(line.detail).isEqualTo("Bercail lit tes conversations dans Beeper, sur le téléphone seulement")
+        assertThat(line.touchable).isFalse()
+    }
+
+    @Test
+    fun `Beeper relié sans l'accès aux notifications, la ligne Messages dit comment voir un message dès son arrivée`() {
+        val line = messagesSourceLine(allowed = true, toldOfArrivals = false)
+
+        assertThat(line.detail)
+            .isEqualTo("Relié · pour voir un message dès qu'il arrive, autorise aussi « Musique en cours », plus haut")
         assertThat(line.touchable).isFalse()
     }
 }

@@ -18,9 +18,11 @@ import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -162,6 +164,65 @@ class BeeperMessagesUiTest {
         listener.cancel()
 
         assertThat(shadowOf(phone.contentResolver).getContentObservers(chatsAddress)).isEmpty()
+    }
+
+    // ---------- when Beeper says nothing: the notifications tell ----------
+
+    private val notifications = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val nudged by lazy {
+        BeeperMessages(phone, access, MemorySeen(), notifications, Duration.ZERO, background = Dispatchers.Unconfined)
+    }
+
+    @Test
+    fun `quand une notification de Beeper s'affiche, les conversations sont relues, même si Beeper ne prévient pas`() {
+        beeper.chat("lea", "Léa")
+        val listener = CoroutineScope(Dispatchers.Unconfined)
+        val seen = mutableListOf<List<Int>>()
+        listener.launch { nudged.conversations.collect { all -> seen += all.map { it.unread } } }
+
+        beeper.chat("lea", "Léa", unread = 1)
+        notifications.tryEmit(Unit)
+
+        assertThat(seen).containsExactly(listOf(0), listOf(1))
+        listener.cancel()
+    }
+
+    @Test
+    fun `quand une notification de Beeper s'affiche, la conversation ouverte est relue elle aussi`() {
+        beeper.chat("lea", "Léa", at = 1)
+        beeper.message("lea", "\$1", "Je suis en terrasse", at = 1)
+        val listener = CoroutineScope(Dispatchers.Unconfined)
+        val shown = mutableListOf<List<String>?>()
+        listener.launch { nudged.history("lea").collect { shown += it.texts() } }
+
+        beeper.message("lea", "\$2", "Merci pour le déj !", at = 2)
+        beeper.chat("lea", "Léa", unread = 1, at = 2)
+        notifications.tryEmit(Unit)
+
+        assertThat(shown.last()).isEqualTo(listOf("Je suis en terrasse", "Merci pour le déj !"))
+        listener.cancel()
+    }
+
+    @Test
+    fun `les notifications ne sont attendues que tant que quelqu'un écoute les conversations`() {
+        assertThat(notifications.subscriptionCount.value).isEqualTo(0)
+        val listener = CoroutineScope(Dispatchers.Unconfined)
+        listener.launch { nudged.conversations.collect {} }
+        assertThat(notifications.subscriptionCount.value).isEqualTo(1)
+
+        listener.cancel()
+
+        assertThat(notifications.subscriptionCount.value).isEqualTo(0)
+    }
+
+    @Test
+    fun `sans l'accord sur Beeper, les notifications ne sont pas attendues non plus`() {
+        access.refuse(Access.Messages)
+        val listener = CoroutineScope(Dispatchers.Unconfined)
+        listener.launch { nudged.conversations.collect {} }
+
+        assertThat(notifications.subscriptionCount.value).isEqualTo(0)
+        listener.cancel()
     }
 
     @Test

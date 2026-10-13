@@ -41,9 +41,16 @@ fun weatherSourceLine(allowed: Boolean, city: String? = null): SourceLine {
 
 private const val WEATHER = "Lieu des prévisions"
 
-/** What plays in the media apps: Android only tells it to an app that has its "notification access". */
+/**
+ * What plays in the media apps: Android only tells it to an app that has its "notification access". The same
+ * access tells Bercail that a messaging app just showed a notification, which is how it knows a message arrived.
+ */
 fun mediaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
-    SourceLine(MEDIA, "Bercail voit ce qui joue et le pilote, sans lire aucune notification", touchable = false)
+    SourceLine(
+        MEDIA,
+        "Bercail voit ce qui joue et sait qu'un message arrive, sans lire aucune notification",
+        touchable = false
+    )
 } else {
     SourceLine(
         MEDIA,
@@ -54,9 +61,18 @@ fun mediaSourceLine(allowed: Boolean): SourceLine = if (allowed) {
 
 private const val MEDIA = "Musique en cours"
 
-/** The conversations: Beeper keeps them, and lets another app read them and answer once the user has agreed. */
-fun messagesSourceLine(allowed: Boolean): SourceLine = if (allowed) {
-    SourceLine(MESSAGES, "Bercail lit tes conversations dans Beeper, sur le téléphone seulement", touchable = false)
+/**
+ * The conversations: Beeper keeps them, and lets another app read them and answer once the user has agreed. Beeper
+ * does not tell when a message arrives: Bercail only knows at once when it is [toldOfArrivals], which takes the
+ * "notification access" too.
+ */
+fun messagesSourceLine(allowed: Boolean, toldOfArrivals: Boolean = true): SourceLine = if (allowed) {
+    val detail = if (toldOfArrivals) {
+        "Bercail lit tes conversations dans Beeper, sur le téléphone seulement"
+    } else {
+        "Relié · pour voir un message dès qu'il arrive, autorise aussi « $MEDIA », plus haut"
+    }
+    SourceLine(MESSAGES, detail, touchable = false)
 } else {
     SourceLine(MESSAGES, "Toucher pour autoriser Bercail à lire tes conversations et à y répondre", touchable = true)
 }

@@ -1,6 +1,8 @@
 package io.github.bahuauddimitri.bercail
 
 import android.app.Activity
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Intent
@@ -10,6 +12,8 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Looper
+import android.os.Process
+import android.service.notification.StatusBarNotification
 import android.speech.RecognizerIntent
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -20,12 +24,15 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import io.github.bahuauddimitri.bercail.data.media.MediaAccess
+import io.github.bahuauddimitri.bercail.data.media.MediaListener
 import io.github.bahuauddimitri.bercail.data.messages.BeeperAccess
 import java.time.Duration
 import org.junit.Rule
@@ -201,6 +208,47 @@ class MessagesUiTest {
 
         awaitDescription("Léa : Merci pour le déj !")
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
+    }
+
+    /** The user gave Bercail the "notification access", and Android connected its listener. */
+    private fun listenerOfBercail(): MediaListener {
+        shadowOf(app.getSystemService(NotificationManager::class.java))
+            .setNotificationListenerAccessGranted(MediaAccess.listener(app), true)
+        return Robolectric.setupService(MediaListener::class.java)
+    }
+
+    private fun notificationOfBeeper() =
+        @Suppress("DEPRECATION")
+        StatusBarNotification(BEEPER, BEEPER, 1, null, 0, 0, 0, Notification(), Process.myUserHandle(), 0L)
+
+    @Test
+    fun `un message qui arrive se voit dès que Beeper affiche sa notification, même si Beeper ne prévient pas`() {
+        beeper.chat("lea", "Léa")
+        linkBeeper()
+        val listener = listenerOfBercail()
+        showHome()
+        awaitText("Aucun message")
+        listener.onListenerConnected()
+
+        // Beeper has the message and shows its notification, but tells nothing to the apps that watch its list.
+        beeper.chat("lea", "Léa", unread = 1)
+        listener.onNotificationPosted(notificationOfBeeper())
+
+        awaitText("1 non lu · Léa")
+    }
+
+    @Test
+    fun `tant que l'accueil est affiché le service reste relié, et il se détache dès que l'accueil est caché`() {
+        linkBeeper()
+        val listener = listenerOfBercail()
+        val home = showHome()
+        awaitText("Aucun message")
+        listener.onListenerConnected()
+        assertThat(shadowOf(listener).unbindRequestCount).isEqualTo(0)
+
+        home.moveToState(Lifecycle.State.CREATED)
+
+        compose.waitUntil(TIMEOUT) { shadowOf(listener).unbindRequestCount == 1 }
     }
 
     private companion object {

@@ -42,7 +42,7 @@ class MediaAccessUiTest {
     }
 
     @Test
-    fun `dès qu'Android relie le service, il demande à être détaché et ne lit donc aucune notification`() {
+    fun `dès qu'Android relie le service, il demande à être détaché si personne n'attend de signal`() {
         val service = Robolectric.setupService(MediaListener::class.java)
 
         service.onListenerConnected()

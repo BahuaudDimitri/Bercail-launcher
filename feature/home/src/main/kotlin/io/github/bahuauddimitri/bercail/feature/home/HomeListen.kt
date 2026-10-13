@@ -95,7 +95,8 @@ private const val NO_MEDIA_APP =
     "Aucune app de musique ou de vidéo n'est installée. Dès qu'une app joue quelque chose, elle apparaît ici."
 private const val WHY_THE_ACCESS =
     "Pour afficher ce que tu écoutes et le piloter d'ici, Bercail a besoin de ton accord. Android range ce droit " +
-        "sous « Accès aux notifications », mais Bercail ne lit aucune notification : il regarde seulement ce qui joue."
+        "sous « Accès aux notifications », mais Bercail ne lit aucune notification : il regarde seulement ce qui " +
+        "joue, et quelle app vient d'en afficher une, pour savoir qu'un message est arrivé."
 private const val WHEN_ANDROID_REFUSES =
     "Si Android répond « Paramètre restreint » : ouvre la page de Bercail, puis le menu aux trois points en haut, " +
         "« Autoriser les paramètres restreints », et reviens ici."

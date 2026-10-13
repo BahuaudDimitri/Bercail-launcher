@@ -133,6 +133,19 @@ class SettingsUiTest {
     }
 
     @Test
+    fun `Beeper relié sans l'accès aux notifications, la ligne Messages renvoie à celle de la musique`() {
+        world.access.refuse(Access.Notifications)
+        show()
+
+        compose.onNodeWithText("Messages de Beeper").performScrollTo().assertHasNoClickAction()
+        compose
+            .onNodeWithText(
+                "Relié · pour voir un message dès qu'il arrive, autorise aussi « Musique en cours », plus haut"
+            )
+            .assertExists()
+    }
+
+    @Test
     fun `tant que Beeper n'est pas relié, il n'y a pas de favoris à choisir`() {
         world.access.refuse(Access.Messages)
         show()
@@ -200,7 +213,8 @@ class SettingsUiTest {
     fun `une fois l'accès donné, la ligne « Musique en cours » dit ce que Bercail en fait et ne se touche plus`() {
         show()
 
-        compose.onNodeWithText("Bercail voit ce qui joue et le pilote, sans lire aucune notification").assertExists()
+        compose.onNodeWithText("Bercail voit ce qui joue et sait qu'un message arrive, sans lire aucune notification")
+            .assertExists()
         compose.onNodeWithText("Musique en cours").performScrollTo().assertHasNoClickAction()
     }
 

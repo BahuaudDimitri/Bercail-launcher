@@ -121,7 +121,7 @@ class SettingsViewModel(
             val messagesAllowed = Access.Messages in granted
             SettingsUiState(
                 mediaApps = players,
-                messages = messagesSourceLine(messagesAllowed),
+                messages = messagesSourceLine(messagesAllowed, toldOfArrivals = Access.Notifications in granted),
                 messagesAllowed = messagesAllowed,
                 people = if (messagesAllowed) conversations else emptyList(),
                 settings = current,

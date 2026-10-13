@@ -20,7 +20,9 @@ import io.github.bahuauddimitri.bercail.data.apps.DeviceApps
 import io.github.bahuauddimitri.bercail.data.apps.DevicePhone
 import io.github.bahuauddimitri.bercail.data.media.DeviceMedia
 import io.github.bahuauddimitri.bercail.data.media.DeviceMediaApps
+import io.github.bahuauddimitri.bercail.data.media.NotificationSignals
 import io.github.bahuauddimitri.bercail.data.media.listeningStore
+import io.github.bahuauddimitri.bercail.data.messages.BeeperAccess
 import io.github.bahuauddimitri.bercail.data.messages.BeeperMessages
 import io.github.bahuauddimitri.bercail.data.messages.StoredSeen
 import io.github.bahuauddimitri.bercail.data.messages.seenStore
@@ -107,12 +109,14 @@ class Sources(
 
     /**
      * The conversations of every network, read in Beeper only while the home screen or the search shows them; the
-     * messages of one, only while its sheet is open. What was already seen is noted in a small file.
+     * messages of one, only while its sheet is open. What was already seen is noted in a small file. Beeper does not
+     * tell when a message arrives: each notification it shows or removes is the signal to look again.
      */
     val messages: MessagesSource = messages ?: BeeperMessages(
         context,
         access,
-        StoredSeen(seenStore(File(context.filesDir, MESSAGES_FILE), background))
+        StoredSeen(seenStore(File(context.filesDir, MESSAGES_FILE), background)),
+        notifications = NotificationSignals.from(context, BeeperAccess.PACKAGE)
     )
 
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
