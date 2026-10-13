@@ -116,12 +116,6 @@ class ThreadTest {
     }
 
     @Test
-    fun `trois réponses rapides sont proposées, et celle qui vient de partir n'est plus dans la liste`() {
-        assertThat(QUICK_REPLIES).containsExactly("D'accord", "J'arrive", "Je te rappelle")
-        assertThat(quickRepliesWithout(listOf("J'arrive"))).containsExactly("D'accord", "Je te rappelle")
-    }
-
-    @Test
     fun `l'initiale d'un nom qui commence par un emoji est cet emoji entier`() {
         assertThat(Conversation("x", "🥰❤️", "WhatsApp").initials).isEqualTo("🥰")
         assertThat(Conversation("x", "", "WhatsApp").initials).isEqualTo("")

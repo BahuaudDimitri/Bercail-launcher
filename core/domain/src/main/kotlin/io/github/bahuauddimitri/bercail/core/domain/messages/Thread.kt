@@ -65,11 +65,6 @@ fun messageTime(at: LocalDateTime, now: LocalDateTime): String {
 /** What really leaves when the user sends [typed]: the text without the blanks around it, or nothing. */
 fun sendable(typed: String): String? = typed.trim().ifEmpty { null }
 
-/** The answers offered above the field. One that was just sent is no longer offered. */
-val QUICK_REPLIES = listOf("D'accord", "J'arrive", "Je te rappelle")
-
-fun quickRepliesWithout(sent: List<String>): List<String> = QUICK_REPLIES - sent.toSet()
-
 private const val MESSAGING_APP = "Beeper"
 private const val ME = "Moi"
 private const val MINE = "Toi"

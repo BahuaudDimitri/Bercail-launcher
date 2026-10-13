@@ -1,6 +1,5 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
@@ -29,7 +27,7 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.via
 
 /**
  * The sheet of a conversation: who and through which network, a way to the messaging app, the last messages (the
- * latest always in view), the quick replies, and the field to answer, by hand or by voice.
+ * latest always in view), and the field to answer, by hand or by voice. Nothing is written for the user.
  */
 @Composable
 internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
@@ -51,14 +49,6 @@ internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLink
         }
         Messages(talk, pastelOf(talk.person.id, state.favorites.map { it.id }), actions::onUndoSend)
         if (talk.notSent) BcText(NOT_SENT, style = BcTextStyle.Label, color = BcTextColor.Muted)
-        if (talk.quickReplies.isNotEmpty()) {
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(BcSpacing.xs)
-            ) {
-                talk.quickReplies.forEach { reply -> BcPill(reply, onClick = { actions.onQuickReply(reply) }) }
-            }
-        }
         BcReplyField(
             value = talk.draft,
             onValueChange = actions::onDraftChange,
@@ -90,7 +80,6 @@ private fun ColumnScope.Messages(talk: TalkUiState, pastel: BcPastel, onUndo: ()
             else -> talk.bubbles.forEach { bubble ->
                 val side = Modifier.align(if (bubble.mine) Alignment.End else Alignment.Start)
                 BcBubble(bubble.text, bubble.author, bubble.mine, pastel, side, header = bubble.header)
-                // Under the message, never where a quick reply was: a second touch cannot take it back by mistake.
                 if (bubble.id == talk.undoable) {
                     key(bubble.id) { BcUndoCountdown(UNDO_MILLIS, onUndo, Modifier.align(Alignment.End)) }
                 }

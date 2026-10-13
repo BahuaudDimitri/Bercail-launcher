@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -132,7 +133,8 @@ class HomeScreenshotTest {
         show(FakeWorld(Moment.Trajet, playing = false))
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
         compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
-        compose.onNodeWithText("J'arrive").performClick()
+        compose.onNodeWithContentDescription("Répondre").performTextInput("J'arrive")
+        compose.onNodeWithContentDescription("Envoyer").performClick()
 
         capture("home_talk_undo")
     }

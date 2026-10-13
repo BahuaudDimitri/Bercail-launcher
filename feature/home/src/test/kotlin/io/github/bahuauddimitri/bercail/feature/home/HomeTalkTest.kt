@@ -47,6 +47,12 @@ class HomeTalkTest {
 
     private val HomeViewModel.texts get() = talk.bubbles.map { it.text }
 
+    /** Writes [text] in the field and sends it. */
+    private fun HomeViewModel.write(text: String) {
+        onDraftChange(text)
+        onSend()
+    }
+
     // ---------- reading ----------
 
     @Test
@@ -217,43 +223,14 @@ class HomeTalkTest {
         }
 
     @Test
-    fun `une réponse rapide envoyée disparaît de la liste`() = runTest(dispatcher) {
-        val home = homeOf(FakeWorld(Moment.Trajet))
-        home.onOpenConversation("lea")
-        assertThat(home.talk.quickReplies).containsExactly("D'accord", "J'arrive", "Je te rappelle")
-
-        home.onQuickReply("J'arrive")
-
-        assertThat(home.texts.last()).isEqualTo("J'arrive")
-        assertThat(home.talk.quickReplies).containsExactly("D'accord", "Je te rappelle")
-    }
-
-    @Test
-    fun `une réponse rapide annulée revient dans la liste, et le champ garde ce qu'on y écrivait`() =
-        runTest(dispatcher) {
-            val world = FakeWorld(Moment.Trajet)
-            val home = homeOf(world)
-            home.onOpenConversation("lea")
-            home.onDraftChange("Au fait")
-            home.onQuickReply("J'arrive")
-
-            home.onUndoSend()
-            advanceTimeBy(7.seconds)
-
-            assertThat(home.talk.quickReplies).containsExactly("D'accord", "J'arrive", "Je te rappelle")
-            assertThat(home.talk.draft).isEqualTo("Au fait")
-            assertThat(world.messages.sent).isEmpty()
-        }
-
-    @Test
     fun `un second envoi fait partir le premier tout de suite, et lui seul peut encore être annulé`() =
         runTest(dispatcher) {
             val world = FakeWorld(Moment.Trajet)
             val home = homeOf(world)
             home.onOpenConversation("lea")
-            home.onQuickReply("D'accord")
+            home.write("D'accord")
 
-            home.onQuickReply("J'arrive")
+            home.write("J'arrive")
 
             assertThat(world.messages.sent).containsExactly("lea: D'accord")
             assertThat(home.talk.undoable).isEqualTo(home.talk.bubbles.last().id)
@@ -265,7 +242,7 @@ class HomeTalkTest {
         val world = FakeWorld(Moment.Trajet)
         val home = homeOf(world)
         home.onOpenConversation("lea")
-        home.onQuickReply("J'arrive")
+        home.write("J'arrive")
 
         home.onCloseConversation()
 
@@ -277,7 +254,7 @@ class HomeTalkTest {
         val world = FakeWorld(Moment.Trajet).apply { messages.givesBack = false }
         val home = homeOf(world)
         home.onOpenConversation("lea")
-        home.onQuickReply("J'arrive")
+        home.write("J'arrive")
 
         advanceTimeBy(7.seconds)
 
@@ -307,10 +284,9 @@ class HomeTalkTest {
         val world = FakeWorld(Moment.Trajet).apply { messages.refusing = true }
         val home = homeOf(world)
         home.onOpenConversation("lea")
-        home.onQuickReply("J'arrive")
+        home.write("J'arrive")
         advanceTimeBy(7.seconds)
         assertThat(home.talk.notSent).isTrue()
-        assertThat(home.talk.quickReplies).containsExactly("D'accord", "J'arrive", "Je te rappelle")
 
         home.onDraftChange("J")
 

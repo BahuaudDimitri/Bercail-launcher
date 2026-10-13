@@ -14,7 +14,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 
-/** A small glass chip: quick replies, the "Écouter…" pill. At least 40 dp high. */
+/** A small glass chip: the "Écouter…" pill. At least 40 dp high. */
 @Composable
 fun BcPill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: BcIcons? = null) {
     Row(

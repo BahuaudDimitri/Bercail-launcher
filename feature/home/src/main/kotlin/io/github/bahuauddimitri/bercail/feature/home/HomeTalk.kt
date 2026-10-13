@@ -5,7 +5,6 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.messages.notYetIn
-import io.github.bahuauddimitri.bercail.core.domain.messages.quickRepliesWithout
 import io.github.bahuauddimitri.bercail.core.domain.messages.sendable
 import io.github.bahuauddimitri.bercail.core.domain.messages.threadOf
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
@@ -37,7 +36,6 @@ data class TalkUiState(
     val bubbles: List<Bubble> = emptyList(),
     /** True until the messages were read once in the messaging app, which takes a moment. */
     val loading: Boolean = false,
-    val quickReplies: List<String> = emptyList(),
     /** What is written in the field and not sent yet. */
     val draft: String = "",
     /** The bubble that was just sent and can still be taken back, if any. */
@@ -59,7 +57,6 @@ interface TalkActions {
 
     /** Sends what is in the field. It only leaves for good a few seconds later: until then it can be taken back. */
     fun onSend()
-    fun onQuickReply(text: String)
 
     /** Takes back the message that was just sent: nothing leaves, and its text comes back. */
     fun onUndoSend()
@@ -123,11 +120,7 @@ internal class HomeTalk(private val messages: MessagesSource, private val clock:
 
     override fun onSend() {
         val id = open.value ?: return
-        sendable(notes.value.drafts[id].orEmpty())?.let { post(id, it, quick = false) }
-    }
-
-    override fun onQuickReply(text: String) {
-        open.value?.let { post(it, text, quick = true) }
+        sendable(notes.value.drafts[id].orEmpty())?.let { post(id, it) }
     }
 
     override fun onUndoSend() {
@@ -136,10 +129,10 @@ internal class HomeTalk(private val messages: MessagesSource, private val clock:
         notes.update { it.without(taken) }
     }
 
-    private fun post(id: String, text: String, quick: Boolean) {
+    private fun post(id: String, text: String) {
         deliver()
         val message = Message("local-${++posted}", text, mine = true, author = "", at = clock.now())
-        notes.update { it.with(Posted(id, message, quick)) }
+        notes.update { it.with(Posted(id, message)) }
         countdown = scope.launch {
             delay(UNDO_WINDOW)
             countdown = null
@@ -166,40 +159,29 @@ internal class HomeTalk(private val messages: MessagesSource, private val clock:
     }
 }
 
-/** A message sent from the sheet. A [quick] one was a quick reply, not something typed. */
-internal data class Posted(val conversationId: String, val message: Message, val quick: Boolean)
+/** A message sent from the sheet. */
+internal data class Posted(val conversationId: String, val message: Message)
 
 /**
  * What the sheet remembers by itself, conversation by conversation: what is written and not sent, what was sent
- * and is not in the messaging app yet, the message that can still be taken back, the quick replies already used.
+ * and is not in the messaging app yet, the message that can still be taken back.
  */
 internal data class TalkNotes(
     val drafts: Map<String, String> = emptyMap(),
     val sent: List<Posted> = emptyList(),
     val pending: Posted? = null,
-    val failedIn: String? = null,
-    val usedReplies: Map<String, List<String>> = emptyMap()
+    val failedIn: String? = null
 ) {
-    fun with(posted: Posted): TalkNotes {
-        val id = posted.conversationId
-        return copy(
-            drafts = if (posted.quick) drafts else drafts - id,
-            sent = sent + posted,
-            pending = posted,
-            failedIn = null,
-            usedReplies = if (posted.quick) usedReplies + (id to used(id) + posted.message.text) else usedReplies
-        )
-    }
+    fun with(posted: Posted): TalkNotes =
+        copy(drafts = drafts - posted.conversationId, sent = sent + posted, pending = posted, failedIn = null)
 
-    /** The message never left: its text goes back where it came from, the field or the quick replies. */
+    /** The message never left: its text goes back to the field, unless something else was written since. */
     fun without(posted: Posted): TalkNotes {
         val id = posted.conversationId
-        val text = posted.message.text
         return copy(
-            drafts = if (posted.quick || !drafts[id].isNullOrBlank()) drafts else drafts + (id to text),
+            drafts = if (drafts[id].isNullOrBlank()) drafts + (id to posted.message.text) else drafts,
             sent = sent - posted,
-            pending = pending.takeIf { it != posted },
-            usedReplies = if (posted.quick) usedReplies + (id to used(id) - text) else usedReplies
+            pending = pending.takeIf { it != posted }
         )
     }
 
@@ -220,12 +202,9 @@ internal data class TalkNotes(
             person = person,
             bubbles = threadOf(person, read.orEmpty(), notBack, now),
             loading = read == null && notBack.isEmpty(),
-            quickReplies = quickRepliesWithout(used(person.id)),
             draft = drafts[person.id].orEmpty(),
             undoable = waiting?.id,
             notSent = failedIn == person.id
         )
     }
-
-    private fun used(conversationId: String): List<String> = usedReplies[conversationId].orEmpty()
 }

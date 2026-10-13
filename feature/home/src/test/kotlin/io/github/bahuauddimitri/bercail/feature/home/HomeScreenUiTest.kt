@@ -376,7 +376,8 @@ class HomeScreenUiTest {
     @Test
     fun `« Annuler l'envoi » disparaît de lui-même au bout de six secondes, et le message est parti`() {
         val world = openTalk()
-        compose.onNodeWithText("J'arrive").performClick()
+        compose.onNodeWithContentDescription("Répondre").performTextInput("J'arrive")
+        compose.onNodeWithContentDescription("Envoyer").performClick()
         compose.onNodeWithText("Annuler l'envoi").assertExists()
 
         sixSecondsPass()
@@ -386,14 +387,11 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `une réponse rapide part d'un toucher et quitte la liste`() {
+    fun `la feuille ne propose aucune réponse toute faite, seulement le champ où écrire`() {
         openTalk()
 
-        compose.onNodeWithText("Je te rappelle").performClick()
-
-        compose.onNodeWithContentDescription("Moi : Je te rappelle").assertExists()
-        compose.onNode(hasText("Je te rappelle") and hasClickAction()).assertDoesNotExist()
-        compose.onNodeWithText("D'accord").assertExists()
+        compose.onNodeWithContentDescription("Répondre").assertIsDisplayed()
+        listOf("D'accord", "J'arrive", "Je te rappelle").forEach { compose.onNodeWithText(it).assertDoesNotExist() }
     }
 
     @Test
