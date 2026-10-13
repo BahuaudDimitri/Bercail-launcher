@@ -22,13 +22,16 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
+import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThan
+import assertk.assertions.isLessThanOrEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import org.junit.Rule
 import org.junit.Test
@@ -114,6 +117,40 @@ class BcNavigationUiTest {
         assertThat(shift("A")).isLessThan(4.dp)
         assertThat(moved.getValue("M").width).isEqualTo(atRest.getValue("M").width)
         assertThat(moved.getValue("M").top).isEqualTo(atRest.getValue("M").top)
+    }
+
+    @Test
+    fun `quand la place manque, clavier sorti, les lettres se serrent sans qu'aucune soit coupée`() {
+        compose.setContent {
+            BcTheme { BcAlphabetRail(alphabet, onLetter = {}, modifier = Modifier.height(240.dp).testTag("az")) }
+        }
+
+        val rail = compose.onNodeWithTag("az").getUnclippedBoundsInRoot()
+
+        val first = railLetter("A").getUnclippedBoundsInRoot()
+        val last = railLetter("Z").getUnclippedBoundsInRoot()
+        assertThat((first.top + first.bottom) / 2).isGreaterThanOrEqualTo(rail.top)
+        assertThat((last.top + last.bottom) / 2).isLessThanOrEqualTo(rail.bottom)
+        // A letter that no longer fits must not be squeezed: it would show cut in half.
+        assertThat(last.height).isEqualTo(first.height)
+    }
+
+    @Test
+    fun `même serré, l'alphabet mène à la lettre qu'on touche`() {
+        val reached = mutableListOf<String>()
+        compose.setContent {
+            BcTheme {
+                BcAlphabetRail(alphabet, onLetter = { reached += it }, modifier = Modifier.height(240.dp).testTag("az"))
+            }
+        }
+        val rail = compose.onNodeWithTag("az").getUnclippedBoundsInRoot()
+        val z = railLetter("Z").getUnclippedBoundsInRoot()
+
+        compose.onNodeWithTag("az").performTouchInput {
+            click(Offset(centerX, ((z.top + z.bottom) / 2 - rail.top).toPx()))
+        }
+
+        assertThat(reached).containsExactly("Z")
     }
 
     @Test

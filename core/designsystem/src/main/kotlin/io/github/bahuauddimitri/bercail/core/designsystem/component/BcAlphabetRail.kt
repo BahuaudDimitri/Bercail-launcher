@@ -29,11 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -100,7 +102,8 @@ fun BcAlphabetRail(letters: List<String>, onLetter: (String) -> Unit, modifier: 
 }
 
 /**
- * The column of letters. [lean] says how far the letter standing at a share of the height (0 at the top, 1 at the
+ * The column of letters, evenly spread over the height; when the room is short (the keyboard is out), they stand
+ * closer together. [lean] says how far the letter standing at a share of the height (0 at the top, 1 at the
  * bottom) moves away from the edge; the one that is [lit] is the letter reached.
  */
 @Composable
@@ -111,25 +114,36 @@ private fun Letters(
     onLetter: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Layout(
         modifier = modifier.fillMaxHeight().padding(end = RAIL_END_PADDING),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.End
-    ) {
-        letters.forEachIndexed { index, letter ->
-            BcText(
-                text = letter,
-                style = BcTextStyle.LabelStrong,
-                color = if (index == lit) BcTextColor.Primary else BcTextColor.Muted,
-                modifier = Modifier
-                    .offset { IntOffset(-lean((index + HALF) / letters.size).roundToInt(), 0) }
-                    .semantics {
-                        onClick(label = "Aller à $letter") {
-                            onLetter(letter)
-                            true
+        content = {
+            letters.forEachIndexed { index, letter ->
+                BcText(
+                    text = letter,
+                    style = BcTextStyle.LabelStrong,
+                    color = if (index == lit) BcTextColor.Primary else BcTextColor.Muted,
+                    modifier = Modifier
+                        .offset { IntOffset(-lean((index + HALF) / letters.size).roundToInt(), 0) }
+                        .semantics {
+                            onClick(label = "Aller à $letter") {
+                                onLetter(letter)
+                                true
+                            }
                         }
-                    }
-            )
+                )
+            }
+        }
+    ) { measurables, constraints ->
+        // Each letter keeps its own height, whatever the room: a squeezed letter would show cut in half.
+        val placed = measurables.map { it.measure(Constraints()) }
+        val height = if (constraints.hasBoundedHeight) constraints.maxHeight else placed.sumOf { it.height }
+        val width = placed.maxOfOrNull { it.width } ?: 0
+        layout(width, height) {
+            placed.forEachIndexed { index, letter ->
+                // Evenly spread, each in the middle of its share of the height: where the finger looks for it.
+                val middle = (index + HALF) / placed.size * height
+                letter.place(width - letter.width, (middle - letter.height * HALF).roundToInt())
+            }
         }
     }
 }
