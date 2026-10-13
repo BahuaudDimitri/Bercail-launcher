@@ -5,12 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -194,6 +197,14 @@ class HomeScreenshotTest {
         }
 
         capture("home_unconnected")
+    }
+
+    @Test
+    fun `l'accueil, un doigt posé sur la ligne du temps, correspond à sa capture`() {
+        show(FakeWorld(Moment.Matin))
+        compose.onNodeWithTag(TIMELINE_TAG).performTouchInput { down(Offset(width - 30f, height * 0.68f)) }
+
+        capture("home_timeline_touched")
     }
 
     @Test

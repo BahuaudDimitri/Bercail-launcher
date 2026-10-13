@@ -34,10 +34,10 @@ class BcNavigationScreenshotTest {
     private val alphabet = listOf("A", "B", "C", "D", "G", "M", "N", "S", "W", "Y")
 
     private val day = listOf(
-        BcTimelineMark(position = 0.06f, label = "08:00"),
-        BcTimelineMark(position = 0.15f, label = "09:30", next = true),
-        BcTimelineMark(position = 0.47f, label = "15:00"),
-        BcTimelineMark(position = 0.76f, label = "20:00")
+        BcTimelineMark(position = 0.06f, label = "08:00", title = "Stand-up"),
+        BcTimelineMark(position = 0.15f, label = "09:30", next = true, title = "Café avec Tom"),
+        BcTimelineMark(position = 0.47f, label = "15:00", title = "Point design"),
+        BcTimelineMark(position = 0.76f, label = "20:00", title = "Dîner")
     )
 
     @Test
@@ -62,6 +62,39 @@ class BcNavigationScreenshotTest {
             )
         }
     }
+
+    @Test
+    fun `la ligne du temps touchée, courbée autour du doigt avec sa bulle, correspond à sa capture`() =
+        compose.captureComponent(
+            name = "timeline_wave",
+            before = { onNodeWithTag("line").performTouchInput { down(Offset(width - 20f, height * 0.47f)) } }
+        ) {
+            Box(Modifier.width(300.dp).height(420.dp), contentAlignment = Alignment.CenterEnd) {
+                BcTimeline(
+                    now = 0.1f,
+                    marks = day,
+                    modifier = Modifier.fillMaxHeight().width(78.dp).testTag("line"),
+                    onOpen = {}
+                )
+            }
+        }
+
+    @Test
+    fun `la ligne du temps couchée et touchée, soulevée sous le doigt, correspond à sa capture`() =
+        compose.captureComponent(
+            name = "timeline_horizontal_wave",
+            before = { onNodeWithTag("line").performTouchInput { down(Offset(width * 0.47f, centerY)) } }
+        ) {
+            Box(Modifier.width(360.dp).height(120.dp), contentAlignment = Alignment.BottomCenter) {
+                BcTimeline(
+                    now = 0.1f,
+                    marks = day,
+                    orientation = BcTimelineOrientation.Horizontal,
+                    modifier = Modifier.width(360.dp).height(44.dp).testTag("line"),
+                    onOpen = {}
+                )
+            }
+        }
 
     @Test
     fun `la ligne du temps horizontale correspond à sa capture`() = compose.captureComponent("timeline_horizontal") {

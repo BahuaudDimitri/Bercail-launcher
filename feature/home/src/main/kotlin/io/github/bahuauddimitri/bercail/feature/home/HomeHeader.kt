@@ -33,9 +33,13 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.DayLine
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 
-/** The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day. */
+/**
+ * The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day;
+ * so does the line of the day when it lies under it, on the appointment the finger was on ([onOpenDay] is given its
+ * id, or nothing).
+ */
 @Composable
-internal fun HomeHeader(state: HomeUiState, onOpenDay: () -> Unit, modifier: Modifier = Modifier) {
+internal fun HomeHeader(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
     val vertical = state.timeline == TimelineOrientation.Vertical
     Column(
         modifier
@@ -46,7 +50,7 @@ internal fun HomeHeader(state: HomeUiState, onOpenDay: () -> Unit, modifier: Mod
         Column(
             Modifier
                 .fillMaxWidth()
-                .clickable(onClickLabel = "Voir la journée", role = Role.Button, onClick = onOpenDay),
+                .clickable(onClickLabel = "Voir la journée", role = Role.Button) { onOpenDay(null) },
             verticalArrangement = Arrangement.spacedBy(LINE_GAP)
         ) {
             state.weatherLine?.let { BcWeatherLine(it, state.weather.look, Modifier.padding(bottom = WEATHER_GAP)) }
@@ -60,9 +64,12 @@ internal fun HomeHeader(state: HomeUiState, onOpenDay: () -> Unit, modifier: Mod
                 marks = state.dayLine.timelineMarks,
                 orientation = BcTimelineOrientation.Horizontal,
                 description = TIMELINE_DESCRIPTION,
-                modifier = Modifier.fillMaxWidth().padding(
-                    top = HORIZONTAL_GAP
-                ).height(HORIZONTAL_LINE).testTag(TIMELINE_TAG)
+                onOpen = { onOpenDay(it?.key) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = HORIZONTAL_GAP)
+                    .height(HORIZONTAL_LINE)
+                    .testTag(TIMELINE_TAG)
             )
         }
     }
@@ -70,10 +77,11 @@ internal fun HomeHeader(state: HomeUiState, onOpenDay: () -> Unit, modifier: Mod
 
 /**
  * The day along the right edge, from 7 am under the status bar to midnight above the drawer.
- * It fades and retracts on the Listen screen.
+ * It fades and retracts on the Listen screen. Sliding a finger along it names each appointment, and lifting it opens
+ * the day on the one reached.
  */
 @Composable
-internal fun VerticalTimeline(state: HomeUiState, modifier: Modifier = Modifier) {
+internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
     val motion = BcTheme.motion
     AnimatedVisibility(
         visible = state.timeline == TimelineOrientation.Vertical && state.page == HomePage.Home,
@@ -87,6 +95,7 @@ internal fun VerticalTimeline(state: HomeUiState, modifier: Modifier = Modifier)
             now = state.dayLine.now,
             marks = state.dayLine.timelineMarks,
             description = TIMELINE_DESCRIPTION,
+            onOpen = { onOpenDay(it?.key) },
             modifier = Modifier
                 .fillMaxHeight()
                 .statusBarsPadding()
@@ -98,7 +107,7 @@ internal fun VerticalTimeline(state: HomeUiState, modifier: Modifier = Modifier)
 }
 
 private val DayLine.timelineMarks
-    get() = marks.map { BcTimelineMark(position = it.position, label = it.time, next = it.next) }
+    get() = marks.map { BcTimelineMark(it.position, label = it.time, next = it.next, title = it.title, key = it.id) }
 
 private const val TIMELINE_DESCRIPTION = "Ligne du temps de la journée"
 internal val SIDE = 22.dp

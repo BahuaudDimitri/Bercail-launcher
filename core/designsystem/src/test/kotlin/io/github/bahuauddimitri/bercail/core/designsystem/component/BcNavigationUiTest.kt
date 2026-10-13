@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -11,14 +12,19 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
@@ -27,6 +33,7 @@ import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isGreaterThanOrEqualTo
@@ -172,6 +179,148 @@ class BcNavigationUiTest {
         }
 
         assertThat(ticks).isEqualTo(letters.size)
+    }
+
+    // ---------- the line of the day under the finger ----------
+
+    private val day = listOf(
+        BcTimelineMark(position = 0.06f, label = "08:00", title = "Stand-up", key = "standup"),
+        BcTimelineMark(position = 0.15f, label = "09:30", next = true, title = "Café avec Tom", key = "cafe"),
+        BcTimelineMark(position = 0.47f, label = "15:00", title = "Point design", key = "design"),
+        BcTimelineMark(position = 0.76f, label = "20:00", title = "Dîner", key = "diner")
+    )
+    private val openedOn = mutableListOf<String?>()
+
+    /** The line of the day, 400 dp long, tagged "line"; what it opens is noted in [openedOn]. */
+    private fun showLine(
+        marks: List<BcTimelineMark> = day,
+        orientation: BcTimelineOrientation = BcTimelineOrientation.Vertical,
+        haptics: HapticFeedback? = null
+    ) {
+        val vertical = orientation == BcTimelineOrientation.Vertical
+        val size = if (vertical) Modifier.height(400.dp).width(78.dp) else Modifier.width(400.dp).height(44.dp)
+        compose.setContent {
+            CompositionLocalProvider(LocalHapticFeedback provides (haptics ?: LocalHapticFeedback.current)) {
+                BcTheme {
+                    Box(Modifier.padding(top = 120.dp).width(400.dp), contentAlignment = Alignment.TopEnd) {
+                        BcTimeline(
+                            now = 0.1f,
+                            marks = marks,
+                            modifier = size.testTag("line"),
+                            orientation = orientation,
+                            onOpen = { openedOn += it?.key }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private val bubble get() = compose.onNodeWithTag(TIMELINE_BUBBLE)
+
+    @Test
+    fun `toucher la ligne du temps ouvre la journée sur le rendez-vous le plus proche du doigt`() {
+        showLine()
+
+        compose.onNodeWithTag("line").performTouchInput { click(Offset(centerX, height * 0.45f)) }
+
+        assertThat(openedOn).containsExactly("design")
+    }
+
+    @Test
+    fun `en glissant le long de la ligne, une bulle nomme le rendez-vous sous le doigt, et lâcher ouvre la journée`() {
+        showLine()
+        bubble.assertDoesNotExist()
+
+        compose.onNodeWithTag("line").performTouchInput { down(Offset(centerX, height * 0.06f)) }
+        bubble.assert(hasAnyDescendant(hasText("08:00 · Stand-up")) or hasText("08:00 · Stand-up"))
+        compose.onNodeWithTag("line").performTouchInput { moveTo(Offset(centerX, height * 0.8f)) }
+        bubble.assert(hasAnyDescendant(hasText("20:00 · Dîner")) or hasText("20:00 · Dîner"))
+        assertThat(openedOn).isEmpty()
+
+        compose.onNodeWithTag("line").performTouchInput { up() }
+
+        assertThat(openedOn).containsExactly("diner")
+        bubble.assertDoesNotExist()
+    }
+
+    @Test
+    fun `un jour sans rendez-vous, toucher la ligne ouvre simplement la journée, sans bulle`() {
+        showLine(marks = emptyList())
+
+        compose.onNodeWithTag("line").performTouchInput { down(center) }
+        bubble.assertDoesNotExist()
+        compose.onNodeWithTag("line").performTouchInput { up() }
+
+        assertThat(openedOn).containsExactly(null)
+    }
+
+    @Test
+    fun `chaque rendez-vous atteint en glissant le long de la ligne donne un tic sous le doigt`() {
+        var ticks = 0
+        showLine(
+            haptics = object : HapticFeedback {
+                override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
+                    ticks++
+                }
+            }
+        )
+
+        compose.onNodeWithTag("line").performTouchInput {
+            swipe(start = Offset(centerX, 1f), end = Offset(centerX, height - 1f), durationMillis = 600)
+        }
+
+        assertThat(ticks).isEqualTo(day.size)
+    }
+
+    @Test
+    fun `la ligne se courbe autour du doigt, l'heure la plus proche s'écarte du bord et les lointaines restent`() {
+        showLine()
+        val atRest = listOf("08:00", "15:00").associateWith { compose.onNodeWithText(it).getUnclippedBoundsInRoot() }
+
+        compose.onNodeWithTag("line").performTouchInput { down(Offset(centerX, height * 0.47f)) }
+
+        fun shift(time: String) =
+            atRest.getValue(time).left - compose.onNodeWithText(time).getUnclippedBoundsInRoot().left
+        assertThat(shift("15:00")).isGreaterThan(40.dp)
+        assertThat(shift("08:00")).isLessThan(4.dp)
+    }
+
+    @Test
+    fun `couchée, la ligne se parcourt aussi du doigt, et se soulève sous lui`() {
+        showLine(orientation = BcTimelineOrientation.Horizontal)
+        val atRest = compose.onNodeWithText("15:00").getUnclippedBoundsInRoot()
+
+        compose.onNodeWithTag("line").performTouchInput { down(Offset(width * 0.47f, centerY)) }
+
+        bubble.assert(hasAnyDescendant(hasText("15:00 · Point design")) or hasText("15:00 · Point design"))
+        assertThat(atRest.top - compose.onNodeWithText("15:00").getUnclippedBoundsInRoot().top).isGreaterThan(16.dp)
+        compose.onNodeWithTag("line").performTouchInput { up() }
+        assertThat(openedOn).containsExactly("design")
+    }
+
+    @Test
+    fun `sans rien à ouvrir, la ligne du temps ne réagit pas au doigt`() {
+        compose.setContent {
+            BcTheme {
+                BcTimeline(now = 0.1f, marks = day, modifier = Modifier.height(400.dp).width(78.dp).testTag("line"))
+            }
+        }
+
+        compose.onNodeWithTag("line").performTouchInput { down(center) }
+
+        bubble.assertDoesNotExist()
+    }
+
+    @Test
+    fun `la ligne du temps propose aux lecteurs d'écran de voir la journée`() {
+        showLine()
+
+        compose.onNodeWithTag("line")
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        assertThat(openedOn).containsExactly(null)
     }
 
     @Test

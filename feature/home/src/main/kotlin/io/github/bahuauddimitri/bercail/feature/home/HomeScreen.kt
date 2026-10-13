@@ -127,10 +127,14 @@ fun HomeScreen(
                     screen = {
                         Box(Modifier.fillMaxSize()) {
                             Column(Modifier.fillMaxSize()) {
-                                HomeHeader(state, onOpenDay = { actions.onDayOpenChange(true) })
+                                HomeHeader(state, onOpenDay = { actions.onDayOpenChange(true, focus = it) })
                                 HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
                             }
-                            VerticalTimeline(state, Modifier.align(Alignment.TopEnd).then(fading))
+                            VerticalTimeline(
+                                state = state,
+                                onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                                modifier = Modifier.align(Alignment.TopEnd).then(fading)
+                            )
                         }
                     },
                     drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search) } }

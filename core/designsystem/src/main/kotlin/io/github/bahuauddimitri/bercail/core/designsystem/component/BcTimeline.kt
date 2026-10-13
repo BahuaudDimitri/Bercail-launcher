@@ -1,31 +1,80 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_BULGE
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_SPREAD
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.bell
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.followFinger
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** An appointment on the timeline: where it falls in the day (0 = 7 am, 1 = midnight), its time, whether it is next. */
-data class BcTimelineMark(val position: Float, val label: String, val next: Boolean = false)
+internal const val TIMELINE_BUBBLE = "timeline-bubble"
+
+/**
+ * An appointment on the timeline: where it falls in the day (0 = 7 am, 1 = midnight), its time, whether it is
+ * next. Its [title] is what the bubble says under the finger; its [key] tells the caller which one was opened.
+ */
+data class BcTimelineMark(
+    val position: Float,
+    val label: String,
+    val next: Boolean = false,
+    val title: String = "",
+    val key: String? = null
+)
 
 enum class BcTimelineOrientation { Vertical, Horizontal }
 
 /**
  * The day from 7 am to midnight: past as a solid line, future dotted, a glowing dot for now,
  * the time of each appointment beside it and the next one circled. Marks outside the day are not drawn.
+ *
+ * With [onOpen], the line answers to the finger like the alphabet of the search: while it is touched, it bends
+ * around the finger, a bubble names the appointment the finger is closest to (with a tick at each new one), and
+ * lifting the finger calls [onOpen] with that appointment, or with nothing on a day without any.
  */
 @Composable
 fun BcTimeline(
@@ -33,35 +82,185 @@ fun BcTimeline(
     marks: List<BcTimelineMark>,
     modifier: Modifier = Modifier,
     orientation: BcTimelineOrientation = BcTimelineOrientation.Vertical,
-    description: String? = null
+    description: String? = null,
+    onOpen: ((BcTimelineMark?) -> Unit)? = null
 ) {
     val vertical = orientation == BcTimelineOrientation.Vertical
     val visible = marks.filter { it.position in 0f..1f }
-    val position = now.coerceIn(0f, 1f)
-    Box(modifier.semantics { if (description != null) contentDescription = description }) {
-        Canvas(Modifier.matchParentSize()) { drawLine(vertical, position, visible) }
-        visible.forEach { mark ->
+    val touch = remember { TimelineTouch() }
+    val swell = animateFloatAsState(if (touch.down) 1f else 0f, tween(BcTheme.motion.fadeMillis), label = "day wave")
+    val bulge = if (vertical) WAVE_BULGE else FLAT_BULGE
+    // How far the line stands away from its place, this many pixels along it.
+    val lean: Density.(Float) -> Float = { along ->
+        bulge.toPx() * swell.value * bell(along - touch.finger, WAVE_SPREAD.toPx())
+    }
+    val bubbleShown by remember { derivedStateOf { swell.value > 0f && touch.last >= 0 } }
+    Box(
+        modifier
+            .onSizeChanged { touch.length = if (vertical) it.height else it.width }
+            .semantics {
+                if (description != null) contentDescription = description
+                if (onOpen != null) {
+                    onClick(label = OPEN_DAY) {
+                        onOpen(null)
+                        true
+                    }
+                }
+            }
+    ) {
+        Canvas(Modifier.matchParentSize()) {
+            drawLine(vertical, now.coerceIn(0f, 1f), visible, bent = swell.value > 0f) { lean(it) }
+        }
+        visible.forEachIndexed { index, mark ->
             BcText(
                 text = mark.label,
                 style = BcTextStyle.Micro,
-                color = if (mark.next) BcTextColor.Primary else BcTextColor.Muted,
+                color = if (mark.next || index == touch.reached) BcTextColor.Primary else BcTextColor.Muted,
                 maxLines = 1,
-                modifier = Modifier.matchParentSize().placeBeside(mark.position, vertical)
+                modifier = Modifier.matchParentSize().placeBeside(mark.position, vertical, lean)
             )
         }
+        if (onOpen != null) FingerZone(vertical, visible, touch, onOpen)
+        if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), vertical, bulge, swell, touch)
     }
 }
 
-private fun DrawScope.drawLine(vertical: Boolean, now: Float, marks: List<BcTimelineMark>) {
+/** Where the finger is on the line, and which appointment it is closest to. */
+private class TimelineTouch {
+    /** The length of the line, in pixels. */
+    var length by mutableIntStateOf(0)
+
+    /** Where the finger is along the line, in pixels; kept after it lifts, while the wave flattens. */
+    var finger by mutableFloatStateOf(0f)
+    var down by mutableStateOf(false)
+
+    /** The appointment the finger is closest to, or nothing while the line is not touched. */
+    var reached by mutableStateOf<Int?>(null)
+
+    /** The last appointment reached: what the bubble still says while it fades. */
+    var last by mutableIntStateOf(-1)
+}
+
+/**
+ * The part of the timeline that takes the finger: the line itself and a little around it, not the whole width of
+ * the times beside it, so that the rest of the screen keeps its own gestures.
+ */
+@Composable
+private fun BoxScope.FingerZone(
+    vertical: Boolean,
+    marks: List<BcTimelineMark>,
+    touch: TimelineTouch,
+    onOpen: (BcTimelineMark?) -> Unit
+) {
+    val current by rememberUpdatedState(marks)
+    val open by rememberUpdatedState(onOpen)
+    val haptics by rememberUpdatedState(LocalHapticFeedback.current)
+    val zone = if (vertical) {
+        Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE)
+    } else {
+        Modifier.fillMaxSize()
+    }
+    Box(
+        zone.followFinger(
+            vertical = vertical,
+            onMove = { along ->
+                touch.finger = along.coerceIn(0f, touch.length.toFloat())
+                touch.down = true
+                val closest = current.indices.minByOrNull { abs(current[it].position * touch.length - touch.finger) }
+                if (closest != touch.reached) {
+                    touch.reached = closest
+                    if (closest != null) {
+                        touch.last = closest
+                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                    }
+                }
+            },
+            onLift = {
+                val chosen = touch.reached?.let(current::getOrNull)
+                touch.down = false
+                touch.reached = null
+                open(chosen)
+            },
+            onCancel = {
+                touch.down = false
+                touch.reached = null
+            }
+        )
+    )
+}
+
+/** What the bubble says of an appointment: "15:00 · Point design". */
+private val BcTimelineMark.spoken: String get() = if (title.isBlank()) label else "$label · $title"
+
+/** The appointment under the finger, in a light bubble that follows it on the far side of the wave. */
+@Composable
+private fun BoxScope.Bubble(text: String, vertical: Boolean, bulge: Dp, swell: State<Float>, touch: TimelineTouch) {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .layout { measurable, constraints ->
+                val bubble = measurable.measure(Constraints(maxWidth = BUBBLE_MAX.roundToPx()))
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    val away = (bulge.toPx() * swell.value).roundToInt()
+                    if (vertical) {
+                        val x = constraints.maxWidth - (LINE_INSET + BUBBLE_BESIDE).roundToPx() - away - bubble.width
+                        val y = (touch.finger - bubble.height / 2f).roundToInt()
+                        bubble.place(x, y.coerceIn(0, (constraints.maxHeight - bubble.height).coerceAtLeast(0)))
+                    } else {
+                        val x = (touch.finger - bubble.width / 2f).roundToInt()
+                        val y = (LINE_INSET - BUBBLE_ABOVE).roundToPx() - away - bubble.height
+                        bubble.place(x.coerceIn(0, (constraints.maxWidth - bubble.width).coerceAtLeast(0)), y)
+                    }
+                }
+            }
+            .graphicsLayer { alpha = swell.value }
+            .background(BcColors.text, BcShapes.pill)
+            .padding(horizontal = BUBBLE_SIDE, vertical = BUBBLE_EDGE)
+            .testTag(TIMELINE_BUBBLE)
+    ) {
+        BcText(text, style = BcTextStyle.LabelStrong, color = BcTextColor.OnLight, maxLines = 1)
+    }
+}
+
+private fun DrawScope.drawLine(
+    vertical: Boolean,
+    now: Float,
+    marks: List<BcTimelineMark>,
+    bent: Boolean,
+    lean: (Float) -> Float
+) {
     val inset = LINE_INSET.toPx()
-    val start = if (vertical) Offset(size.width - inset, 0f) else Offset(0f, inset)
-    val end = if (vertical) Offset(size.width - inset, size.height) else Offset(size.width, inset)
-    fun at(fraction: Float) = start + (end - start) * fraction
+    val length = if (vertical) size.height else size.width
+
+    /** The point of the line at this share of the day, pushed away from its place around the finger. */
+    fun at(fraction: Float): Offset {
+        val along = fraction * length
+        val away = if (bent) lean(along) else 0f
+        return if (vertical) Offset(size.width - inset - away, along) else Offset(along, inset - away)
+    }
+
+    fun stretch(from: Float, to: Float) = Path().apply {
+        val start = at(from)
+        moveTo(start.x, start.y)
+        var fraction = from
+        while (fraction < to) {
+            fraction = (fraction + BEND_STEP.toPx() / length).coerceAtMost(to)
+            val next = at(fraction)
+            lineTo(next.x, next.y)
+        }
+    }
+
     val width = LINE_WIDTH.toPx()
     val dash = PathEffect.dashPathEffect(floatArrayOf(DASH.toPx(), GAP.toPx()))
-
-    drawLine(BcColors.text.copy(alpha = FUTURE_ALPHA), at(now), end, width, StrokeCap.Round, dash)
-    drawLine(BcColors.text.copy(alpha = PAST_ALPHA), start, at(now), width, StrokeCap.Round)
+    val future = BcColors.text.copy(alpha = FUTURE_ALPHA)
+    val past = BcColors.text.copy(alpha = PAST_ALPHA)
+    if (bent && length > 0f) {
+        drawPath(stretch(now, 1f), future, style = Stroke(width, cap = StrokeCap.Round, pathEffect = dash))
+        drawPath(stretch(0f, now), past, style = Stroke(width, cap = StrokeCap.Round))
+    } else {
+        drawLine(future, at(now), at(1f), width, StrokeCap.Round, dash)
+        drawLine(past, at(0f), at(now), width, StrokeCap.Round)
+    }
     marks.forEach { mark ->
         val center = at(mark.position)
         drawCircle(BcColors.text, MARK_RADIUS.toPx(), center)
@@ -80,22 +279,29 @@ private fun DrawScope.drawLine(vertical: Boolean, now: Float, marks: List<BcTime
     drawCircle(BcColors.text, NOW_RADIUS.toPx(), dot)
 }
 
-/** Places a label beside the line, centered on its fraction of the day and kept inside the timeline. */
-private fun Modifier.placeBeside(fraction: Float, vertical: Boolean) = layout { measurable, constraints ->
-    val label = measurable.measure(Constraints())
-    layout(constraints.maxWidth, constraints.maxHeight) {
-        if (vertical) {
-            val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
-            val y = (fraction * constraints.maxHeight - label.height / 2f).roundToInt()
-            label.place(x, y.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
-        } else {
-            val x = (fraction * constraints.maxWidth - label.width / 2f).roundToInt()
-            val y = (LINE_INSET + LABEL_GAP).roundToPx()
-            label.place(x.coerceIn(0, (constraints.maxWidth - label.width).coerceAtLeast(0)), y)
+/**
+ * Places a label beside the line, centered on its fraction of the day and kept inside the timeline; it follows the
+ * line when it [lean]s away from its place.
+ */
+private fun Modifier.placeBeside(fraction: Float, vertical: Boolean, lean: Density.(Float) -> Float) =
+    layout { measurable, constraints ->
+        val label = measurable.measure(Constraints())
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            val length = if (vertical) constraints.maxHeight else constraints.maxWidth
+            val away = lean(fraction * length).roundToInt()
+            if (vertical) {
+                val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
+                val y = (fraction * constraints.maxHeight - label.height / 2f).roundToInt()
+                label.place(x - away, y.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
+            } else {
+                val x = (fraction * constraints.maxWidth - label.width / 2f).roundToInt()
+                val y = (LINE_INSET + LABEL_GAP).roundToPx()
+                label.place(x.coerceIn(0, (constraints.maxWidth - label.width).coerceAtLeast(0)), y - away)
+            }
         }
     }
-}
 
+private const val OPEN_DAY = "Voir la journée"
 private const val PAST_ALPHA = 0.55f
 private const val FUTURE_ALPHA = 0.35f
 private const val GLOW_ALPHA = 0.6f
@@ -108,3 +314,19 @@ private val NEXT_RADIUS = 7.dp
 private val NOW_RADIUS = 3.5.dp
 private val GLOW = 11.dp
 private val LABEL_GAP = 12.dp
+
+/** Lying down, the line has the header just above it: it rises less than it leans when standing. */
+private val FLAT_BULGE = 32.dp
+
+/** How finely the bent line is drawn. */
+private val BEND_STEP = 4.dp
+
+/** How wide the standing line takes the finger, from the edge it runs along. */
+private val FINGER_ZONE = 48.dp
+
+/** The bubble stands clear of the times written beside the standing line, and above the lying one. */
+private val BUBBLE_BESIDE = 56.dp
+private val BUBBLE_ABOVE = 10.dp
+private val BUBBLE_MAX = 240.dp
+private val BUBBLE_SIDE = 14.dp
+private val BUBBLE_EDGE = 8.dp

@@ -3,8 +3,6 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -39,11 +36,14 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_BULGE
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_SPREAD
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.bell
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.followFinger
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.LocalBcContentColor
-import kotlin.math.exp
 import kotlin.math.roundToInt
 
 internal const val ALPHABET_BUBBLE = "alphabet-bubble"
@@ -93,7 +93,7 @@ fun BcAlphabetRail(letters: List<String>, onLetter: (String) -> Unit, modifier: 
             letters = letters,
             lit = touched,
             // How far the letter whose middle is at this height leans out, in pixels.
-            lean = { middle -> BULGE.toPx() * swell.value * bell(middle * height - finger, SPREAD.toPx()) },
+            lean = { middle -> WAVE_BULGE.toPx() * swell.value * bell(middle * height - finger, WAVE_SPREAD.toPx()) },
             onLetter = { reach(it) },
             modifier = Modifier.align(Alignment.CenterEnd)
         )
@@ -148,26 +148,6 @@ private fun Letters(
     }
 }
 
-/** Tells where the finger is along the rail
-, from the moment it touches it until it lifts, wherever it slides. */
-private fun Modifier.followFinger(onMove: (Float) -> Unit, onLift: () -> Unit): Modifier = pointerInput(Unit) {
-    awaitEachGesture {
-        val down = awaitFirstDown()
-        down.consume()
-        onMove(down.position.y)
-        do {
-            val event = awaitPointerEvent()
-            event.changes.forEach { change ->
-                if (change.pressed) {
-                    onMove(change.position.y)
-                    change.consume()
-                }
-            }
-        } while (event.changes.any { it.pressed })
-        onLift()
-    }
-}
-
 /** The letter reached, in a light bubble
  that follows the finger on the far side of the wave. */
 @Composable
@@ -175,7 +155,7 @@ private fun Bubble(letter: String, swell: State<Float>, finger: () -> Float) {
     Box(
         modifier = Modifier
             .offset {
-                val side = RAIL_WIDTH.toPx() - BUBBLE.toPx() - BUBBLE_GAP.toPx() - BULGE.toPx() * swell.value
+                val side = RAIL_WIDTH.toPx() - BUBBLE.toPx() - BUBBLE_GAP.toPx() - WAVE_BULGE.toPx() * swell.value
                 IntOffset(side.roundToInt(), (finger() - BUBBLE.toPx() * HALF).roundToInt())
             }
             .size(BUBBLE)
@@ -194,18 +174,10 @@ private fun Bubble(letter: String, swell: State<Float>, finger: () -> Float) {
     }
 }
 
-/** How much of the bulge a letter takes, [distance] pixels away from the finger: all of it under the finger. */
-private fun bell(distance: Float, spread: Float): Float = exp(-(distance * distance) / (2f * spread * spread))
-
 private const val HALF = 0.5f
 private const val BUBBLE_START = 0.6f
 private val RAIL_WIDTH = 48.dp
 private val RAIL_END_PADDING = 10.dp
 
-/** How far the letter under the finger moves away from the edge. */
-private val BULGE = 72.dp
-
-/** How wide the wave is: letters this far from the finger still move by more than half of the bulge. */
-private val SPREAD = 56.dp
 private val BUBBLE = 48.dp
 private val BUBBLE_GAP = 40.dp

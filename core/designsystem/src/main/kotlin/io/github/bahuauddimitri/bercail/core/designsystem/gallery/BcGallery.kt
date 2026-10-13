@@ -305,22 +305,23 @@ private fun Music() {
 private fun Navigation() {
     val reached = remember { mutableStateOf("—") }
     val day = listOf(
-        BcTimelineMark(position = 0.06f, label = "08:00"),
-        BcTimelineMark(position = 0.15f, label = "09:30", next = true),
-        BcTimelineMark(position = 0.47f, label = "15:00")
+        BcTimelineMark(position = 0.06f, label = "08:00", title = "Stand-up"),
+        BcTimelineMark(position = 0.15f, label = "09:30", next = true, title = "Café avec Tom"),
+        BcTimelineMark(position = 0.47f, label = "15:00", title = "Point design")
     )
     BcText("Lettre atteinte : ${reached.value}", style = BcTextStyle.Caption, color = BcTextColor.Muted)
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
         BcAlphabetRail(listOf("A", "B", "D", "G", "M", "S", "W"), onLetter = {
             reached.value = it
         }, modifier = Modifier.height(TALL))
-        BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH))
+        BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpen = {})
     }
     BcTimeline(
         now = NOW,
         marks = day,
         orientation = BcTimelineOrientation.Horizontal,
-        modifier = Modifier.fillMaxWidth().height(LINE)
+        modifier = Modifier.fillMaxWidth().height(LINE),
+        onOpen = {}
     )
 }
 

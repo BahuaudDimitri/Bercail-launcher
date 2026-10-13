@@ -67,8 +67,11 @@ private fun countdown(now: LocalDateTime, start: LocalDateTime): String {
     }
 }
 
-/** An appointment on the line of the day: where it falls (0 = 7 am, 1 = midnight), its time, whether it is next. */
-data class DayMark(val position: Float, val time: String, val next: Boolean)
+/**
+ * An appointment on the line of the day: where it falls (0 = 7 am, 1 = midnight), its time, whether it is next,
+ * and which appointment it is ([id], [title]), so that the line can show it and open the day on it.
+ */
+data class DayMark(val position: Float, val time: String, val next: Boolean, val id: String, val title: String)
 
 /** The day as a line from 7 am to midnight, with the point of now. */
 data class DayLine(val now: Float, val marks: List<DayMark>)
@@ -80,7 +83,7 @@ fun dayLineAt(now: LocalDateTime, events: List<AgendaEvent>): DayLine {
         now = positionOf(now.toLocalTime()),
         marks = sorted.map { event ->
             val time = event.start.toLocalTime()
-            DayMark(positionOf(time), time.asClockTime(), next = event == next)
+            DayMark(positionOf(time), time.asClockTime(), next = event == next, id = event.id, title = event.title)
         }
     )
 }

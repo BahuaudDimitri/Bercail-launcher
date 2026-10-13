@@ -48,6 +48,14 @@ class DayLineTest {
     }
 
     @Test
+    fun `chaque marque de la ligne dit de quel rendez-vous elle est, pour ouvrir la journée sur lui`() {
+        val line = dayLineAt(at(10, 0), events)
+
+        assertThat(line.marks.map { it.id }).isEqualTo(events.sortedBy { it.start }.map { it.id })
+        assertThat(line.marks.map { it.title }).isEqualTo(events.sortedBy { it.start }.map { it.title })
+    }
+
+    @Test
     fun `après le dernier rendez-vous, plus aucun n'est entouré`() {
         val line = dayLineAt(at(22, 0), events)
 
