@@ -5,6 +5,7 @@ import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,12 @@ import kotlinx.coroutines.flow.flowOf
 object Unconnected {
     val messages: MessagesSource = object : MessagesSource {
         override val conversations: Flow<List<Conversation>> = flowOf(emptyList())
+
+        override fun history(conversationId: String): Flow<List<Message>?> = flowOf(emptyList())
+
+        override suspend fun send(conversationId: String, text: String) = false
+
+        override suspend fun markRead(conversationId: String) = Unit
 
         override fun openApp() = Unit
     }

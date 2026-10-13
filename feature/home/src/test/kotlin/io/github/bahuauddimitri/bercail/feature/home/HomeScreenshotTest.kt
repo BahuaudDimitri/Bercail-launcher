@@ -119,6 +119,25 @@ class HomeScreenshotTest {
     }
 
     @Test
+    fun `la feuille de conversation, pendant le trajet, correspond à sa capture`() {
+        show(FakeWorld(Moment.Trajet, playing = false))
+        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
+
+        capture("home_talk")
+    }
+
+    @Test
+    fun `une réponse tout juste envoyée, avec « Annuler l'envoi », correspond à sa capture`() {
+        show(FakeWorld(Moment.Trajet, playing = false))
+        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
+        compose.onNodeWithText("J'arrive").performClick()
+
+        capture("home_talk_undo")
+    }
+
+    @Test
     fun `la feuille « Écouter » et ses apps média, quand la musique s'est tue, correspond à sa capture`() {
         val world = FakeWorld(Moment.Matin)
         show(world)

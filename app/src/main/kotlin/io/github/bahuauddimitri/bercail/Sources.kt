@@ -22,6 +22,8 @@ import io.github.bahuauddimitri.bercail.data.media.DeviceMedia
 import io.github.bahuauddimitri.bercail.data.media.DeviceMediaApps
 import io.github.bahuauddimitri.bercail.data.media.listeningStore
 import io.github.bahuauddimitri.bercail.data.messages.BeeperMessages
+import io.github.bahuauddimitri.bercail.data.messages.StoredSeen
+import io.github.bahuauddimitri.bercail.data.messages.seenStore
 import io.github.bahuauddimitri.bercail.data.settings.StoredSettings
 import io.github.bahuauddimitri.bercail.data.settings.settingsStore
 import io.github.bahuauddimitri.bercail.data.weather.OpenMeteo
@@ -103,8 +105,15 @@ class Sources(
     val mediaApps: MediaAppsSource =
         DeviceMediaApps(context, apps, listeningStore(File(context.filesDir, LISTENING_FILE), background))
 
-    /** The conversations of every network, read in Beeper only while the home screen or the search shows them. */
-    val messages: MessagesSource = messages ?: BeeperMessages(context, access)
+    /**
+     * The conversations of every network, read in Beeper only while the home screen or the search shows them; the
+     * messages of one, only while its sheet is open. What was already seen is noted in a small file.
+     */
+    val messages: MessagesSource = messages ?: BeeperMessages(
+        context,
+        access,
+        StoredSeen(seenStore(File(context.filesDir, MESSAGES_FILE), background))
+    )
 
     private val updateParts = update ?: UpdateParts.onPhone(context, background)
 
@@ -143,6 +152,7 @@ class Sources(
         const val SETTINGS_FILE = "datastore/settings.preferences_pb"
         const val WEATHER_FILE = "datastore/weather.preferences_pb"
         const val LISTENING_FILE = "datastore/listening.preferences_pb"
+        const val MESSAGES_FILE = "datastore/messages.preferences_pb"
         const val LOG_TAG = "Bercail"
     }
 }

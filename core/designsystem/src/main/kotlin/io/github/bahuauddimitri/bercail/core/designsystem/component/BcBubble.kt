@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -21,6 +22,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberAnimationSeconds
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
@@ -85,6 +87,16 @@ fun BcUndoButton(remaining: Float, onUndo: () -> Unit, modifier: Modifier = Modi
     }
 }
 
+/**
+ * "Annuler l'envoi" whose ring empties by itself over [millis], redrawn 20 times per second at most. When Android
+ * removes animations, the ring stays full: the button still works.
+ */
+@Composable
+fun BcUndoCountdown(millis: Int, onUndo: () -> Unit, modifier: Modifier = Modifier) {
+    val seconds by rememberAnimationSeconds(running = true)
+    BcUndoButton(remaining = 1f - seconds * MILLIS_PER_SECOND / millis, onUndo = onUndo, modifier = modifier)
+}
+
 /** Caps the width at a fraction of the space the parent offers; shorter content stays short. */
 private fun Modifier.maxWidthFraction(fraction: Float) = layout { measurable, constraints ->
     val max = (constraints.maxWidth * fraction).toInt()
@@ -93,6 +105,7 @@ private fun Modifier.maxWidthFraction(fraction: Float) = layout { measurable, co
 }
 
 private const val ME = "Moi"
+private const val MILLIS_PER_SECOND = 1_000
 private const val MAX_WIDTH_FRACTION = 0.82f
 private const val START_ANGLE = -90f
 private const val FULL_TURN = 360f

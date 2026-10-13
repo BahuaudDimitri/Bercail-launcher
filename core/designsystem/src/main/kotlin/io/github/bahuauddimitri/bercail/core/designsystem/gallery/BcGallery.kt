@@ -53,6 +53,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeade
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
@@ -69,6 +70,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineOrientation
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoCountdown
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
@@ -245,7 +247,10 @@ private fun Conversation() {
     ) {
         BcBubble("J'arrive dans 10 minutes", author = "Léa", mine = true, pastel = BcPastel.Coral)
         BcUndoButton(remaining = UNDO_REMAINING, onUndo = {})
+        BcUndoCountdown(millis = UNDO_MILLIS, onUndo = {})
     }
+    var reply by remember { mutableStateOf("") }
+    BcReplyField(value = reply, onValueChange = { reply = it }, onSend = { reply = "" }, onDictate = {})
 }
 
 @Composable
@@ -362,6 +367,7 @@ private fun Brume() {
 private const val ICONS_PER_ROW = 7
 private const val PROGRESS = 0.35f
 private const val UNDO_REMAINING = 0.6f
+private const val UNDO_MILLIS = 6_000
 private const val NOW = 0.1f
 private val SWATCH = 28.dp
 private val TALL = 260.dp

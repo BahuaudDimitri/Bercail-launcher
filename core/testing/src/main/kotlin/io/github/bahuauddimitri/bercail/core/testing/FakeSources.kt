@@ -2,8 +2,6 @@ package io.github.bahuauddimitri.bercail.core.testing
 
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
-import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
-import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
@@ -50,26 +48,6 @@ class FakeAgendaSource(events: List<AgendaEvent> = emptyList()) : AgendaSource {
     fun set(events: List<AgendaEvent>) {
         this.events.value = events
     }
-}
-
-class FakeMessagesSource(conversations: List<Conversation> = emptyList()) : MessagesSource {
-    override val conversations = MutableStateFlow(conversations)
-
-    /** How many times the messaging app was asked for. */
-    var appOpenings = 0
-        private set
-
-    override fun openApp() {
-        appOpenings++
-    }
-
-    /** One more unread message from this person. */
-    fun receive(id: String) = change(id) { it.copy(unread = it.unread + 1) }
-
-    fun markRead(id: String) = change(id) { it.copy(unread = 0) }
-
-    private fun change(id: String, transform: (Conversation) -> Conversation) =
-        conversations.update { all -> all.map { if (it.id == id) transform(it) else it } }
 }
 
 class FakeSettingsSource(settings: Settings = Settings()) : SettingsSource {

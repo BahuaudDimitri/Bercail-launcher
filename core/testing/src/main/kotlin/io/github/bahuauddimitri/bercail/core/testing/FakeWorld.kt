@@ -8,6 +8,7 @@ import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
@@ -33,7 +34,11 @@ class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val access = FakeAccess()
     val agenda = FakeAgendaSource(Samples.eventsOn(Samples.day))
     val weather = FakeWeatherSource(moment.forecast)
-    val messages = FakeMessagesSource(Samples.conversations(moment.unread))
+    val messages = FakeMessagesSource(
+        conversations = Samples.conversations(moment.unread),
+        messages = Samples.messagesAt(moment),
+        now = { clock.now() }
+    )
     val home = FakeHomeSource()
     val media = FakeMediaSource(moment.playlist, playing = playing, position = Samples.position)
     val settings = FakeSettingsSource(Samples.settings)
@@ -61,7 +66,7 @@ object Samples {
     val people = listOf(
         Conversation("lea", "Léa", "WhatsApp"),
         Conversation("tom", "Tom", "Signal"),
-        Conversation("team", "Équipe", "Slack"),
+        Conversation("team", "Équipe", "Slack", group = true),
         Conversation("mum", "Maman", "SMS"),
         Conversation("julien", "Julien", "Instagram")
     )
@@ -114,6 +119,30 @@ object Samples {
     fun conversations(unread: Map<String, Int>): List<Conversation> = people.map {
         it.copy(unread = unread[it.id] ?: 0)
     }
+
+    /** What was written at each moment of the prototype, by conversation. */
+    fun messagesAt(moment: Moment): Map<String, List<Message>> = when (moment) {
+        Moment.Matin -> listOf(
+            got("tom", "Tu as vu le match hier ?", 7, 20),
+            got("lea", "On se retrouve à 12h30 ?", 7, 52)
+        )
+
+        Moment.Trajet -> listOf(
+            got("lea", "Je suis en terrasse", 12, 58),
+            got("team", "Slides pour 14h dans le drive", 13, 10, author = "Camille"),
+            got("lea", "Merci pour le déj !", 13, 31)
+        )
+
+        Moment.Soir -> listOf(
+            got("team", "Bonne soirée à tous", 17, 45, author = "Camille"),
+            got("mum", "Bisous, à dimanche", 19, 55),
+            got("julien", "On joue demain ?", 20, 31),
+            got("julien", "Vers 15h ?", 20, 33)
+        )
+    }.groupBy({ it.first }, { it.second })
+
+    private fun got(from: String, text: String, hour: Int, minute: Int, author: String = "") =
+        from to Message("$from-$hour-$minute", text, mine = false, author = author, at = day.atTime(hour, minute))
 
     fun eventsOn(day: LocalDate): List<AgendaEvent> = listOf(
         event(day, "Stand-up", LocalTime.of(9, 30), LocalTime.of(10, 0)),

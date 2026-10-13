@@ -130,7 +130,7 @@ private fun Summary(state: HomeUiState, onExpand: () -> Unit) {
 @Composable
 private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ROW_GAP)) {
-        PeopleRow(state, links)
+        PeopleRow(state, actions, links)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             state.controls.forEach { control ->
                 BcHomeToggle(

@@ -1,11 +1,12 @@
 # :feature:home
 
-L'accueil de Bercail : ses deux écrans (Accueil et Écoute), son tiroir en verre et les feuilles « Aujourd'hui » et « Écouter », assemblés uniquement avec les composants `Bc…` du design system.
+L'accueil de Bercail : ses deux écrans (Accueil et Écoute), son tiroir en verre et les feuilles « Aujourd'hui », « Écouter » et de conversation, assemblés uniquement avec les composants `Bc…` du design system.
 
 - **Expose** : `HomeRoute` (l'écran branché sur son `HomeViewModel`), `HomeScreen` (l'écran sans état, pour les tests et les captures), `HomeViewModel`.
 - **Ne doit pas** : contenir de règle métier (elles sont dans `:core:domain`), ni de couleur, de taille de texte ou de composant Material (vérifié par `DesignSystemOnlyTest`), ni connaître une vraie source de données : il ne voit que les interfaces du domaine.
 - **Agenda** : sans le droit de lire l'agenda, l'en-tête propose de le relier et la feuille de la journée offre le bouton qui pose la question d'Android (`HomeLinks.onAskAccess`) ; rien de l'agenda n'est montré avant l'accord.
 - **Musique** : sans l'« accès aux notifications », rien de ce qui joue n'est montré ; la pastille « Écouter… » ouvre la feuille « Écouter », qui dit pourquoi Bercail demande cet accès et offre le bouton vers la page d'Android. La télécommande n'a que les boutons que l'app accepte.
 - **Messages** : sans l'accès à Beeper, la ligne des messages dit « Beeper n'est pas relié » et le tiroir ouvert offre le bouton « Relier Beeper » ; aucune conversation n'est montrée avant l'accord. Tant qu'aucun favori n'est choisi, les tuiles sont les quatre dernières conversations.
+- **Conversation** : la tuile d'une personne ouvre sa feuille (`TalkSheet`, logique dans `HomeTalk`). Un message envoyé s'affiche tout de suite et ne part qu'après six secondes, sauf « Annuler l'envoi » ; un second envoi ou la fermeture de la feuille le font partir aussitôt. Les messages ne sont lus que feuille ouverte. La dictée passe par `HomeLinks.onDictate`.
 - **Batterie** : l'écran n'écoute ses sources que lorsqu'il est visible ; la position du morceau n'est suivie que sur l'écran Écoute.
-- **Tests** : `HomeViewModelTest` (ce que l'écran expose selon les événements), `HomeScreenUiTest` (gestes et états affichés), `HomeScreenshotTest` (une capture par moment).
+- **Tests** : `HomeViewModelTest` et `HomeTalkTest` (ce que l'écran expose selon les événements), `HomeScreenUiTest` (gestes et états affichés), `HomeScreenshotTest` (une capture par moment).

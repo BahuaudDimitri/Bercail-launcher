@@ -4,16 +4,20 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * A conversation as the home screen needs it: who, on which network, how many unread messages. A [muted] one is
- * a conversation the user silenced in the messaging app: it never speaks for itself on the home screen.
+ * a conversation the user silenced in the messaging app: it never speaks for itself on the home screen. In a
+ * [group], several people write.
  */
 data class Conversation(
     val id: String,
     val name: String,
     val network: String,
     val unread: Int = 0,
-    val muted: Boolean = false
+    val muted: Boolean = false,
+    val group: Boolean = false
 ) {
-    val initials: String get() = name.take(1).uppercase()
+    /** The first letter of the name, or its first emoji, whole. */
+    val initials: String
+        get() = if (name.isEmpty()) "" else name.substring(0, name.offsetByCodePoints(0, 1)).uppercase()
 
     /** How the person is announced: "Léa, 1 non lu". */
     val description: String get() = if (unread > 0) "$name, ${unreadWording(unread)}" else name
@@ -25,6 +29,18 @@ interface MessagesSource {
      * message history.
      */
     val conversations: Flow<List<Conversation>>
+
+    /**
+     * The last messages of a conversation, emitted again when it changes; nothing (null) until they were read
+     * once. Reading them is slow: they are only read while someone listens, that is while the conversation is open.
+     */
+    fun history(conversationId: String): Flow<List<Message>?>
+
+    /** Sends [text] in the conversation. False when the messaging app could not take it. */
+    suspend fun send(conversationId: String, text: String): Boolean
+
+    /** The user has seen the conversation: its unread messages no longer count. */
+    suspend fun markRead(conversationId: String)
 
     /** Shows the messaging app, where every conversation is. */
     fun openApp()

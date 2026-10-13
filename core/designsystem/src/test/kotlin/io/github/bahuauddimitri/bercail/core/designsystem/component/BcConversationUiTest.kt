@@ -65,6 +65,49 @@ class BcConversationUiTest {
     }
 
     @Test
+    fun `le champ de réponse s'annonce « Répondre » et transmet ce qu'on y écrit`() {
+        var draft by mutableStateOf("")
+        compose.setContent { BcTheme { BcReplyField(value = draft, onValueChange = { draft = it }, onSend = {}) } }
+
+        compose.onNode(hasSetTextAction()).assert(hasContentDescription("Répondre"))
+        compose.onNodeWithContentDescription("Répondre").performTextInput("J'arrive")
+
+        assertThat(draft).isEqualTo("J'arrive")
+    }
+
+    @Test
+    fun `le bouton Envoyer est désactivé tant que le champ est vide, et envoie dès qu'il ne l'est plus`() {
+        var draft by mutableStateOf("  ")
+        var sent = 0
+        compose.setContent {
+            BcTheme { BcReplyField(value = draft, onValueChange = { draft = it }, onSend = { sent++ }) }
+        }
+        compose.onNodeWithContentDescription("Envoyer").assertIsNotEnabled()
+
+        draft = "J'arrive"
+        compose.onNodeWithContentDescription("Envoyer").assertHeightIsAtLeast(40.dp).performClick()
+
+        assertThat(sent).isEqualTo(1)
+    }
+
+    @Test
+    fun `le micro n'est là que si la dictée est possible, et la demande d'un toucher`() {
+        var dictations = 0
+        var withMic by mutableStateOf(false)
+        compose.setContent {
+            BcTheme {
+                BcReplyField("", onValueChange = {}, onSend = {}, onDictate = if (withMic) ({ dictations++ }) else null)
+            }
+        }
+        compose.onNodeWithContentDescription("Dicter").assertDoesNotExist()
+
+        withMic = true
+        compose.onNodeWithContentDescription("Dicter").assertHeightIsAtLeast(40.dp).performClick()
+
+        assertThat(dictations).isEqualTo(1)
+    }
+
+    @Test
     fun `mes messages ne sont jamais annoncés comme écrits par le contact`() {
         compose.setContent {
             BcTheme {

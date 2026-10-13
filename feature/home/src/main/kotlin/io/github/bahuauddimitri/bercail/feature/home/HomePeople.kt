@@ -38,7 +38,7 @@ internal fun MessagesLine(state: HomeUiState, onClick: () -> Unit, onClickLabel:
  * Bercail read Beeper, the button that asks for it stands in their place.
  */
 @Composable
-internal fun PeopleRow(state: HomeUiState, links: HomeLinks) {
+internal fun PeopleRow(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
     if (!state.messagesAllowed) {
         Row(Modifier.fillMaxWidth(), Arrangement.Center, Alignment.CenterVertically) {
             BcButton(LINK_MESSAGES, onClick = { links.onAskAccess(Access.Messages) }, icon = BcIcons.Chat)
@@ -53,7 +53,7 @@ internal fun PeopleRow(state: HomeUiState, links: HomeLinks) {
                 initials = person.initials,
                 pastel = pastelOf(person.id, favoriteIds),
                 unread = person.unread,
-                onClick = { links.onOpenConversation(person.id) },
+                onClick = { actions.onOpenConversation(person.id) },
                 description = person.description
             )
         }

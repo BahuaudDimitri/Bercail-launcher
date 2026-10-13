@@ -1,17 +1,21 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import android.os.Looper
 import android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -19,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeLeft
@@ -48,6 +53,7 @@ import kotlin.time.Duration.Companion.seconds
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** The home screen on a simulated phone, fed by fake sources: what is shown, and what each gesture does. */
@@ -60,7 +66,10 @@ class HomeScreenUiTest {
     private val opened = mutableListOf<String>()
     private val links = object : HomeLinks {
         override fun onAskAccess(access: Access) = opened.add("demande d'accès $access").let {}
-        override fun onOpenConversation(id: String) = opened.add("conversation $id").let {}
+        override fun onDictate(onHeard: (String) -> Unit) {
+            opened.add("dictée")
+            onHeard("à tout à l'heure")
+        }
         override fun onOpenMessagesApp() = opened.add("app de messages").let {}
         override fun onOpenHomeApp() = opened.add("app de la maison").let {}
         override fun onOpenAppSettings() = opened.add("page de Bercail dans les Paramètres").let {}
@@ -76,6 +85,7 @@ class HomeScreenUiTest {
 
     private val inTheDaySheet = hasAnyAncestor(hasTestTag(DAY_TAG))
     private val inTheListenSheet = hasAnyAncestor(hasTestTag(LISTEN_TAG))
+    private val inTheTalkSheet = hasAnyAncestor(hasTestTag(TALK_TAG))
 
     private fun searchBarBottom() = compose.onNodeWithContentDescription("Chercher").getUnclippedBoundsInRoot().bottom
 
@@ -228,8 +238,8 @@ class HomeScreenUiTest {
     @Test
     fun `sans message, le résumé dit « Aucun message »`() {
         val world = FakeWorld(Moment.Matin)
-        world.messages.markRead("lea")
-        world.messages.markRead("tom")
+        world.messages.readNow("lea")
+        world.messages.readNow("tom")
         show(world)
 
         compose.onNodeWithText("Aucun message").assertExists()
@@ -294,14 +304,156 @@ class HomeScreenUiTest {
         compose.onNodeWithContentDescription("Chercher").assertIsNotEnabled()
     }
 
-    @Test
-    fun `toucher une personne demande sa conversation`() {
-        show()
+    // ---------- conversation ----------
+
+    /** The time during which a message can be taken back goes by, on the phone's own clock. */
+    private fun sixSecondsPass() {
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(6_500))
+        compose.waitForIdle()
+    }
+
+    private fun openTalk(world: FakeWorld = FakeWorld(Moment.Trajet), person: String = "Léa, 1 non lu"): FakeWorld {
+        show(world)
         compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.onNodeWithContentDescription(person).performClick()
+        return world
+    }
 
-        compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
+    @Test
+    fun `toucher une personne ouvre sa conversation, avec son réseau et ses messages`() {
+        openTalk()
 
-        assertThat(opened).containsExactly("conversation lea")
+        compose.onNodeWithTag(TALK_TAG).assertExists()
+        compose.onNode(hasText("WhatsApp via Beeper") and inTheTalkSheet).assertExists()
+        compose.onNodeWithContentDescription("Léa : Je suis en terrasse").assertExists()
+        compose.onNodeWithContentDescription("Léa : Merci pour le déj !").assertIsDisplayed()
+    }
+
+    @Test
+    fun `ouvrir la conversation retire son badge et la sort du résumé`() {
+        val world = openTalk()
+
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
+
+        compose.onNodeWithContentDescription("Léa").assertExists()
+        compose.onNodeWithContentDescription("Léa, 1 non lu").assertDoesNotExist()
+        assertThat(world.messages.conversations.value.first { it.id == "lea" }.unread).isEqualTo(0)
+    }
+
+    @Test
+    fun `le bouton Envoyer est désactivé tant que le champ est vide`() {
+        openTalk()
+
+        compose.onNodeWithContentDescription("Envoyer").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `ce qu'on écrit puis envoie s'affiche comme mon message, avec « Annuler l'envoi » dessous`() {
+        openTalk()
+
+        compose.onNodeWithContentDescription("Répondre").performTextInput("De rien !")
+        compose.onNodeWithContentDescription("Envoyer").performClick()
+
+        compose.onNodeWithContentDescription("Moi : De rien !").assertIsDisplayed()
+        compose.onNodeWithText("Annuler l'envoi").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Envoyer").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `« Annuler l'envoi » retire le message et rend son texte au champ`() {
+        val world = openTalk()
+        compose.onNodeWithContentDescription("Répondre").performTextInput("De rien !")
+        compose.onNodeWithContentDescription("Envoyer").performClick()
+
+        compose.onNodeWithText("Annuler l'envoi").performClick()
+
+        compose.onNodeWithContentDescription("Moi : De rien !").assertDoesNotExist()
+        compose.onNodeWithText("Annuler l'envoi").assertDoesNotExist()
+        compose.onNode(hasSetTextAction() and hasText("De rien !")).assertExists()
+        assertThat(world.messages.sent).isEqualTo(emptyList())
+    }
+
+    @Test
+    fun `« Annuler l'envoi » disparaît de lui-même au bout de six secondes, et le message est parti`() {
+        val world = openTalk()
+        compose.onNodeWithText("J'arrive").performClick()
+        compose.onNodeWithText("Annuler l'envoi").assertExists()
+
+        sixSecondsPass()
+
+        compose.onNodeWithText("Annuler l'envoi").assertDoesNotExist()
+        assertThat(world.messages.sent).containsExactly("lea: J'arrive")
+    }
+
+    @Test
+    fun `une réponse rapide part d'un toucher et quitte la liste`() {
+        openTalk()
+
+        compose.onNodeWithText("Je te rappelle").performClick()
+
+        compose.onNodeWithContentDescription("Moi : Je te rappelle").assertExists()
+        compose.onNode(hasText("Je te rappelle") and hasClickAction()).assertDoesNotExist()
+        compose.onNodeWithText("D'accord").assertExists()
+    }
+
+    @Test
+    fun `dans un groupe, chaque bulle est annoncée avec celui qui l'a écrite`() {
+        openTalk(person = "Équipe, 1 non lu")
+
+        compose.onNodeWithContentDescription("Camille : Slides pour 14h dans le drive").assertExists()
+        compose.onNode(hasText("Slack via Beeper") and inTheTalkSheet).assertExists()
+    }
+
+    @Test
+    fun `le bouton Beeper de la feuille demande l'app de messages`() {
+        openTalk()
+
+        compose.onNode(hasText("Beeper") and hasClickAction() and inTheTalkSheet).performClick()
+
+        assertThat(opened).containsExactly("app de messages")
+    }
+
+    @Test
+    fun `le micro demande la dictée, et ce qui est entendu s'ajoute dans le champ`() {
+        openTalk()
+        compose.onNodeWithContentDescription("Répondre").performTextInput("Oui")
+
+        compose.onNodeWithContentDescription("Dicter").performClick()
+
+        assertThat(opened).containsExactly("dictée")
+        compose.onNode(hasSetTextAction() and hasText("Oui à tout à l'heure")).assertExists()
+    }
+
+    @Test
+    fun `le brouillon est gardé quand la feuille se ferme, et retrouvé à la réouverture`() {
+        openTalk()
+        compose.onNodeWithContentDescription("Répondre").performTextInput("Avec plaisir")
+
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
+        compose.onNodeWithTag(TALK_TAG).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Léa").performClick()
+
+        compose.onNode(hasSetTextAction() and hasText("Avec plaisir")).assertExists()
+    }
+
+    @Test
+    fun `sous la feuille de conversation, l'accueil n'est plus lu`() {
+        openTalk()
+
+        compose.onNodeWithText("Dans 25 min · 14:00").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
+    }
+
+    @Test
+    fun `si le message ne part pas, la feuille le dit et rend le texte au champ`() {
+        openTalk(FakeWorld(Moment.Trajet).apply { messages.refusing = true })
+        compose.onNodeWithContentDescription("Répondre").performTextInput("De rien !")
+        compose.onNodeWithContentDescription("Envoyer").performClick()
+
+        sixSecondsPass()
+
+        compose.onNodeWithText("Le message n'est pas parti : il est revenu dans le champ.").assertExists()
+        compose.onNode(hasSetTextAction() and hasText("De rien !")).assertExists()
     }
 
     @Test

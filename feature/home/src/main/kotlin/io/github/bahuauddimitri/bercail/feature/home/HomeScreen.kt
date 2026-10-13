@@ -36,7 +36,9 @@ internal const val DAY_TAG = "home-day"
 internal const val LISTEN_TAG = "home-listen"
 
 /** What the home screen does by itself. */
-interface HomeActions : ListenActions {
+interface HomeActions :
+    ListenActions,
+    TalkActions {
     fun onDrawerExpandedChange(expanded: Boolean)
     fun onPageWanted(page: HomePage)
 
@@ -51,12 +53,14 @@ interface HomeActions : ListenActions {
     fun onToggleControl(id: String)
 }
 
-/** What the home screen asks others to open. Each one arrives with its wave; until then, nothing happens. */
+/** What the home screen asks others to open or to do. The one of the house arrives with its wave. */
 interface HomeLinks {
     /** Asks the user, on Android's own screen, to let Bercail read something on the phone. */
     fun onAskAccess(access: Access) = Unit
-    fun onOpenConversation(id: String) = Unit
     fun onOpenMessagesApp() = Unit
+
+    /** Listens to the user, on Android's own screen, and gives what was heard to [onHeard]. */
+    fun onDictate(onHeard: (String) -> Unit) = Unit
     fun onOpenHomeApp() = Unit
 
     /** The page of Bercail in the phone settings: where a right Android refuses to give can be unlocked. */
@@ -106,7 +110,7 @@ fun HomeScreen(
 ) {
     val brume = rememberBcBrumeState()
     // A sheet is tinted glass: what it covers fades away, so that nothing shows through it.
-    val covered = state.dayOpen || state.listenOpen
+    val covered = state.dayOpen || state.listenOpen || state.talk != null
     val uncovered by animateFloatAsState(
         targetValue = if (covered) 0f else 1f,
         animationSpec = tween(BcTheme.motion.fadeMillis),
@@ -134,6 +138,7 @@ fun HomeScreen(
             }
             DaySheet(state, actions, links)
             ListenSheet(state, actions, links)
+            TalkSheet(state, actions, links)
         }
     }
 }

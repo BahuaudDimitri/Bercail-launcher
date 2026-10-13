@@ -85,6 +85,9 @@ data class HomeUiState(
 
     /** The lines of the « Écouter » sheet while it is open: the main media app first. */
     val mediaApps: List<MediaAppRow> = emptyList(),
+
+    /** The conversation sheet, or nothing while it is closed. */
+    val talk: TalkUiState? = null,
     val page: HomePage = HomePage.Home,
     val drawerExpanded: Boolean = false,
     val background: HomeBackground = HomeBackground.Wallpaper,
@@ -105,10 +108,12 @@ class HomeViewModel private constructor(
     settings: SettingsSource,
     access: AccessSource,
     private val listen: ListenSources,
-    private val remote: HomeRemote
+    private val remote: HomeRemote,
+    private val talk: HomeTalk
 ) : ViewModel(),
     HomeActions,
-    ListenActions by remote {
+    ListenActions by remote,
+    TalkActions by talk {
     constructor(
         clock: Clock,
         agenda: AgendaSource,
@@ -118,10 +123,17 @@ class HomeViewModel private constructor(
         listen: ListenSources,
         settings: SettingsSource,
         access: AccessSource
-    ) : this(clock, agenda, weather, messages, home, settings, access, listen, HomeRemote(listen))
+    ) : this(
+        clock, agenda, weather, messages, home, settings, access, listen,
+        HomeRemote(
+            listen
+        ),
+        HomeTalk(messages, clock)
+    )
 
     init {
         addCloseable(remote)
+        addCloseable(talk)
     }
 
     private val wantedPage = MutableStateFlow(HomePage.Home)
@@ -154,7 +166,7 @@ class HomeViewModel private constructor(
         // Without the user's agreement, nothing of the conversations is shown, whatever the source says.
         val allowed = Access.Messages in granted
         Drawer(if (allowed) conversations else emptyList(), controls, current, allowed)
-    }
+    }.onEach { talk.people.value = it.conversations }
 
     /**
      * What plays, once the user has agreed to let Bercail see it. When the content goes away, the Listen page goes
@@ -185,7 +197,10 @@ class HomeViewModel private constructor(
 
     private val choices: Flow<Choices> = combine(wantedPage, drawerChoice, daySheet, remote.sheetOpen, ::Choices)
 
-    val state: StateFlow<HomeUiState> = combine(day, drawer, listening, choices, mediaApps, ::stateOf)
+    /** What the sheets over the home screen show: the media apps, a conversation. */
+    private val sheets: Flow<Sheets> = combine(mediaApps, talk.state, ::Sheets)
+
+    val state: StateFlow<HomeUiState> = combine(day, drawer, listening, choices, sheets, ::stateOf)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), HomeUiState())
 
     /** Where the content is. Only the remote of the Listen page collects it. */
@@ -224,13 +239,7 @@ class HomeViewModel private constructor(
         viewModelScope.launch { listen.mediaApps.remember(heard) }
     }
 
-    private fun stateOf(
-        day: Day,
-        drawer: Drawer,
-        listening: Listening,
-        choices: Choices,
-        mediaApps: List<MediaAppRow>
-    ): HomeUiState {
+    private fun stateOf(day: Day, drawer: Drawer, listening: Listening, choices: Choices, sheets: Sheets): HomeUiState {
         val media = listening.media
         val part = DayPart.at(day.now.toLocalTime())
         val favorites = favoritesAmong(drawer.conversations, drawer.settings.favoritePeople)
@@ -255,7 +264,8 @@ class HomeViewModel private constructor(
             media = media,
             mediaAllowed = listening.allowed,
             listenOpen = choices.listen,
-            mediaApps = mediaApps,
+            mediaApps = sheets.mediaApps,
+            talk = sheets.talk,
             page = choices.page.allowedWith(media),
             drawerExpanded = choices.drawerExpanded ?: drawer.settings.drawerExpandedAtStart,
             background = backgroundFor(media, drawer.settings.idleBackground),
@@ -279,6 +289,8 @@ class HomeViewModel private constructor(
 
     /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment the search pointed at. */
     private data class DaySheet(val open: Boolean = false, val focus: String? = null)
+
+    private data class Sheets(val mediaApps: List<MediaAppRow>, val talk: TalkUiState?)
 
     /** What plays, and whether the user lets Bercail see it. */
     private data class Listening(val media: MediaState, val allowed: Boolean)

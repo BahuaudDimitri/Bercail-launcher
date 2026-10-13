@@ -35,7 +35,7 @@ class BeeperMessagesUiTest {
     private val phone = ApplicationProvider.getApplicationContext<Application>()
     private val beeper = Robolectric.buildContentProvider(FakeBeeper::class.java).create("com.beeper.api").get()
     private val access = FakeAccess()
-    private val messages = BeeperMessages(phone, access, background = Dispatchers.Unconfined)
+    private val messages = BeeperMessages(phone, access, MemorySeen(), background = Dispatchers.Unconfined)
     private val chatsAddress = Uri.parse("content://com.beeper.api/chats")
 
     private fun conversations(): List<Conversation> = runBlocking { messages.conversations.first() }
