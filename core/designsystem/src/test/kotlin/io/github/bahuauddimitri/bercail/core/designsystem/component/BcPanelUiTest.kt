@@ -4,6 +4,7 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isCloseTo
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
@@ -123,6 +125,33 @@ class BcPanelUiTest {
         compose.waitForIdle()
 
         assertThat(gapUnderField()).isGreaterThan(before)
+    }
+
+    @Test
+    fun `quand le clavier sort, une feuille peut monter plus haut que ses 62 % pour garder de la place`() {
+        compose.setContent {
+            BcTheme {
+                BcSheet(visible = true, onDismiss = {}, modifier = Modifier.testTag("sheet")) {
+                    Box(Modifier.height(2_000.dp))
+                }
+            }
+        }
+        val screen = compose.onRoot().getUnclippedBoundsInRoot().height
+        val resting = compose.onNodeWithTag("sheet").getUnclippedBoundsInRoot().height
+        assertThat(resting.value).isCloseTo(screen.value * 0.62f, delta = 1f)
+
+        compose.activityRule.scenario.onActivity { activity ->
+            val composeView = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+            val keyboard = WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, KEYBOARD_PX))
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(composeView, keyboard)
+        }
+        compose.waitForIdle()
+
+        val raised = compose.onNodeWithTag("sheet").getUnclippedBoundsInRoot().height
+        assertThat(raised).isGreaterThan(resting)
+        assertThat(raised.value).isCloseTo(screen.value * 0.94f, delta = 1f)
     }
 
     @Test

@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.contentDescription
@@ -135,7 +137,8 @@ private fun Modifier.opens(expanded: Boolean, change: (Boolean) -> Unit): Modifi
     }
 
 /**
- * The same glass drawer, opened over the screen for a conversation, the day or the media apps.
+ * The same glass drawer, opened over the screen for a conversation, the day or the media apps. It takes 62 % of
+ * the screen at most, and more while the keyboard is out, which hides the bottom of it.
  * Sliding it down, touching the veil behind it or the system back gesture closes it.
  */
 @Composable
@@ -149,7 +152,13 @@ fun BcSheet(
     val dismiss by rememberUpdatedState(onDismiss)
     BackHandler(enabled = visible) { dismiss() }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val maxSheet = maxHeight * SHEET_MAX_FRACTION
+        // The keyboard takes the bottom of the screen: the sheet may then rise higher, to keep room for its content.
+        val keyboardOut = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val maxSheet by animateDpAsState(
+            targetValue = maxHeight * if (keyboardOut) SHEET_MAX_WITH_KEYBOARD else SHEET_MAX_FRACTION,
+            animationSpec = tween(motion.sheetMillis, easing = motion.easing),
+            label = "sheet room"
+        )
         AnimatedVisibility(
             visible,
             enter = fadeIn(tween(motion.fadeMillis)),
@@ -254,6 +263,7 @@ private fun Modifier.verticalSlide(onSlide: (up: Boolean) -> Unit): Modifier = p
 }
 
 private const val SHEET_MAX_FRACTION = 0.62f
+private const val SHEET_MAX_WITH_KEYBOARD = 0.94f
 private const val HANDLE_ALPHA = 0.4f
 private val SHEET_GAP = 10.dp
 private val HANDLE_TOUCH_WIDTH = 120.dp
