@@ -19,12 +19,18 @@ const val PIXEL_9 = "w411dp-h923dp-420dpi"
 private const val CAPTURE = "capture"
 
 /** Renders [content] on the night background, inside BcTheme, and compares it with its committed reference. */
-fun ComposeContentTestRule.captureComponent(name: String, content: @Composable () -> Unit) {
+fun ComposeContentTestRule.captureComponent(
+    name: String,
+    /** What is done to the component once it is shown, before the capture: a finger put down, for instance. */
+    before: ComposeContentTestRule.() -> Unit = {},
+    content: @Composable () -> Unit
+) {
     setContent {
         BcTheme {
             Box(Modifier.testTag(CAPTURE).background(BcColors.base).padding(BcSpacing.l)) { content() }
         }
     }
+    before()
     // One more frame before capturing: an image still being drawn sometimes comes out blank.
     mainClock.advanceTimeByFrame()
     waitForIdle()

@@ -1,11 +1,18 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
@@ -41,6 +48,20 @@ class BcNavigationScreenshotTest {
                 BcTimeline(now = 0.1f, marks = day, modifier = Modifier.height(360.dp).width(64.dp))
             }
         }
+
+    @Test
+    fun `l'alphabet touché, avec sa vague et sa bulle, correspond à sa capture`() = compose.captureComponent(
+        name = "alphabet_wave",
+        before = { onNodeWithTag("az").performTouchInput { down(Offset(centerX, height * 0.55f)) } }
+    ) {
+        Box(Modifier.width(220.dp).height(520.dp), contentAlignment = Alignment.CenterEnd) {
+            BcAlphabetRail(
+                letters = ('A'..'Z').map { it.toString() },
+                onLetter = {},
+                modifier = Modifier.fillMaxHeight().testTag("az")
+            )
+        }
+    }
 
     @Test
     fun `la ligne du temps horizontale correspond à sa capture`() = compose.captureComponent("timeline_horizontal") {
