@@ -13,6 +13,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import assertk.assertions.none
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
 import java.time.LocalDateTime
@@ -188,6 +189,38 @@ class BeeperThreadUiTest {
         beeper.refusing = false
         beeper.broken = true
         assertThat(runBlocking { messages.send("lea", "J'arrive") }).isFalse()
+    }
+
+    @Test
+    fun `chercher un mot interroge Beeper une fois, sur vingt messages au plus, toutes conversations confondues`() {
+        beeper.chat("lea", "Léa")
+        beeper.chat("tom", "Tom")
+        beeper.message("lea", "\$1", "Je suis en terrasse", millis(12, 58))
+        beeper.message("tom", "\$2", "Tu as vu le match hier ?", millis(7, 20))
+        beeper.message("tom", "\$3", "En Terrasse ce soir ?", millis(13, 5), mine = true, sender = null)
+
+        val found = runBlocking { messages.search("terrasse") }
+
+        assertThat(found).isEqualTo(
+            listOf(
+                FoundMessage("tom", "En Terrasse ce soir ?", at(13, 5), mine = true),
+                FoundMessage("lea", "Je suis en terrasse", at(12, 58))
+            )
+        )
+        assertThat(beeper.asked.map { it.toString() })
+            .containsExactly("content://com.beeper.api/messages?query=terrasse&limit=20")
+    }
+
+    @Test
+    fun `un message supprimé n'est pas trouvé, et sans accord Beeper n'est pas interrogé`() {
+        beeper.chat("lea", "Léa")
+        beeper.message("lea", "\$1", "Rendez-vous en terrasse", millis(12, 58), deleted = true)
+        assertThat(runBlocking { messages.search("terrasse") }).isEmpty()
+
+        access.refuse(Access.Messages)
+        beeper.asked.clear()
+        assertThat(runBlocking { messages.search("terrasse") }).isEmpty()
+        assertThat(beeper.asked).isEmpty()
     }
 
     @Test

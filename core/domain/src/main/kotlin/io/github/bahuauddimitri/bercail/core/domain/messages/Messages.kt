@@ -39,6 +39,9 @@ interface MessagesSource {
     /** Sends [text] in the conversation. False when the messaging app could not take it. */
     suspend fun send(conversationId: String, text: String): Boolean
 
+    /** The messages holding [text], whatever their conversation. Only asked when the user searches. */
+    suspend fun search(text: String): List<FoundMessage>
+
     /** The user has seen the conversation: its unread messages no longer count. */
     suspend fun markRead(conversationId: String)
 

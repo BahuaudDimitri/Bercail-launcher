@@ -6,17 +6,21 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.search.AppDirectory
 import io.github.bahuauddimitri.bercail.core.domain.search.SearchResults
 import io.github.bahuauddimitri.bercail.core.domain.search.SearchScope
 import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
 import io.github.bahuauddimitri.bercail.core.domain.search.search
+import io.github.bahuauddimitri.bercail.core.domain.search.searchesMessages
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.update.Updates
 import io.github.bahuauddimitri.bercail.core.domain.update.updateNotice
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 
 /** What the search shows: every app from A to Z, or what the typed letters find. */
@@ -56,7 +61,7 @@ interface SearchActions {
     fun onSearchStore()
 }
 
-/** What the search asks others to open. The conversation arrives with its wave. */
+/** What the search asks others to open. */
 interface SearchLinks {
     fun onOpenSettings() = Unit
     fun onOpenConversation(id: String) = Unit
@@ -76,7 +81,7 @@ class SearchViewModel(
     private val phone: Phone,
     clock: Clock,
     agenda: AgendaSource,
-    messages: MessagesSource,
+    private val messages: MessagesSource,
     private val home: HomeSource,
     settings: SettingsSource,
     updates: Updates
@@ -104,14 +109,30 @@ class SearchViewModel(
         .map { }
         .onStart { emit(Unit) }
 
+    /**
+     * The messages holding what is typed. The messaging app is only asked once the typing has paused, and what it
+     * found for other words is dropped at once.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val found: Flow<List<FoundMessage>> = query.transformLatest { typed ->
+        emit(emptyList())
+        if (searchesMessages(typed)) {
+            delay(TYPING_PAUSE)
+            emit(messages.search(typed.trim()))
+        }
+    }
+
+    private val typing: Flow<Typing> = combine(query, found, ::Typing)
+
     val state: StateFlow<SearchUiState> =
-        combine(open, query, known, updates.status, listening) { isOpen, typed, known, update, _ ->
+        combine(open, typing, known, updates.status, listening) { isOpen, typing, known, update, _ ->
+            val typed = typing.query
             SearchUiState(
                 open = isOpen,
                 query = typed,
                 directory = appDirectory(known.scope.apps, known.favoriteApps),
                 favoritePeople = known.favoritePeople,
-                results = if (typed.isBlank()) null else search(typed, known.scope),
+                results = if (typed.isBlank()) null else search(typed, known.scope.copy(messages = typing.found)),
                 settingsNote = updateNotice(update)
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SearchUiState())
@@ -152,9 +173,17 @@ class SearchViewModel(
         onOpenChange(false)
     }
 
+    /** What is typed, and the messages found for it so far. */
+    private data class Typing(val query: String, val found: List<FoundMessage>)
+
     private data class Known(
         val scope: SearchScope = SearchScope(),
         val favoriteApps: List<String> = emptyList(),
         val favoritePeople: List<String> = emptyList()
     )
+
+    private companion object {
+        /** How long the typing must pause before the messaging app is asked. */
+        val TYPING_PAUSE = 300.milliseconds
+    }
 }

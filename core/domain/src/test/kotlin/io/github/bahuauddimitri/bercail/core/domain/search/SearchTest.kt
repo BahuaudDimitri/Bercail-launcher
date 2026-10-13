@@ -10,6 +10,7 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import java.time.LocalDateTime
 import org.junit.Test
 
@@ -127,5 +128,59 @@ class SearchTest {
     fun `dès qu'une famille a un résultat, la recherche n'est pas vide`() {
         assertThat(find("salon").isEmpty).isFalse()
         assertThat(find("réglages").isEmpty).isFalse()
+    }
+
+    // ---------- messages found by the messaging app ----------
+
+    private val terrace = FoundMessage("lea", "Je suis en terrasse", LocalDateTime.of(2026, 10, 2, 12, 58))
+    private val match = FoundMessage("tom", "Tu as vu le match en terrasse ?", LocalDateTime.of(2026, 10, 1, 7, 20))
+
+    private fun findWith(found: List<FoundMessage>, query: String = "terrasse") =
+        search(query, SearchScope(apps, people, house, day, found))
+
+    @Test
+    fun `les messages trouvés sont rangés sous leur personne, le plus récent d'abord`() {
+        val lines = findWith(listOf(match, terrace)).messages
+
+        assertThat(lines.map { it.person.name }).containsExactly("Léa", "Tom")
+        assertThat(lines.map { it.text }).containsExactly("Je suis en terrasse", "Tu as vu le match en terrasse ?")
+    }
+
+    @Test
+    fun `un message que j'ai écrit est annoncé « Toi », jamais comme écrit par le contact`() {
+        val mine = terrace.copy(text = "En terrasse à 12h30 ?", mine = true)
+
+        assertThat(findWith(listOf(mine)).messages.single().text).isEqualTo("Toi : En terrasse à 12h30 ?")
+    }
+
+    @Test
+    fun `un message d'une conversation que l'accueil ne connaît pas n'est pas proposé`() {
+        val elsewhere = FoundMessage("archive", "Terrasse refaite", LocalDateTime.of(2024, 5, 1, 9, 0))
+
+        assertThat(findWith(listOf(elsewhere)).messages).isEmpty()
+    }
+
+    @Test
+    fun `cinq messages au plus sont proposés`() {
+        val many = (1..8).map { terrace.copy(at = terrace.at.plusMinutes(it.toLong()), text = "Terrasse $it") }
+
+        val lines = findWith(many).messages
+
+        assertThat(lines.map { it.text })
+            .containsExactly("Terrasse 8", "Terrasse 7", "Terrasse 6", "Terrasse 5", "Terrasse 4")
+    }
+
+    @Test
+    fun `un message trouvé suffit pour que la recherche ne soit pas vide`() {
+        assertThat(findWith(listOf(terrace), query = "terrasse").isEmpty).isFalse()
+        assertThat(findWith(emptyList(), query = "terrasse").isEmpty).isTrue()
+    }
+
+    @Test
+    fun `les messages ne sont cherchés qu'à partir de trois lettres`() {
+        assertThat(searchesMessages("te")).isFalse()
+        assertThat(searchesMessages("  te  ")).isFalse()
+        assertThat(searchesMessages("ter")).isTrue()
+        assertThat(searchesMessages("Été")).isTrue()
     }
 }

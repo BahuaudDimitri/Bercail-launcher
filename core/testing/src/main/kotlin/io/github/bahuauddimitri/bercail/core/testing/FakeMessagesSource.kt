@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.testing
 
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import java.time.LocalDateTime
@@ -56,6 +57,18 @@ class FakeMessagesSource(
             }
         }
         return true
+    }
+
+    /** The searches asked so far, in order. */
+    val searched = mutableListOf<String>()
+
+    override suspend fun search(text: String): List<FoundMessage> {
+        searched += text
+        return histories.flatMap { (id, all) ->
+            all.value.orEmpty()
+                .filter { text.lowercase() in it.text.lowercase() }
+                .map { FoundMessage(id, it.text, it.at, it.mine) }
+        }
     }
 
     override suspend fun markRead(conversationId: String) = readNow(conversationId)

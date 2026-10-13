@@ -7,6 +7,9 @@ import java.time.temporal.ChronoUnit
 /** One message of a conversation, as the messaging app keeps it. [author] is who wrote it, when it is not mine. */
 data class Message(val id: String, val text: String, val mine: Boolean, val author: String, val at: LocalDateTime)
 
+/** A message the messaging app found for a few typed words, in the conversation it belongs to. */
+data class FoundMessage(val conversationId: String, val text: String, val at: LocalDateTime, val mine: Boolean = false)
+
 /**
  * One bubble of the conversation sheet. A bubble always says who truly wrote it: [author] is "Moi" for mine, never
  * the name of the contact.

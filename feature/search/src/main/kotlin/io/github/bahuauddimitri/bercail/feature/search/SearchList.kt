@@ -155,6 +155,14 @@ private fun LazyListScope.found(
             leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople))
         )
     }
+    family("Messages", results.messages, key = { "message ${it.person.id} ${it.text}" }) { line ->
+        BcListRow(
+            title = line.person.name,
+            onClick = { links.onOpenConversation(line.person.id) },
+            subtitle = line.text,
+            leading = BcLeading.Initials(line.person.initials, BcPastel.forKey(line.person.id, state.favoritePeople))
+        )
+    }
     family("Maison", results.controls, key = { "control ${it.id}" }) { control ->
         BcListRow(
             title = control.name,

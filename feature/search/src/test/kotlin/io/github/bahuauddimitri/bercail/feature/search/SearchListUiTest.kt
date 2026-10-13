@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.feature.search
 
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -25,9 +26,11 @@ import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import java.time.Duration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** The search list on a simulated phone: every app before typing, results by family while typing. */
@@ -142,6 +145,20 @@ class SearchListUiTest {
         compose.onNodeWithText("Léa").performClick()
 
         assertThat(opened).containsExactly("conversation lea")
+    }
+
+    @Test
+    fun `un message trouvé s'affiche sous « Messages », avec sa personne, et ouvre sa conversation`() {
+        show(typed = "match")
+        // The messaging app is asked once the typing has paused.
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(400))
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Messages").assertExists()
+        compose.onNodeWithText("Tom").assertExists()
+        compose.onNodeWithText("Tu as vu le match hier ?").performClick()
+
+        assertThat(opened).containsExactly("conversation tom")
     }
 
     @Test

@@ -185,6 +185,24 @@ class MessagesUiTest {
         }
     }
 
+    @Test
+    fun `une personne trouvée dans la recherche ouvre sa conversation`() {
+        beeper.chat("lea", "Léa", at = 3)
+        beeper.message("lea", "Merci pour le déj !", at = 3)
+        linkBeeper()
+        showHome()
+        awaitText("Aucun message")
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        awaitText("Toutes les apps")
+
+        compose.onNodeWithContentDescription("Chercher").performTextInput("léa")
+        awaitText("Gens")
+        compose.onNodeWithText("Léa").performClick()
+
+        awaitDescription("Léa : Merci pour le déj !")
+        compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
+    }
+
     private companion object {
         const val BEEPER = "com.beeper.android"
         const val TIMEOUT = 5_000L

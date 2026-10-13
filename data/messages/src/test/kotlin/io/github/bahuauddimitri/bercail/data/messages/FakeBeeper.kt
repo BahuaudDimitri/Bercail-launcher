@@ -77,7 +77,8 @@ class FakeBeeper : ContentProvider() {
             "type" to type,
             "text_content" to text,
             "reactions" to null,
-            "displayName" to sender
+            "displayName" to sender,
+            "is_search_match" to 1
         )
     }
 
@@ -93,6 +94,7 @@ class FakeBeeper : ContentProvider() {
         asked += uri
         val rooms = uri.getQueryParameter("roomIds")?.split(",")
         val limit = uri.getQueryParameter("limit")?.toInt() ?: DEFAULT_LIMIT
+        val words = uri.getQueryParameter("query")?.lowercase()
         return when (uri.path) {
             "/chats" -> cursorOf(CHAT_COLUMNS, chats.filter { rooms == null || it["roomId"] in rooms }.take(limit))
 
@@ -100,6 +102,7 @@ class FakeBeeper : ContentProvider() {
             "/messages" -> cursorOf(
                 MESSAGE_COLUMNS,
                 messages.filter { rooms == null || it["roomId"] in rooms }
+                    .filter { words == null || words in (it["text_content"] as? String).orEmpty().lowercase() }
                     .sortedByDescending { it["timestamp"] as Long }
                     .take(limit)
             )
@@ -167,7 +170,8 @@ class FakeBeeper : ContentProvider() {
             "type",
             "text_content",
             "reactions",
-            "displayName"
+            "displayName",
+            "is_search_match"
         )
     }
 }

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import java.time.ZoneId
@@ -84,6 +85,9 @@ class BeeperMessages(
 
     override suspend fun send(conversationId: String, text: String): Boolean =
         allowed.first() && withContext(background) { beeper.send(conversationId, text) }
+
+    override suspend fun search(text: String): List<FoundMessage> =
+        if (allowed.first()) withContext(background) { beeper.search(text, zone()) } else emptyList()
 
     /**
      * Beeper has no way to be told that a conversation was read. Bercail notes when the conversation last moved:

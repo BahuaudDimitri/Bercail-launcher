@@ -11,12 +11,14 @@ import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -252,5 +254,74 @@ class SearchViewModelTest {
         search.onSearchStore()
 
         assertThat(world.phone.visits).isEmpty()
+    }
+
+    // ---------- messages ----------
+
+    @Test
+    fun `un mot tapé trouve aussi les messages qui le contiennent, une fois qu'on a cessé de taper`() =
+        runTest(dispatcher) {
+            show()
+            search.onOpenChange(true)
+
+            search.onQueryChange("match")
+            assertThat(state.results?.messages.orEmpty()).isEmpty()
+            assertThat(world.messages.searched).isEmpty()
+
+            advanceTimeBy(400.milliseconds)
+
+            assertThat(state.results?.messages?.map { it.person.name to it.text })
+                .isEqualTo(listOf("Tom" to "Tu as vu le match hier ?"))
+            assertThat(world.messages.searched).containsExactly("match")
+        }
+
+    @Test
+    fun `tant qu'on tape, la messagerie n'est pas interrogée à chaque lettre`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+
+        search.onQueryChange("mat")
+        advanceTimeBy(100.milliseconds)
+        search.onQueryChange("matc")
+        advanceTimeBy(100.milliseconds)
+        search.onQueryChange("match")
+        advanceTimeBy(400.milliseconds)
+
+        assertThat(world.messages.searched).containsExactly("match")
+    }
+
+    @Test
+    fun `deux lettres ne suffisent pas à interroger la messagerie`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+
+        search.onQueryChange("ma")
+        advanceTimeBy(400.milliseconds)
+
+        assertThat(world.messages.searched).isEmpty()
+    }
+
+    @Test
+    fun `changer ce qu'on tape efface les messages trouvés pour l'ancien mot`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+        search.onQueryChange("match")
+        advanceTimeBy(400.milliseconds)
+
+        search.onQueryChange("matchs")
+
+        assertThat(state.results?.messages.orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun `fermer la recherche avant la fin de la frappe n'interroge pas la messagerie`() = runTest(dispatcher) {
+        show()
+        search.onOpenChange(true)
+        search.onQueryChange("match")
+
+        search.onOpenChange(false)
+        advanceTimeBy(400.milliseconds)
+
+        assertThat(world.messages.searched).isEmpty()
     }
 }

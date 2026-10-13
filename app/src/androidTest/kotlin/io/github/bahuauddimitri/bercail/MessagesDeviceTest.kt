@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail
 
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -94,10 +95,23 @@ class MessagesDeviceTest {
         assertThat(upToDate * 2 >= probed.size).isTrue()
     }
 
+    @Test
+    fun `chercher un mot dans les messages répond en quelques secondes au plus`() {
+        assumeTrue("Beeper is not linked on this phone", BeeperAccess.granted(phone))
+        val started = SystemClock.elapsedRealtime()
+
+        val found = runBlocking { withTimeout(TIMEOUT) { messages.search("bonjour") } }
+
+        val took = SystemClock.elapsedRealtime() - started
+        Log.i(TAG, "search found=${found.size} conversations=${found.map { it.conversationId }.toSet().size} ms=$took")
+        assertThat(took < SLOWEST_SEARCH).isTrue()
+    }
+
     private companion object {
         const val TAG = "Bercail"
         const val TIMEOUT = 30_000L
         const val PROBED = 5
+        const val SLOWEST_SEARCH = 5_000L
         const val MILLIS_PER_SECOND = 1_000
 
         /** How far, in seconds, the last message may be from the last move of its conversation. */

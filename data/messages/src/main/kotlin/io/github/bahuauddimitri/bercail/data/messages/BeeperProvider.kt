@@ -6,6 +6,7 @@ import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
+import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
 import io.github.bahuauddimitri.bercail.core.domain.messages.Message
 import java.time.Instant
 import java.time.ZoneId
@@ -62,6 +63,14 @@ internal class BeeperProvider(private val beeper: ContentResolver) {
             .build()
     ) { rows -> MessageColumns(rows, zone)::messageOf }.filterNotNull().sortedBy { it.at }
 
+    /** The messages holding [words], whatever their conversation. Beeper does the looking, in its own index. */
+    fun search(words: String, zone: ZoneId): List<FoundMessage> = rows(
+        MESSAGES.buildUpon()
+            .appendQueryParameter("query", words)
+            .appendQueryParameter("limit", SEARCH_LENGTH)
+            .build()
+    ) { rows -> MessageColumns(rows, zone)::foundOf }.filterNotNull()
+
     /** Beeper takes a message as an insertion at the address of the messages, and answers with its address. */
     fun send(roomId: String, text: String): Boolean = try {
         val letter = MESSAGES.buildUpon()
@@ -115,6 +124,16 @@ internal class BeeperProvider(private val beeper: ContentResolver) {
         private val deleted = rows.getColumnIndex("isDeleted")
         private val author = rows.getColumnIndex("displayName")
         private val time = rows.getColumnIndex("timestamp")
+        private val room = rows.getColumnIndex("roomId")
+        private val match = rows.getColumnIndex("is_search_match")
+
+        /** The row as a message found, unless it was deleted or is only there around a message that matches. */
+        fun foundOf(row: Cursor): FoundMessage? {
+            val matches = match < 0 || row.number(match) == 1L
+            return messageOf(row)?.takeIf { matches }?.let {
+                FoundMessage(row.text(room).orEmpty(), it.text, it.at, it.mine)
+            }
+        }
 
         /** The row as a message, unless it was deleted. Beeper only gives texts: the rest is "an attachment". */
         fun messageOf(row: Cursor): Message? = if (row.number(deleted) == 1L) {
@@ -136,6 +155,9 @@ internal class BeeperProvider(private val beeper: ContentResolver) {
 
         /** What the sheet of a conversation shows; more would make a slow reading slower. */
         const val HISTORY_LENGTH = "30"
+
+        /** More than the search shows: some of what is found belongs to conversations the home screen ignores. */
+        const val SEARCH_LENGTH = "20"
         val CHATS: Uri = Uri.parse("content://com.beeper.api/chats")
         val MESSAGES: Uri = Uri.parse("content://com.beeper.api/messages")
 
