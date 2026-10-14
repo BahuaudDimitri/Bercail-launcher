@@ -102,6 +102,8 @@ jobs:
           # Android 17 images boot slowly on GitHub runners.
           cores: 4
           ram-size: 4096M
+          # The Android 17 image is too short on disk to install the APK: Gradle then ran zero tests and still passed.
+          disk-size: 4096M
           emulator-boot-timeout: 1500
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: ./gradlew connectedDebugAndroidTest
@@ -126,9 +128,12 @@ jobs:
           disable-animations: true
           cores: 4
           ram-size: 4096M
+          disk-size: 4096M
           emulator-boot-timeout: 1500
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: ./gradlew connectedDebugAndroidTest
+      - name: Refuse a green run where no test ran
+        run: .github/scripts/require-device-tests.sh
       - name: Annotate the failures (public, unlike the logs)
         if: failure()
         run: .github/scripts/annotate-failures.sh
