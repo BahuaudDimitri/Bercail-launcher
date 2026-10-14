@@ -57,8 +57,8 @@ class BcConversationScreenshotTest {
     @Test
     fun `le champ de réponse, vide puis rempli, correspond à sa capture`() = compose.captureComponent("reply_field") {
         Column(Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
-            BcReplyField(value = "", onValueChange = {}, onSend = {}, onDictate = {})
-            BcReplyField(value = "J'arrive dans 10 minutes", onValueChange = {}, onSend = {}, onDictate = {})
+            BcReplyField(value = "", onValueChange = {}, onSend = {})
+            BcReplyField(value = "J'arrive dans 10 minutes", onValueChange = {}, onSend = {})
         }
     }
 

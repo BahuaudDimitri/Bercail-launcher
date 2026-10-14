@@ -65,7 +65,9 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 - **Retour :** « Supprimer l'option Barre horizontale ».
 - **Décision (14 octobre) :** on supprime tout le code, pas seulement l'option. Le choix disparaît des Réglages ; `TimelineOrientation.Horizontal` quitte le domaine et les réglages ; la branche horizontale disparaît de `HomeHeader.kt`, de `BcTimeline` (avec ses captures) et de `BcGallery`. Un réglage déjà enregistré en horizontal est lu comme vertical. À faire avant la météo sur le fil (3.1), qui n'aura plus qu'une ligne à gérer.
 
-### 1.2 Retirer « Faire un audio » — `Précisé`
+### 1.2 Retirer « Faire un audio » — `Livré`
+
+**Livré le 14 octobre 2026** : le micro « Dicter » a quitté le champ de réponse, avec la dictée qui allait derrière ; le champ garde le texte et l'envoi. Poussé sans essai sur le Pixel, à la demande de Dimitri.
 
 - **Retour :** « Je ne l'utilise pas ».
 - **Constat :** Bercail n'enregistre aucun vocal. Le seul bouton avec un micro est « Dicter », dans le champ de réponse d'une conversation (`BcReplyField`, `Dictation.kt`) : il lance la dictée d'Android, qui écrit le message en texte, sans autorisation micro pour Bercail.

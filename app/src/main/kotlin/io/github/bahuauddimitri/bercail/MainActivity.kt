@@ -46,7 +46,6 @@ class MainActivity : ComponentActivity() {
         viewModelFactory { initializer { sources.settingsViewModel() } }
     }
     private val questions = AccessQuestions(this, access = { sources.access }, phone = { sources.phone })
-    private val dictation = Dictation(this)
     private var settingsOpen by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,7 +107,6 @@ class MainActivity : ComponentActivity() {
             override fun onAskAccess(access: Access) = questions.ask(access)
             override fun onOpenAppSettings() = sources.phone.openAppSettings()
             override fun onOpenMessagesApp() = sources.messages.openApp()
-            override fun onDictate(onHeard: (String) -> Unit) = dictation.listen(onHeard)
         }
         Box {
             HomeRoute(

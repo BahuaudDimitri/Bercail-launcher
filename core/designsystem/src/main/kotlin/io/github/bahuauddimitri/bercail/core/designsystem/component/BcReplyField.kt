@@ -28,8 +28,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 
 /**
- * Where an answer is written, at the bottom of a conversation: the microphone when dictation is possible, the
- * field, which grows with the text up to a few lines, and the send button, disabled while there is nothing to send.
+ * Where an answer is written, at the bottom of a conversation: the field, which grows with the text up to a few
+ * lines, and the send button, disabled while there is nothing to send.
  */
 @Composable
 fun BcReplyField(
@@ -38,8 +38,7 @@ fun BcReplyField(
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "Répondre",
-    canSend: Boolean = value.isNotBlank(),
-    onDictate: (() -> Unit)? = null
+    canSend: Boolean = value.isNotBlank()
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -48,7 +47,6 @@ fun BcReplyField(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(GAP)
     ) {
-        if (onDictate != null) BcIconButton(BcIcons.Mic, contentDescription = "Dicter", onClick = onDictate)
         Box(
             modifier = Modifier
                 .weight(1f)

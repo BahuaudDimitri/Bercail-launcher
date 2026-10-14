@@ -91,23 +91,6 @@ class BcConversationUiTest {
     }
 
     @Test
-    fun `le micro n'est là que si la dictée est possible, et la demande d'un toucher`() {
-        var dictations = 0
-        var withMic by mutableStateOf(false)
-        compose.setContent {
-            BcTheme {
-                BcReplyField("", onValueChange = {}, onSend = {}, onDictate = if (withMic) ({ dictations++ }) else null)
-            }
-        }
-        compose.onNodeWithContentDescription("Dicter").assertDoesNotExist()
-
-        withMic = true
-        compose.onNodeWithContentDescription("Dicter").assertHeightIsAtLeast(40.dp).performClick()
-
-        assertThat(dictations).isEqualTo(1)
-    }
-
-    @Test
     fun `mes messages ne sont jamais annoncés comme écrits par le contact`() {
         compose.setContent {
             BcTheme {

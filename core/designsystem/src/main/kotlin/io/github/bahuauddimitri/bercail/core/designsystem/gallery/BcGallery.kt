@@ -249,7 +249,7 @@ private fun Conversation() {
         BcUndoCountdown(millis = UNDO_MILLIS, onUndo = {})
     }
     var reply by remember { mutableStateOf("") }
-    BcReplyField(value = reply, onValueChange = { reply = it }, onSend = { reply = "" }, onDictate = {})
+    BcReplyField(value = reply, onValueChange = { reply = it }, onSend = { reply = "" })
 }
 
 @Composable

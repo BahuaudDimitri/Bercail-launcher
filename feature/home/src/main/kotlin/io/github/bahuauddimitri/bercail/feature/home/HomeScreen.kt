@@ -59,8 +59,6 @@ interface HomeLinks {
     fun onAskAccess(access: Access) = Unit
     fun onOpenMessagesApp() = Unit
 
-    /** Listens to the user, on Android's own screen, and gives what was heard to [onHeard]. */
-    fun onDictate(onHeard: (String) -> Unit) = Unit
     fun onOpenHomeApp() = Unit
 
     /** The page of Bercail in the phone settings: where a right Android refuses to give can be unlocked. */

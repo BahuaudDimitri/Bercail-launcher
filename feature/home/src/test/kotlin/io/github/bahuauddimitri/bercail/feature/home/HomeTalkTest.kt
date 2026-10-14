@@ -311,15 +311,4 @@ class HomeTalkTest {
         assertThat(home.talk.draft).isEqualTo("Oui, 12h30 c'est")
         assertThat(home.state.value.talk).isNotNull()
     }
-
-    @Test
-    fun `ce qui est dicté s'ajoute à ce qui est déjà écrit`() = runTest(dispatcher) {
-        val home = homeOf(FakeWorld(Moment.Matin))
-        home.onOpenConversation("lea")
-        home.onDraftChange("Oui")
-
-        home.onDictated("à tout à l'heure")
-
-        assertThat(home.talk.draft).isEqualTo("Oui à tout à l'heure")
-    }
 }

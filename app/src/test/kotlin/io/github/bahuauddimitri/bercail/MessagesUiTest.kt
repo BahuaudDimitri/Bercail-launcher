@@ -1,6 +1,5 @@
 package io.github.bahuauddimitri.bercail
 
-import android.app.Activity
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.ContentProvider
@@ -14,7 +13,6 @@ import android.net.Uri
 import android.os.Looper
 import android.os.Process
 import android.service.notification.StatusBarNotification
-import android.speech.RecognizerIntent
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -160,22 +158,6 @@ class MessagesUiTest {
         compose.waitUntil(TIMEOUT) { beeper.sent.isNotEmpty() }
 
         assertThat(beeper.sent).isEqualTo(listOf("lea: De rien !"))
-    }
-
-    @Test
-    fun `le micro ouvre la dictée d'Android, et ce qui est entendu arrive dans le champ`() {
-        val home = openLea()
-
-        compose.onNodeWithContentDescription("Dicter").performClick()
-        val asked = shadowOf(app).nextStartedActivityForResult
-        assertThat(asked.intent.action).isEqualTo(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-
-        val heard = Intent().putStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS, arrayListOf("à tout à l'heure"))
-        home.onActivity { shadowOf(it).receiveResult(asked.intent, Activity.RESULT_OK, heard) }
-
-        compose.waitUntil(TIMEOUT) {
-            compose.onAllNodes(hasSetTextAction() and hasText("à tout à l'heure")).fetchSemanticsNodes().isNotEmpty()
-        }
     }
 
     @Test

@@ -60,9 +60,6 @@ interface TalkActions {
 
     /** Takes back the message that was just sent: nothing leaves, and its text comes back. */
     fun onUndoSend()
-
-    /** Adds what the phone heard to what is written in the field. */
-    fun onDictated(text: String)
 }
 
 /**
@@ -110,12 +107,6 @@ internal class HomeTalk(private val messages: MessagesSource, private val clock:
     override fun onDraftChange(text: String) {
         val id = open.value ?: return
         notes.update { it.copy(drafts = it.drafts + (id to text), failedIn = null) }
-    }
-
-    override fun onDictated(text: String) {
-        val id = open.value ?: return
-        val written = notes.value.drafts[id].orEmpty().trimEnd()
-        onDraftChange(listOf(written, text.trim()).filter { it.isNotEmpty() }.joinToString(" "))
     }
 
     override fun onSend() {

@@ -53,8 +53,7 @@ internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLink
             value = talk.draft,
             onValueChange = actions::onDraftChange,
             onSend = actions::onSend,
-            canSend = talk.canSend,
-            onDictate = { links.onDictate(actions::onDictated) }
+            canSend = talk.canSend
         )
     }
 }

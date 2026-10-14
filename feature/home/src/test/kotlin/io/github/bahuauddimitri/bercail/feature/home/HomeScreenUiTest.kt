@@ -65,10 +65,6 @@ class HomeScreenUiTest {
     private val opened = mutableListOf<String>()
     private val links = object : HomeLinks {
         override fun onAskAccess(access: Access) = opened.add("demande d'accès $access").let {}
-        override fun onDictate(onHeard: (String) -> Unit) {
-            opened.add("dictée")
-            onHeard("à tout à l'heure")
-        }
         override fun onOpenMessagesApp() = opened.add("app de messages").let {}
         override fun onOpenHomeApp() = opened.add("app de la maison").let {}
         override fun onOpenAppSettings() = opened.add("page de Bercail dans les Paramètres").let {}
@@ -400,14 +396,11 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `le micro demande la dictée, et ce qui est entendu s'ajoute dans le champ`() {
+    fun `la feuille de conversation n'a pas de micro, on y écrit sa réponse`() {
         openTalk()
-        compose.onNodeWithContentDescription("Répondre").performTextInput("Oui")
 
-        compose.onNodeWithContentDescription("Dicter").performClick()
-
-        assertThat(opened).containsExactly("dictée")
-        compose.onNode(hasSetTextAction() and hasText("Oui à tout à l'heure")).assertExists()
+        compose.onNodeWithContentDescription("Répondre").assertExists()
+        compose.onNodeWithContentDescription("Dicter").assertDoesNotExist()
     }
 
     @Test
