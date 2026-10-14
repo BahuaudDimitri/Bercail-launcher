@@ -24,7 +24,7 @@ Tranchées le 14 octobre 2026. Elles s'ajoutent à `docs/handoff.md` et y primen
 | Alignement | — | Le centre de l'anneau est à la hauteur du centre de la pastille musique |
 | Vent | — | Rangé dans « Sec » : pas de couleur propre (Brume dessine déjà les rafales) |
 | Neige | — | Blanc (`BcColors.text`) à 55 % |
-| Variante horizontale | Existe dans les réglages | Inchangée dans ce chantier : la météo sur le fil ne concerne que la ligne verticale |
+| Variante horizontale | Existe dans les réglages | Supprimée avant ce chantier (feuille de route, point 1.1, décidé le 14 octobre) : la météo sur le fil ne concerne que la ligne verticale |
 
 Rien d'autre ne bouge : tiroir, pastille musique, Brume, écran Écoute restent tels quels.
 
@@ -107,14 +107,14 @@ Mettre `docs/CATALOG.md` (et un nouveau module dans `settings.gradle.kts` + son 
 - Encombrement à droite : noms de ciel, heures de rendez-vous et texte du réveil se disputent la même colonne de 78 dp (`VERTICAL_WIDTH`).
 - Températures en texte vertical : à valider sur le téléphone, elles peuvent se lire mal.
 - Alarmes d'apps tierces : `getNextAlarmClock` ne voit que les alarmes déclarées comme réveil, pas tous les rappels.
-- CI : au 14 octobre, les tests sur émulateur échouent sur `main` (« Failed to inject touch input » sur le toucher de l'en-tête sous Android 16, `adb` en code 224 sous Android 17 ; les tests Beeper sont seulement ignorés). Les étapes 2 à 4 touchent l'en-tête et la ligne : regarder ces échecs d'abord.
+- CI : réparée le 14 octobre (feuille de route, point 0.1). Android 16 bloque, Android 17 est signalé sans bloquer (point 0.2). Un nouveau test qui vise « Voir la journée » doit viser le bouton de l'en-tête par son rôle : la ligne du temps porte la même action.
 
 **Questions ouvertes**
 
 - [ ] Échelle de la ligne : la nuit (minuit → réveil) est-elle comprimée (par exemple 15 % de la hauteur) ou à la même échelle que le jour ? La maquette la comprime.
 - [ ] Réveil au-delà de 24 h ou absent : la ligne finit-elle à minuit comme aujourd'hui ? (proposé : oui)
 - [ ] Toucher l'anneau : ouvrir l'horloge, ou une petite feuille pour décaler le réveil ?
-- [ ] Variante horizontale : reçoit-elle aussi les couleurs du ciel ? (proposé : non, dans un second temps)
+- [x] Variante horizontale : supprimée (point 1.1 de la feuille de route, tranché le 14 octobre).
 - [x] Vent : rangé dans « Sec » (tranché le 14 octobre).
 - [x] Neige : blanc à 55 % (tranché le 14 octobre).
 

@@ -9,7 +9,7 @@
 3. **On livre par petits commits sur main**, selon `CLAUDE.md` : TDD, Conventional Commits, `docs/CATALOG.md` à jour. Pas de grosse PR. Chaque `feat:` publie une version, que la mise à jour intégrée livre sur le téléphone. On teste donc à l'usage au fil de l'eau.
 4. **Le budget batterie reste la priorité absolue** : moins de 10 mAh/jour, pas de polling, animations à 20 fps au plus. Tout point qui ajoute du mouvement ou du réseau passe par une mesure Perfetto avant d'être gardé.
 
-Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abandonné`, avec la raison).
+Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abandonné`, avec la raison, ou `Déplacé` vers un autre point).
 
 ## Vue d'ensemble
 
@@ -17,11 +17,11 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 |---|---|---|---|
 | 0 | Réparer d'abord | 0.1 à 0.2 | Correction |
 | 1 | Ménage rapide | 1.1 à 1.7 | Mécanique |
-| 2 | Gestes et transitions | 2.1 à 2.3 | Mécanique + réglage fin |
+| 2 | Gestes et transitions | 2.1 à 2.4 | Mécanique + réglage fin |
 | 3 | Accueil : infos | 3.1 à 3.3 | Maquette avant code |
 | 4 | Musique | 4.1 à 4.2 | Investigation sur téléphone |
 | 5 | Messages | 5.1 à 5.3 | Investigation + mesure |
-| 6 | Direction artistique | 6.1 à 6.5 | Exploration, maquettes, mesures |
+| 6 | Direction artistique | 6.1 à 6.6 | Exploration, maquettes, mesures |
 
 ---
 
@@ -56,53 +56,45 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 ## Lot 1 — Ménage rapide
 
-### 1.1 Supprimer l'option « Barre horizontale » — `À préciser`
+Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
+
+### 1.1 Supprimer l'option « Barre horizontale » — `Précisé`
 
 - **Retour :** « Supprimer l'option Barre horizontale ».
-- **Piste :** retirer le choix dans `SettingsScreen.kt`, `TimelineOrientation.Horizontal` du domaine et des réglages, la branche horizontale de `HomeHeader.kt`, de `BcTimeline` et de `BcGallery`. Les réglages déjà enregistrés passent en vertical. La « météo sur le fil » en est simplifiée, puisque sa variante horizontale n'a plus lieu d'être.
-- **À préciser :** confirmer qu'on supprime le code, et pas seulement l'option.
+- **Décision (14 octobre) :** on supprime tout le code, pas seulement l'option. Le choix disparaît des Réglages ; `TimelineOrientation.Horizontal` quitte le domaine et les réglages ; la branche horizontale disparaît de `HomeHeader.kt`, de `BcTimeline` (avec ses captures) et de `BcGallery`. Un réglage déjà enregistré en horizontal est lu comme vertical. À faire avant la météo sur le fil (3.1), qui n'aura plus qu'une ligne à gérer.
 
-### 1.2 Retirer « Faire un audio » — `À préciser`
+### 1.2 Retirer « Faire un audio » — `Précisé`
 
 - **Retour :** « Je ne l'utilise pas ».
-- **Piste :** retirer le bouton, ainsi que l'enregistrement et l'autorisation micro s'il est le seul à s'en servir.
-- **À préciser :**
-  - L'endroit exact du bouton (conversation ? libellé exact ?). Le libellé n'a pas été trouvé tel quel dans le code.
-  - Faut-il garder l'écoute des vocaux reçus ?
+- **Constat :** Bercail n'enregistre aucun vocal. Le seul bouton avec un micro est « Dicter », dans le champ de réponse d'une conversation (`BcReplyField`, `Dictation.kt`) : il lance la dictée d'Android, qui écrit le message en texte, sans autorisation micro pour Bercail.
+- **Décision (14 octobre) :** c'est ce bouton : on retire le micro et la dictée. Le champ de réponse garde le texte et l'envoi.
 
-### 1.3 Pas d'automatisation détectée : retirer la ligne — `À préciser`
+### 1.3 Pas d'automatisation détectée : retirer la ligne — `Abandonné`
 
-- **Piste :** n'afficher la ligne que si la liste n'est pas vide, avec un test Robolectric.
-- **À préciser :** de quelle ligne il s'agit exactement (zone Maison ? réglages ?), et ce qui la remplace : rien, ou un espace resserré.
+- **Raison (14 octobre) :** la phrase n'existe pas dans Bercail ; Dimitri la voit dans une autre app. Rien à faire ici.
 
-### 1.4 Recherche : toujours les apps avant les gens — `À préciser`
+### 1.4 Recherche : toujours les apps avant les gens — `Précisé`
 
-- **Piste :** changer l'ordre des sections dans `SearchList.kt` (`Results`) et le figer par un test. La touche Entrée ouvre déjà la première app.
-- **À préciser :** l'ordre des autres sections (maison, agenda, web).
+- **Constat :** les résultats partent de la barre de recherche et montent. Aujourd'hui, en partant de la barre : Réglages, Agenda, Maison, Messages, Gens, et les apps tout en haut, le plus loin du pouce.
+- **Décision (14 octobre) :** en partant de la barre : Apps, Gens, Messages, Agenda, Maison, puis Réglages au bout. Figé par un test. La touche Entrée ouvre toujours la première app.
 
-### 1.5 Agenda : ouvrir directement quand il n'y a rien — `À préciser`
+### 1.5 Agenda : ouvrir directement quand il n'y a rien — `Précisé`
 
 - **Retour :** « Si 0 events, au clic sur agenda, ouvrir directement l'agenda (et/ou au swipe) ».
-- **Piste :**
-  - Journée vide : un toucher ouvre l'app Agenda (intent `CalendarContract`) au lieu de la feuille « Rien aujourd'hui ».
-  - Un geste (swipe) ouvre l'agenda dans tous les cas.
-- **À préciser :**
-  - Quelle app d'agenda.
-  - Quel geste et dans quel sens, sans entrer en conflit avec les gestes existants de l'en-tête.
-  - Le comportement s'il y a des événements.
+- **Décisions (14 octobre) :**
+  - Journée vide : toucher l'en-tête ouvre l'app d'agenda du téléphone, au lieu de la feuille « Rien de prévu aujourd'hui ». Avec des rendez-vous, le toucher ouvre la feuille comme aujourd'hui.
+  - Glisser l'en-tête vers la droite ouvre l'app d'agenda, toujours, avec ou sans rendez-vous. C'est le geste de la ligne des messages et de la pastille musique (`BcRowSwipe`, « Ouvrir l'agenda ») : glisser à droite = ouvrir l'app.
+  - L'app d'agenda est celle du téléphone (intention `CalendarContract`), pas une app choisie dans Bercail.
 
-### 1.6 Pouvoir changer le fond d'écran — `À préciser`
+### 1.6 Pouvoir changer le fond d'écran — `Déplacé au lot 6`
 
-- **Piste :** une ligne dans les Réglages qui ouvre le sélecteur système (`ACTION_SET_WALLPAPER`). Zéro coût batterie. Cela reste cohérent avec la décision de garder le fond d'écran météo natif de Google.
-- **À préciser :** l'accès seul suffit-il, ou veux-tu des fonds propres à Bercail (dégradés pastel, Brume en fond) ? Des fonds propres basculeraient au lot 6.
+- **Décision (14 octobre) :** Dimitri veut revoir des fonds façon Brume plutôt qu'un simple accès au sélecteur d'Android. Le point devient 6.6. Rien n'est ajouté aux Réglages en attendant.
 
 ### 1.7 Chrome facilement accessible — `À préciser`
 
-- **Pistes :**
-  - Chrome épinglé en app favorite.
-  - « Chercher sur le web » de la recherche ouvre Chrome.
-  - Un geste dédié.
-- **À préciser :** depuis où tu veux l'atteindre (accueil, recherche, geste) et ce que tu fais dans Chrome (ouvrir l'app, ou chercher directement).
+- **Constat :** « Chercher sur le web » n'apparaît que quand la recherche ne trouve rien, et ouvre l'app Google (`ACTION_WEB_SEARCH`), pas Chrome. Chrome peut déjà être mis en app favorite dans les Réglages.
+- **Décidé (14 octobre) :** Chrome s'ouvre tel qu'il a été laissé, comme en touchant son icône.
+- **À préciser :** pas un glissement : Dimitri préfère un bouton ou un autre élément à l'écran. À chercher ensemble à partir des maquettes inspirantes qu'il a trouvées (séance dédiée, à rapprocher de 6.1).
 
 ## Lot 2 — Gestes et transitions
 
@@ -124,6 +116,12 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 - **Piste :** `ActivityOptions.makeClipRevealAnimation` ou `makeScaleUpAnimation`, à partir des bornes de l'icône ou de la ligne touchée. Ça ne coûte rien en batterie. L'animation « Pixel » complète, où l'icône se transforme en fenêtre, est réservée au launcher système (QuickStep) et n'est pas atteignable.
 - **À préciser :** le style voulu, et le retour vers Bercail (animation de fermeture).
+
+### 2.4 Transitions entre les écrans de Bercail — `À préciser`
+
+- **Retour (13 octobre) :** la vidéo Pinterest « Expandable Tab Bar » : un élément qui s'agrandit et devient l'écran suivant, au lieu d'un fondu. Ajouté au lot 2 le 14 octobre.
+- **Pistes :** `SharedTransitionLayout` de Compose, sur un seul élément d'abord : la pastille musique qui devient la pochette de l'écran Écoute, les lignes du résumé qui deviennent les tuiles du tiroir, ou une tuile de personne qui s'ouvre en conversation. Animation courte, puis arrêt : rien ne tourne au repos.
+- **À préciser :** l'élément par lequel commencer, et le style (rebond, durée).
 
 ## Lot 3 — Accueil : infos
 
@@ -234,3 +232,9 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 - **À préciser :**
   - Les appareils visés.
   - Remplacent-ils ou complètent-ils les commandes Hue actuelles ?
+
+### 6.6 Des fonds d'écran façon Brume — `À préciser`
+
+- **Retour (14 octobre, venu du point 1.6) :** « J'aimerais revoir les fonds d'écran de type Brume ».
+- **Piste :** des fonds propres à Bercail (dégradés pastel, Brume immobile), à travailler avec 6.3 et 6.4. Un fond fixe ne coûte rien ; tout mouvement passe par une mesure.
+- **À préciser :** ce qui ne te plaît pas dans les fonds actuels, et si un fond Bercail remplace le fond météo de Google ou s'y ajoute.
