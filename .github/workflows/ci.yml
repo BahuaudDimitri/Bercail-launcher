@@ -106,18 +106,20 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 1500
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: ./gradlew connectedDebugAndroidTest
+          script: .github/scripts/run-device-tests.sh
       - name: Tell an emulator crash from a test failure
         id: crash
-        if: steps.first.outcome == 'failure'
         run: |
-          reports=$(find . -path '*/build/outputs/androidTest-results/*' -name '*.xml')
-          # An emulator that is not ready yet also leaves a report: "No compatible devices connected".
-          if [ -n "$reports" ] && ! grep -qiE "compatible devices|no connected devices" $reports; then
-            echo "::error title=Tests instrumentés::The tests ran and failed: no second attempt."
-            exit 1
+          # Tests that ran decide the job. None ran (emulator crash, APK not installed): one more attempt.
+          if .github/scripts/require-device-tests.sh >/dev/null 2>&1; then
+            if [ "${{ steps.first.outcome }}" = "failure" ]; then
+              echo "::error title=Tests instrumentés::The tests ran and failed: no second attempt."
+              exit 1
+            fi
+          else
+            echo "No test ran: second attempt on a fresh emulator."
+            echo "crashed=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "crashed=true" >> "$GITHUB_OUTPUT"
       - name: Run the instrumented tests again on a fresh emulator
         if: steps.crash.outputs.crashed == 'true'
         uses: reactivecircus/android-emulator-runner@v2
@@ -131,8 +133,9 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 1500
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: ./gradlew connectedDebugAndroidTest
+          script: .github/scripts/run-device-tests.sh
       - name: Refuse a green run where no test ran
+        if: steps.crash.outputs.crashed == 'true'
         run: .github/scripts/require-device-tests.sh
       - name: Annotate the failures (public, unlike the logs)
         if: failure()
