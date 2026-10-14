@@ -27,15 +27,20 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 ## Lot 0 — Réparer d'abord
 
-### 0.1 Corriger les erreurs — `À préciser`
+### 0.1 Corriger les erreurs — `En cours`
 
 - **Retour :** « Fix les erreurs ».
-- **Pistes :**
-  - Remettre au vert la CI de main. Les jobs émulateur sont rouges. Sur Android 16, « toucher l'en-tête ouvre la feuille de la journée et sa poignée la referme » échoue avec `Failed to inject touch input` ; il faut stabiliser ce test ou le mettre en quarantaine, avec un ticket. Sur Android 17, adb sort en code 224 avant les tests.
-  - Corriger les erreurs vues à l'usage.
-- **À préciser :**
-  - La liste des erreurs vues à l'usage : crashs, messages affichés, contenus qui ne se chargent pas.
-  - Pour chacune : l'écran concerné, comment la reproduire, et sa fréquence.
+- **Constat (séance du 14 octobre, lu dans les runs GitHub Actions des 13 et 14 octobre) :**
+  - Android 16 n'est pas instable : c'est une régression, rouge cinq fois de suite depuis « let a finger run along the line of the day ». Ce commit a donné à la ligne du temps l'action « Voir la journée », que l'en-tête portait déjà. Le test « toucher l'en-tête ouvre la feuille de la journée et sa poignée la referme » trouve deux éléments au lieu d'un ; `Failed to inject touch input` n'est que l'habillage du message.
+  - Android 17 était un faux vert depuis au moins le 10 octobre : l'APK ne s'installe pas sur l'image (`not enough space`), Gradle avale l'erreur et le job passe au vert avec zéro test exécuté. Le plantage adb (code 224) de la nuit est un aléa distinct, déjà couvert par le second essai.
+  - Les trois tests Beeper mis en pause par hypothèse (« Beeper is not linked on this phone ») apparaissent en échec dans les annotations publiques, même sur les runs verts.
+  - Quatre commits attendent une CI verte pour être publiés depuis v0.17.0 : un `fix` de recherche et trois `feat` d'accueil.
+- **Décisions :**
+  - Android 16 : le test vise l'en-tête par son rôle de bouton. Rien ne change dans l'app ; la ligne du temps garde son action.
+  - Android 17 : l'émulateur reçoit 4 Go de disque pour l'APK, et un job émulateur devient rouge quand aucun test instrumenté n'a tourné. Plus de vert sans test.
+  - Les tests mis en pause par hypothèse ne sont plus annotés en échec.
+  - Rien à signaler à l'usage pour l'instant : le point se limite à la CI et à la publication des commits en attente. Les erreurs vues sur la prochaine version feront un point 0.2.
+- **Fini quand :** `main` est verte sur les deux émulateurs avec des tests exécutés sur chacun, et la release qui suit est installée sur le Pixel.
 
 ## Lot 1 — Ménage rapide
 
