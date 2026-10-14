@@ -1,7 +1,9 @@
 package io.github.bahuauddimitri.bercail
 
 import android.content.Intent
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -105,9 +107,13 @@ class LauncherDeviceTest {
     private companion object {
         const val TIMEOUT = 10_000L
 
-        /** The top of the home screen, whatever it says: with or without the right to read the calendar. */
-        val opensTheDay = SemanticsMatcher("ouvre la journée") {
-            it.config.getOrNull(SemanticsActions.OnClick)?.label == "Voir la journée"
+        /**
+         * The top of the home screen, whatever it says: with or without the right to read the calendar. The line of
+         * the day opens the day with the same words, but it is not a button.
+         */
+        val opensTheDay = SemanticsMatcher("l’en-tête ouvre la journée") {
+            it.config.getOrNull(SemanticsProperties.Role) == Role.Button &&
+                it.config.getOrNull(SemanticsActions.OnClick)?.label == "Voir la journée"
         }
     }
 }
