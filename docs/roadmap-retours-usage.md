@@ -27,7 +27,9 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 ## Lot 0 — Réparer d'abord
 
-### 0.1 Corriger les erreurs — `En cours`
+### 0.1 Corriger les erreurs — `Livré`
+
+**Livré le 14 octobre 2026** : `main` verte (run 38588075694), 14 tests exécutés sur l'émulateur Android 16, Android 17 signalé, release [v0.18.0](https://github.com/BahuaudDimitri/Bercail-launcher/releases/tag/v0.18.0) publiée par la CI avec les quatre commits de la vague 10 en attente. Reste à toi : laisser Bercail l'installer sur le Pixel.
 
 - **Retour :** « Fix les erreurs ».
 - **Constat (séance du 14 octobre, lu dans les runs GitHub Actions des 13 et 14 octobre) :**
