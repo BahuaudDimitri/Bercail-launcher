@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Bercail — la météo sur le fil (référence)</title>
+<!-- Reference mockup chosen on 14 October 2026, see docs/passation-meteo-sur-le-fil.md. 390 x 844 px = the Pixel 9 in dp. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap">
+<style>body{margin:0;background:#0c0d13;display:flex;justify-content:center;padding:24px}button{font:inherit;color:inherit}</style>
+<body>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #15161F; font-family: 'Outfit', sans-serif; color: #ECEBF4">
+<div aria-hidden="true" style="position: absolute; inset: -40px; background: radial-gradient(circle at 18% 72%, rgba(180,167,240,0.5), rgba(180,167,240,0) 42%), radial-gradient(circle at 88% 44%, rgba(242,164,154,0.38), rgba(242,164,154,0) 38%), radial-gradient(circle at 42% 22%, rgba(156,196,240,0.3), rgba(156,196,240,0) 44%); filter: blur(24px)"></div>
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 320px; background: linear-gradient(rgba(16,17,25,0.9), rgba(16,17,25,0))"></div>
+
+<div style="position: absolute; left: 22px; right: 110px; top: 58px; display: flex; flex-direction: column; gap: 3px">
+<div style="font-size: 12px; font-weight: 600; color: #B2B0C4">Dans 1 h 10 · 15:00</div>
+<div style="font-size: 30px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.15">Point design</div>
+<div style="font-size: 12.5px; font-weight: 500; color: #B2B0C4">Ensuite Courses à 18:30</div>
+</div>
+
+<div aria-hidden="true" style="position: absolute; left: 365px; top: 74px; width: 1.5px; height: 180px; background: rgba(236,235,244,0.55)"></div>
+<div aria-hidden="true" style="position: absolute; left: 364.5px; top: 254px; width: 2.5px; height: 60px; border-radius: 2px; background: repeating-linear-gradient(rgba(156,196,240,0.95) 0 5px, rgba(156,196,240,0) 5px 9px)"></div>
+<div aria-hidden="true" style="position: absolute; left: 370px; top: 258px; width: 1.5px; height: 6px; background: rgba(156,196,240,0.7); transform: rotate(18deg)"></div>
+<div aria-hidden="true" style="position: absolute; left: 372px; top: 276px; width: 1.5px; height: 6px; background: rgba(156,196,240,0.7); transform: rotate(18deg)"></div>
+<div aria-hidden="true" style="position: absolute; left: 370px; top: 296px; width: 1.5px; height: 6px; background: rgba(156,196,240,0.5); transform: rotate(18deg)"></div>
+<div aria-hidden="true" style="position: absolute; left: 365px; top: 314px; width: 1.5px; height: 156px; background: repeating-linear-gradient(rgba(246,194,139,0.55) 0 3px, rgba(246,194,139,0) 3px 8px)"></div>
+<div aria-hidden="true" style="position: absolute; left: 365.2px; top: 474px; width: 1px; height: 98px; background: repeating-linear-gradient(rgba(180,167,240,0.4) 0 1px, rgba(180,167,240,0) 1px 6px)"></div>
+
+<div style="position: absolute; left: 376px; top: 236px; font-size: 10.5px; font-weight: 500; color: #9CC4F0; writing-mode: vertical-rl">14°</div>
+<div style="position: absolute; left: 376px; top: 396px; font-size: 10.5px; font-weight: 500; color: #F6C28B; writing-mode: vertical-rl">17°</div>
+
+<div aria-hidden="true" style="position: absolute; left: 363px; top: 130px; width: 6px; height: 6px; border-radius: 3px; background: #ECEBF4"></div>
+<div aria-hidden="true" style="position: absolute; left: 358px; top: 279px; width: 14px; height: 14px; border-radius: 8px; border: 1.5px solid #ECEBF4; box-sizing: border-box"></div>
+<div aria-hidden="true" style="position: absolute; left: 363px; top: 283px; width: 6px; height: 6px; border-radius: 3px; background: #ECEBF4"></div>
+<div aria-hidden="true" style="position: absolute; left: 363px; top: 372px; width: 6px; height: 6px; border-radius: 3px; background: #ECEBF4"></div>
+<div aria-hidden="true" style="position: absolute; left: 352px; top: 240px; width: 28px; height: 28px; border-radius: 14px; background: radial-gradient(rgba(156,196,240,0.7), rgba(156,196,240,0) 70%)"></div>
+<div aria-hidden="true" style="position: absolute; left: 362.5px; top: 250.5px; width: 7px; height: 7px; border-radius: 4px; background: #ECEBF4"></div>
+<div style="position: absolute; right: 48px; top: 125px; font-size: 10.5px; color: #B2B0C4">09:30</div>
+<div style="position: absolute; right: 48px; top: 246px; font-size: 10.5px; color: #9CC4F0">Pluie fine</div>
+<div style="position: absolute; right: 48px; top: 279px; font-size: 10.5px; color: #ECEBF4">15:00</div>
+<div style="position: absolute; right: 48px; top: 318px; font-size: 10.5px; color: #F6C28B">Éclaircies</div>
+<div style="position: absolute; right: 48px; top: 367px; font-size: 10.5px; color: #B2B0C4">18:30</div>
+<div style="position: absolute; right: 48px; top: 462px; font-size: 10.5px; color: rgba(180,167,240,0.85)">Nuit claire</div>
+
+<button aria-label="Réveil demain à 07:15, toucher pour régler" style="position: absolute; left: 342px; top: 554px; width: 48px; height: 48px; padding: 0; border: none; background: transparent; display: flex; align-items: center; justify-content: center">
+<span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 6px; border: 1.5px solid #B4A7F0; box-sizing: border-box; box-shadow: 0 0 10px rgba(180,167,240,0.5)"></span>
+</button>
+<div style="position: absolute; right: 48px; top: 563px; display: flex; flex-direction: column; align-items: flex-end">
+<span style="font-size: 15px; font-weight: 500; line-height: 1.1">07:15</span>
+<span style="font-size: 10.5px; color: #B2B0C4">réveil · 9°</span>
+</div>
+
+<button style="position: absolute; left: 22px; top: 556px; height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 6px; border-radius: 22px; background: rgba(255,255,255,0.075); border: 1px solid rgba(255,255,255,0.1)">
+<span style="width: 32px; height: 32px; border-radius: 16px; background: linear-gradient(135deg, #F2A49A, #B4A7F0)"></span>
+<span style="font-size: 13.5px">Lumière lente</span>
+</button>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 196px; box-sizing: border-box; padding: 10px 18px 30px; display: flex; flex-direction: column; gap: 12px; background: rgba(24,25,36,0.55); backdrop-filter: blur(26px) saturate(1.5); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 30px 30px 0 0">
+<div aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.3)"></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 4px"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 5px; background: #F2A49A"></span><span style="font-size: 14px">2 non lus · Léa, Tom</span></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 4px"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 5px; background: #F6C28B"></span><span style="font-size: 14px">Salon 60 %, Volets ouverts</span></div>
+<button style="height: 48px; border-radius: 24px; background: rgba(10,10,16,0.42); border: none; display: flex; align-items: center; gap: 10px; padding: 0 18px; color: #B2B0C4; font-size: 15px">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="m11 11 3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+Chercher
+</button>
+</div>
+</div>
+</body>
+</html>
