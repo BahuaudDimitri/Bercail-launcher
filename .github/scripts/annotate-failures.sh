@@ -15,6 +15,8 @@ failures=$(echo "$reports" | tr '\n' '\0' | xargs -0 awk '
         line = $0
         if (match(line, /message="[^"]*"/)) msg = substr(line, RSTART + 9, RLENGTH - 10)
         else { sub(/.*<failure[^>]*>/, "", line); msg = line }
+        # A test paused by an assumption (Beeper not linked, say) is reported as a failure: it is not one.
+        if (msg ~ /AssumptionViolatedException/) next
         print "::error title=" name "::" substr(msg, 1, 400)
     }
 ')
