@@ -15,7 +15,7 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 | Lot | Thème | Points | Nature |
 |---|---|---|---|
-| 0 | Réparer d'abord | 0.1 | Correction |
+| 0 | Réparer d'abord | 0.1 à 0.2 | Correction |
 | 1 | Ménage rapide | 1.1 à 1.7 | Mécanique |
 | 2 | Gestes et transitions | 2.1 à 2.3 | Mécanique + réglage fin |
 | 3 | Accueil : infos | 3.1 à 3.3 | Maquette avant code |
@@ -37,10 +37,20 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
   - Quatre commits attendent une CI verte pour être publiés depuis v0.17.0 : un `fix` de recherche et trois `feat` d'accueil.
 - **Décisions :**
   - Android 16 : le test vise l'en-tête par son rôle de bouton. Rien ne change dans l'app ; la ligne du temps garde son action.
-  - Android 17 : l'émulateur reçoit 4 Go de disque pour l'APK, et un job émulateur devient rouge quand aucun test instrumenté n'a tourné. Plus de vert sans test.
+  - Android 17 : l'émulateur reçoit 4 Go de disque pour l'APK, le script attend le service paquets avant Gradle, le second essai part dès qu'aucun test n'a tourné, et un job émulateur devient rouge quand aucun test instrumenté n'a tourné. Plus de vert sans test.
   - Les tests mis en pause par hypothèse ne sont plus annotés en échec.
-  - Rien à signaler à l'usage pour l'instant : le point se limite à la CI et à la publication des commits en attente. Les erreurs vues sur la prochaine version feront un point 0.2.
-- **Fini quand :** `main` est verte sur les deux émulateurs avec des tests exécutés sur chacun, et la release qui suit est installée sur le Pixel.
+  - Rien à signaler à l'usage pour l'instant : le point se limite à la CI et à la publication des commits en attente.
+- **Découverte en cours de route (14 octobre, après la correction) :** Android 17 n'avait **jamais** exécuté un test en CI (0 test dès le premier run vert disponible, le 9 octobre). Une fois les tests lancés, 13 sur 14 échouent pour une raison d'environnement : l'activité est cherchée dans le paquet du test (`…bercail.debug.test/MainActivity`) au lieu de celui de l'app. Les mêmes APK passent sur Android 16. Décision : le job Android 17 tourne et affiche ses échecs sans bloquer la publication, et l'enquête devient le point 0.2.
+- **Fini quand :** `main` est verte, Android 16 avec ses tests exécutés et Android 17 signalé, et la release qui suit est installée sur le Pixel.
+
+### 0.2 Faire parler l'émulateur Android 17 — `À préciser`
+
+- **Constat (14 octobre) :** sur l'image « 37.0 » de la CI, avec AGP 9.4.1 et androidx.test 1.7.0, `ActivityScenario` construit l'intention avec le paquet du test et Android ne la résout pas. Les deux tests de mise à jour échouent aussi, autrement (`Waiting` au lieu de `Ready` ou `UpToDate`), sans doute pour la même racine. Rapports : artefact `device-reports-android-17` du run 38586618075.
+- **Pistes :**
+  - Lancer `./gradlew connectedCheck` sur le Pixel 9 branché (vrai Android 17) : si tout passe, l'image de l'émulateur est en cause, pas le téléphone.
+  - Comparer avec une image Android 17 plus récente, ou avec `target: default` au lieu de `google_apis`.
+  - Chercher une version d'androidx.test ou d'AGP qui connaît l'API 37.
+- **À préciser :** le temps qu'on accepte d'y mettre, et si le Pixel peut être branché à un poste avec le SDK pour la première piste.
 
 ## Lot 1 — Ménage rapide
 

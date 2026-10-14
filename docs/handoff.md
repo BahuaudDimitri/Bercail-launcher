@@ -395,7 +395,7 @@ Aucune fonction visible : on construit la chaîne qui protège tout le reste.
 - Instrumentés : l'apostrophe droite est interdite dans les noms de tests Android (format DEX) ; on écrit `’`, une règle d'architecture le vérifie.
 - Robolectric sur Android 17 : Espresso 3.7.0 imposé et accès aux internes du JDK ouvert.
 - L'émulateur Android 17 de la CI démarre lentement : 4 cœurs, 4 Go, 25 min de délai.
-- Un job émulateur vert ne prouve rien si l'APK ne s'est pas installé : du 10 au 14 octobre, l'image Android 17 manquait de disque, Gradle avalait l'erreur et le job passait au vert avec zéro test. Depuis, l'émulateur a 4 Go de disque, le script attend que le service paquets réponde avant Gradle (`run-device-tests.sh`), le second essai part dès qu'aucun test n'a tourné, et un job sans test exécuté est rouge (`require-device-tests.sh`).
+- Un job émulateur vert ne prouve rien si l'APK ne s'est pas installé : jusqu'au 14 octobre, l'image Android 17 manquait de disque ou de service paquets, Gradle avalait l'erreur et le job passait au vert avec zéro test, depuis le premier jour. Depuis, l'émulateur a 4 Go de disque, le script attend que le service paquets réponde avant Gradle (`run-device-tests.sh`), le second essai part dès qu'aucun test n'a tourné, et un job sans test exécuté est rouge (`require-device-tests.sh`). Les tests tournent enfin sur Android 17 et y échouent (activité cherchée dans le paquet du test) : ce job est signalé, non bloquant, jusqu'au point 0.2 de la feuille de route.
 - Les journaux de la CI demandent un compte GitHub connecté : les échecs de tests sont donc aussi publiés en annotations publiques.
 - detekt 2.0 (alpha) : la 1.23 ne suit pas Kotlin 2.4.
 - Reste : installer l'app Renovate sur le dépôt.
