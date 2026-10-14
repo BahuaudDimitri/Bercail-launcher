@@ -23,7 +23,6 @@ import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
@@ -205,17 +204,6 @@ class HomeScreenshotTest {
         compose.onNodeWithTag(TIMELINE_TAG).performTouchInput { down(Offset(width - 30f, height * 0.68f)) }
 
         capture("home_timeline_touched")
-    }
-
-    @Test
-    fun `la ligne du temps horizontale correspond à sa capture`() {
-        val world = FakeWorld(Moment.Trajet).apply {
-            media.stop()
-            settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
-        }
-        show(world)
-
-        capture("home_horizontal_timeline")
     }
 }
 

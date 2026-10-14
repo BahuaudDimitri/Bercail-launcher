@@ -43,7 +43,6 @@ import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
@@ -211,17 +210,6 @@ class HomeScreenUiTest {
 
         assertThat(line.height).isGreaterThan(line.width)
         listOf("09:30", "12:30", "14:00", "18:30", "21:00").forEach { compose.onNodeWithText(it).assertExists() }
-    }
-
-    @Test
-    fun `en réglage horizontal, la ligne du temps se couche sous l'en-tête`() {
-        val world = FakeWorld(Moment.Matin)
-        world.settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
-        show(world)
-
-        val line = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
-
-        assertThat(line.width).isGreaterThan(line.height)
     }
 
     // ---------- drawer ----------

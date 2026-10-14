@@ -16,7 +16,6 @@ import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
 import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
@@ -146,18 +145,6 @@ class HomeViewModelTest {
 
         assertThat(marks.map { it.time }).containsExactly("09:30", "12:30", "14:00", "18:30", "21:00")
         assertThat(marks.single { it.next }.time).isEqualTo("14:00")
-    }
-
-    @Test
-    fun `la ligne du temps suit le réglage vertical ou horizontal`() = runTest(dispatcher) {
-        val world = FakeWorld(Moment.Matin)
-        val home = homeOf(world)
-        show(home)
-        assertThat(home.state.value.timeline).isEqualTo(TimelineOrientation.Vertical)
-
-        world.settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
-
-        assertThat(home.state.value.timeline).isEqualTo(TimelineOrientation.Horizontal)
     }
 
     // ---------- drawer ----------

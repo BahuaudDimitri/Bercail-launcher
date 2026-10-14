@@ -68,7 +68,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineOrientation
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoCountdown
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
@@ -316,13 +315,6 @@ private fun Navigation() {
         }, modifier = Modifier.height(TALL))
         BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpen = {})
     }
-    BcTimeline(
-        now = NOW,
-        marks = day,
-        orientation = BcTimelineOrientation.Horizontal,
-        modifier = Modifier.fillMaxWidth().height(LINE),
-        onOpen = {}
-    )
 }
 
 @Composable
@@ -373,7 +365,6 @@ private const val NOW = 0.1f
 private val SWATCH = 28.dp
 private val TALL = 260.dp
 private val TIMELINE_WIDTH = 64.dp
-private val LINE = 44.dp
 private val BRUME_HEIGHT = 420.dp
 private val COVER_GAP = 48.dp
 private val REMOTE = 52.dp

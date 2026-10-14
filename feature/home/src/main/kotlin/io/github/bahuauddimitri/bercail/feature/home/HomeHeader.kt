@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -26,26 +25,22 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineOrientation
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayLine
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 
 /**
- * The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day;
- * so does the line of the day when it lies under it, on the appointment the finger was on ([onOpenDay] is given its
- * id, or nothing).
+ * The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day
+ * ([onOpenDay] is given nothing: no appointment in particular).
  */
 @Composable
 internal fun HomeHeader(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
-    val vertical = state.timeline == TimelineOrientation.Vertical
     Column(
         modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = SIDE, top = TOP, end = if (vertical) TIMELINE_ROOM else SIDE)
+            .padding(start = SIDE, top = TOP, end = TIMELINE_ROOM)
     ) {
         Column(
             Modifier
@@ -57,20 +52,6 @@ internal fun HomeHeader(state: HomeUiState, onOpenDay: (String?) -> Unit, modifi
             BcText(state.glance.countdown, style = BcTextStyle.LabelStrong, color = BcTextColor.Muted, maxLines = 1)
             BcText(state.glance.title, style = BcTextStyle.AgendaTitle, maxLines = 1)
             state.glance.after?.let { BcText(it, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 1) }
-        }
-        AnimatedVisibility(visible = !vertical && state.page == HomePage.Home) {
-            BcTimeline(
-                now = state.dayLine.now,
-                marks = state.dayLine.timelineMarks,
-                orientation = BcTimelineOrientation.Horizontal,
-                description = TIMELINE_DESCRIPTION,
-                onOpen = { onOpenDay(it?.key) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = HORIZONTAL_GAP)
-                    .height(HORIZONTAL_LINE)
-                    .testTag(TIMELINE_TAG)
-            )
         }
     }
 }
@@ -84,7 +65,7 @@ internal fun HomeHeader(state: HomeUiState, onOpenDay: (String?) -> Unit, modifi
 internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
     val motion = BcTheme.motion
     AnimatedVisibility(
-        visible = state.timeline == TimelineOrientation.Vertical && state.page == HomePage.Home,
+        visible = state.page == HomePage.Home,
         modifier = modifier,
         enter = fadeIn(tween(motion.fadeMillis)) +
             expandVertically(tween(motion.timelineMillis, easing = motion.easing), expandFrom = Alignment.Top),
@@ -115,8 +96,6 @@ private val TOP = 18.dp
 private val TIMELINE_ROOM = 96.dp
 private val LINE_GAP = 3.dp
 private val WEATHER_GAP = 6.dp
-private val HORIZONTAL_GAP = 10.dp
-private val HORIZONTAL_LINE = 44.dp
 private val VERTICAL_TOP = 34.dp
 private val VERTICAL_EDGE = 12.dp
 private val VERTICAL_BOTTOM = 24.dp

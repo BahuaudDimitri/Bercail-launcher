@@ -78,31 +78,4 @@ class BcNavigationScreenshotTest {
                 )
             }
         }
-
-    @Test
-    fun `la ligne du temps couchée et touchée, soulevée sous le doigt, correspond à sa capture`() =
-        compose.captureComponent(
-            name = "timeline_horizontal_wave",
-            before = { onNodeWithTag("line").performTouchInput { down(Offset(width * 0.47f, centerY)) } }
-        ) {
-            Box(Modifier.width(360.dp).height(120.dp), contentAlignment = Alignment.BottomCenter) {
-                BcTimeline(
-                    now = 0.1f,
-                    marks = day,
-                    orientation = BcTimelineOrientation.Horizontal,
-                    modifier = Modifier.width(360.dp).height(44.dp).testTag("line"),
-                    onOpen = {}
-                )
-            }
-        }
-
-    @Test
-    fun `la ligne du temps horizontale correspond à sa capture`() = compose.captureComponent("timeline_horizontal") {
-        BcTimeline(
-            now = 0.1f,
-            marks = day,
-            orientation = BcTimelineOrientation.Horizontal,
-            modifier = Modifier.width(360.dp).height(44.dp)
-        )
-    }
 }

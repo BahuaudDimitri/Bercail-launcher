@@ -58,7 +58,9 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 
 Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 
-### 1.1 Supprimer l'option « Barre horizontale » — `Précisé`
+### 1.1 Supprimer l'option « Barre horizontale » — `Livré`
+
+**Livré le 14 octobre 2026** : le choix a quitté les Réglages et la ligne couchée le code ; un ancien réglage « horizontal » est ignoré, puis effacé au premier réglage changé. Essayé et validé par Dimitri sur le Pixel (version debug).
 
 - **Retour :** « Supprimer l'option Barre horizontale ».
 - **Décision (14 octobre) :** on supprime tout le code, pas seulement l'option. Le choix disparaît des Réglages ; `TimelineOrientation.Horizontal` quitte le domaine et les réglages ; la branche horizontale disparaît de `HomeHeader.kt`, de `BcTimeline` (avec ses captures) et de `BcGallery`. Un réglage déjà enregistré en horizontal est lu comme vertical. À faire avant la météo sur le fil (3.1), qui n'aura plus qu'une ligne à gérer.

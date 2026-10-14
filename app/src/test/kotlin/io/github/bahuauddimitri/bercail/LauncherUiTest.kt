@@ -110,7 +110,7 @@ class LauncherUiTest {
     @Test
     fun `les Réglages de Bercail s'ouvrent depuis la recherche, le retour ramène à la recherche`() {
         openSettings()
-        compose.onNodeWithText("Ligne du temps").assertExists()
+        compose.onNodeWithText("État de départ").assertExists()
         // What the settings cover is no longer read out.
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
 

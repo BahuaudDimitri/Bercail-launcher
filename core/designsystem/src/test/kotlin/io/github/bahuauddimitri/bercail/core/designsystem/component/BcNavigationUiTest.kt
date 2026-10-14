@@ -192,13 +192,7 @@ class BcNavigationUiTest {
     private val openedOn = mutableListOf<String?>()
 
     /** The line of the day, 400 dp long, tagged "line"; what it opens is noted in [openedOn]. */
-    private fun showLine(
-        marks: List<BcTimelineMark> = day,
-        orientation: BcTimelineOrientation = BcTimelineOrientation.Vertical,
-        haptics: HapticFeedback? = null
-    ) {
-        val vertical = orientation == BcTimelineOrientation.Vertical
-        val size = if (vertical) Modifier.height(400.dp).width(78.dp) else Modifier.width(400.dp).height(44.dp)
+    private fun showLine(marks: List<BcTimelineMark> = day, haptics: HapticFeedback? = null) {
         compose.setContent {
             CompositionLocalProvider(LocalHapticFeedback provides (haptics ?: LocalHapticFeedback.current)) {
                 BcTheme {
@@ -206,8 +200,7 @@ class BcNavigationUiTest {
                         BcTimeline(
                             now = 0.1f,
                             marks = marks,
-                            modifier = size.testTag("line"),
-                            orientation = orientation,
+                            modifier = Modifier.height(400.dp).width(78.dp).testTag("line"),
                             onOpen = { openedOn += it?.key }
                         )
                     }
@@ -284,19 +277,6 @@ class BcNavigationUiTest {
             atRest.getValue(time).left - compose.onNodeWithText(time).getUnclippedBoundsInRoot().left
         assertThat(shift("15:00")).isGreaterThan(40.dp)
         assertThat(shift("08:00")).isLessThan(4.dp)
-    }
-
-    @Test
-    fun `couchée, la ligne se parcourt aussi du doigt, et se soulève sous lui`() {
-        showLine(orientation = BcTimelineOrientation.Horizontal)
-        val atRest = compose.onNodeWithText("15:00").getUnclippedBoundsInRoot()
-
-        compose.onNodeWithTag("line").performTouchInput { down(Offset(width * 0.47f, centerY)) }
-
-        bubble.assert(hasAnyDescendant(hasText("15:00 · Point design")) or hasText("15:00 · Point design"))
-        assertThat(atRest.top - compose.onNodeWithText("15:00").getUnclippedBoundsInRoot().top).isGreaterThan(16.dp)
-        compose.onNodeWithTag("line").performTouchInput { up() }
-        assertThat(openedOn).containsExactly("design")
     }
 
     @Test

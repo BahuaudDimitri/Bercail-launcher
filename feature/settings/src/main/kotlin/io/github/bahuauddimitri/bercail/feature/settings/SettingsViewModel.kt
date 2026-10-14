@@ -20,7 +20,6 @@ import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Updates
@@ -83,7 +82,6 @@ data class SettingsUiState(
 /** What the settings screen does. Every change is stored at once. */
 interface SettingsActions {
     fun onIdleBackground(background: IdleBackground)
-    fun onTimeline(orientation: TimelineOrientation)
     fun onDrawerExpandedAtStart(expanded: Boolean)
     fun onToggleFavoriteApp(appId: String)
     fun onMainMediaApp(appId: String)
@@ -135,8 +133,6 @@ class SettingsViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SettingsUiState())
 
     override fun onIdleBackground(background: IdleBackground) = change { it.copy(idleBackground = background) }
-
-    override fun onTimeline(orientation: TimelineOrientation) = change { it.copy(timeline = orientation) }
 
     override fun onDrawerExpandedAtStart(expanded: Boolean) = change { it.copy(drawerExpandedAtStart = expanded) }
 

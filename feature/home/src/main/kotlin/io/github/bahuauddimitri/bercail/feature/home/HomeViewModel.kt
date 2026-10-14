@@ -33,7 +33,6 @@ import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.screen.backgroundFor
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
@@ -62,7 +61,6 @@ data class HomeUiState(
     val weather: WeatherCondition = WeatherCondition.Clear,
     val dayPart: DayPart = DayPart.Morning,
     val dayLine: DayLine = DayLine(now = 0f, marks = emptyList()),
-    val timeline: TimelineOrientation = TimelineOrientation.Vertical,
     /** False until the user lets Bercail read the calendar: the screen then offers to link it. */
     val agendaAllowed: Boolean = true,
     /** The « Aujourd'hui » sheet: whether it is open, the date under its title, the appointments of the day. */
@@ -250,7 +248,6 @@ class HomeViewModel private constructor(
             weather = weather?.condition ?: WeatherCondition.Clear,
             dayPart = part,
             dayLine = dayLineAt(day.now, day.events),
-            timeline = drawer.settings.timeline,
             agendaAllowed = day.agendaAllowed,
             dayOpen = choices.day.open,
             dayDate = day.now.toLocalDate().inWords(),

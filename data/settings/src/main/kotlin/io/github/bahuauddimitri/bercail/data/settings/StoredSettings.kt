@@ -11,7 +11,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +34,8 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
             val wanted = transform(saved.toSettings())
             saved[FAVORITE_PEOPLE] = wanted.favoritePeople.joinToString(SEPARATOR)
             saved[FAVORITE_APPS] = wanted.favoriteApps.joinToString(SEPARATOR)
-            saved[TIMELINE] = wanted.timeline.name
+            // The line of the day could lie down in older versions; it no longer can.
+            saved.remove(TIMELINE)
             saved[DRAWER_EXPANDED] = wanted.drawerExpandedAtStart
             saved[IDLE_BACKGROUND] = wanted.idleBackground.name
             saved.keep(wanted.weatherCity)
@@ -48,7 +48,6 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
         return Settings(
             favoritePeople = this[FAVORITE_PEOPLE]?.toList() ?: defaults.favoritePeople,
             favoriteApps = this[FAVORITE_APPS]?.toList() ?: defaults.favoriteApps,
-            timeline = TimelineOrientation.entries.firstOrNull { it.name == this[TIMELINE] } ?: defaults.timeline,
             drawerExpandedAtStart = this[DRAWER_EXPANDED] ?: defaults.drawerExpandedAtStart,
             idleBackground = IdleBackground.entries.firstOrNull { it.name == this[IDLE_BACKGROUND] }
                 ?: defaults.idleBackground,

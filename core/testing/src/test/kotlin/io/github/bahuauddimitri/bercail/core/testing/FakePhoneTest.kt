@@ -7,7 +7,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -80,8 +79,8 @@ class FakePhoneTest {
     fun `un réglage changé reste changé`() = runTest {
         val settings = FakeSettingsSource()
 
-        settings.update { it.copy(timeline = TimelineOrientation.Horizontal) }
+        settings.update { it.copy(drawerExpandedAtStart = true) }
 
-        assertThat(settings.settings.first().timeline).isEqualTo(TimelineOrientation.Horizontal)
+        assertThat(settings.settings.first().drawerExpandedAtStart).isEqualTo(true)
     }
 }

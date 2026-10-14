@@ -9,7 +9,6 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -45,7 +44,6 @@ class StoredSettingsTest {
         val settings = withSettings { it.settings.first() }
 
         assertThat(settings).isEqualTo(Settings())
-        assertThat(settings.timeline).isEqualTo(TimelineOrientation.Vertical)
         assertThat(settings.idleBackground).isEqualTo(IdleBackground.Wallpaper)
         assertThat(settings.drawerExpandedAtStart).isEqualTo(false)
     }
@@ -53,11 +51,11 @@ class StoredSettingsTest {
     @Test
     fun `un réglage changé est lu changé`() {
         val settings = withSettings {
-            it.update { current -> current.copy(timeline = TimelineOrientation.Horizontal) }
+            it.update { current -> current.copy(idleBackground = IdleBackground.Brume) }
             it.settings.first()
         }
 
-        assertThat(settings.timeline).isEqualTo(TimelineOrientation.Horizontal)
+        assertThat(settings.idleBackground).isEqualTo(IdleBackground.Brume)
     }
 
     @Test
@@ -67,7 +65,6 @@ class StoredSettingsTest {
                 current.copy(
                     favoriteApps = listOf("com.spotify.music/.Main", "com.beeper/.Home"),
                     favoritePeople = listOf("lea", "tom"),
-                    timeline = TimelineOrientation.Horizontal,
                     drawerExpandedAtStart = true,
                     idleBackground = IdleBackground.Brume
                 )
@@ -78,7 +75,6 @@ class StoredSettingsTest {
 
         assertThat(afterRestart.favoriteApps).containsExactly("com.spotify.music/.Main", "com.beeper/.Home")
         assertThat(afterRestart.favoritePeople).containsExactly("lea", "tom")
-        assertThat(afterRestart.timeline).isEqualTo(TimelineOrientation.Horizontal)
         assertThat(afterRestart.drawerExpandedAtStart).isTrue()
         assertThat(afterRestart.idleBackground).isEqualTo(IdleBackground.Brume)
     }
@@ -126,11 +122,24 @@ class StoredSettingsTest {
     fun `une valeur inconnue dans le fichier laisse le réglage à sa valeur par défaut`() = runBlocking {
         val job = Job()
         val store = settingsStore(file, CoroutineScope(Dispatchers.IO + job))
-        store.edit { it[stringPreferencesKey("timeline")] = "Diagonal" }
+        store.edit { it[stringPreferencesKey("idle_background")] = "Diagonal" }
 
         val settings = StoredSettings(store).settings.first()
         job.cancelAndJoin()
 
-        assertThat(settings.timeline).isEqualTo(TimelineOrientation.Vertical)
+        assertThat(settings.idleBackground).isEqualTo(IdleBackground.Wallpaper)
+    }
+
+    @Test
+    fun `la ligne couchée d'une version précédente est effacée du fichier au premier réglage changé`() = runBlocking {
+        val job = Job()
+        val store = settingsStore(file, CoroutineScope(Dispatchers.IO + job))
+        store.edit { it[stringPreferencesKey("timeline")] = "Horizontal" }
+
+        StoredSettings(store).update { it.copy(drawerExpandedAtStart = true) }
+        val saved = store.data.first()
+        job.cancelAndJoin()
+
+        assertThat(saved[stringPreferencesKey("timeline")]).isNull()
     }
 }

@@ -79,7 +79,7 @@ class LauncherDeviceTest {
 
         compose.onNodeWithText("Réglages de Bercail").performClick()
 
-        awaitText("Ligne du temps")
+        awaitText("État de départ")
     }
 
     @Test

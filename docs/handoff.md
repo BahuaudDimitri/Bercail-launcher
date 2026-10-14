@@ -29,7 +29,7 @@ L'accueil a deux écrans (Accueil et Écoute) et un seul tiroir en verre en bas,
 | Zone | Décision |
 | --- | --- |
 | Haut de l'accueil | Météo en une ligne (température + phrase), puis « Dans 1 h 20 · 09:30 », le titre du prochain rendez-vous en grand, et « Ensuite … à … ». Toucher ce bloc ouvre le tiroir « Aujourd'hui ». |
-| Ligne du temps | Verticale par défaut, le long du bord droit, de 7 h (haut) à minuit (au-dessus du tiroir). Passé en trait plein, futur en pointillé, point lumineux pour maintenant, heure écrite à côté de chaque rendez-vous, le prochain entouré. Variante horizontale disponible dans les réglages. Aucun point de message sur la ligne. |
+| Ligne du temps | Verticale par défaut, le long du bord droit, de 7 h (haut) à minuit (au-dessus du tiroir). Passé en trait plein, futur en pointillé, point lumineux pour maintenant, heure écrite à côté de chaque rendez-vous, le prochain entouré. Aucun point de message sur la ligne. (La variante horizontale a été retirée le 14 octobre 2026 : feuille de route, point 1.1.) |
 | Milieu | Zone d'ambiance, non interactive sauf la pastille musique et le glissement horizontal entre écrans. Points de pagination en bas, visibles seulement si un contenu média existe. |
 | Tiroir replié (défaut) | Poignée, puis deux lignes : messages (un point couleur par personne + « 2 non lus · Léa, Tom »), maison (« Salon 60 %, Volets ouverts »). Puis la barre « Chercher ». |
 | Tiroir ouvert (Essentiel) | 4 favoris en tuiles pastel + « Tous » (ouvre Beeper, compte les non-lus hors favoris), 4 commandes maison rondes + « Tout » (ouvre l'app Hue). Barre « Chercher » inchangée. |

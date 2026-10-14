@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -40,7 +39,6 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_BULGE
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_SPREAD
@@ -66,11 +64,10 @@ data class BcTimelineMark(
     val key: String? = null
 )
 
-enum class BcTimelineOrientation { Vertical, Horizontal }
-
 /**
- * The day from 7 am to midnight: past as a solid line, future dotted, a glowing dot for now,
- * the time of each appointment beside it and the next one circled. Marks outside the day are not drawn.
+ * The day from 7 am (top) to midnight (bottom), along the right edge: past as a solid line, future dotted, a
+ * glowing dot for now, the time of each appointment beside it and the next one circled. Marks outside the day are
+ * not drawn.
  *
  * With [onOpen], the line answers to the finger like the alphabet of the search: while it is touched, it bends
  * around the finger, a bubble names the appointment the finger is closest to (with a tick at each new one), and
@@ -81,23 +78,20 @@ fun BcTimeline(
     now: Float,
     marks: List<BcTimelineMark>,
     modifier: Modifier = Modifier,
-    orientation: BcTimelineOrientation = BcTimelineOrientation.Vertical,
     description: String? = null,
     onOpen: ((BcTimelineMark?) -> Unit)? = null
 ) {
-    val vertical = orientation == BcTimelineOrientation.Vertical
     val visible = marks.filter { it.position in 0f..1f }
     val touch = remember { TimelineTouch() }
     val swell = animateFloatAsState(if (touch.down) 1f else 0f, tween(BcTheme.motion.fadeMillis), label = "day wave")
-    val bulge = if (vertical) WAVE_BULGE else FLAT_BULGE
     // How far the line stands away from its place, this many pixels along it.
     val lean: Density.(Float) -> Float = { along ->
-        bulge.toPx() * swell.value * bell(along - touch.finger, WAVE_SPREAD.toPx())
+        WAVE_BULGE.toPx() * swell.value * bell(along - touch.finger, WAVE_SPREAD.toPx())
     }
     val bubbleShown by remember { derivedStateOf { swell.value > 0f && touch.last >= 0 } }
     Box(
         modifier
-            .onSizeChanged { touch.length = if (vertical) it.height else it.width }
+            .onSizeChanged { touch.length = it.height }
             .semantics {
                 if (description != null) contentDescription = description
                 if (onOpen != null) {
@@ -109,7 +103,7 @@ fun BcTimeline(
             }
     ) {
         Canvas(Modifier.matchParentSize()) {
-            drawLine(vertical, now.coerceIn(0f, 1f), visible, bent = swell.value > 0f) { lean(it) }
+            drawLine(now.coerceIn(0f, 1f), visible, bent = swell.value > 0f) { lean(it) }
         }
         visible.forEachIndexed { index, mark ->
             BcText(
@@ -117,11 +111,11 @@ fun BcTimeline(
                 style = BcTextStyle.Micro,
                 color = if (mark.next || index == touch.reached) BcTextColor.Primary else BcTextColor.Muted,
                 maxLines = 1,
-                modifier = Modifier.matchParentSize().placeBeside(mark.position, vertical, lean)
+                modifier = Modifier.matchParentSize().placeBeside(mark.position, lean)
             )
         }
-        if (onOpen != null) FingerZone(vertical, visible, touch, onOpen)
-        if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), vertical, bulge, swell, touch)
+        if (onOpen != null) FingerZone(visible, touch, onOpen)
+        if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), swell, touch)
     }
 }
 
@@ -146,23 +140,12 @@ private class TimelineTouch {
  * the times beside it, so that the rest of the screen keeps its own gestures.
  */
 @Composable
-private fun BoxScope.FingerZone(
-    vertical: Boolean,
-    marks: List<BcTimelineMark>,
-    touch: TimelineTouch,
-    onOpen: (BcTimelineMark?) -> Unit
-) {
+private fun BoxScope.FingerZone(marks: List<BcTimelineMark>, touch: TimelineTouch, onOpen: (BcTimelineMark?) -> Unit) {
     val current by rememberUpdatedState(marks)
     val open by rememberUpdatedState(onOpen)
     val haptics by rememberUpdatedState(LocalHapticFeedback.current)
-    val zone = if (vertical) {
-        Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE)
-    } else {
-        Modifier.fillMaxSize()
-    }
     Box(
-        zone.followFinger(
-            vertical = vertical,
+        Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE).followFinger(
             onMove = { along ->
                 touch.finger = along.coerceIn(0f, touch.length.toFloat())
                 touch.down = true
@@ -194,23 +177,17 @@ private val BcTimelineMark.spoken: String get() = if (title.isBlank()) label els
 
 /** The appointment under the finger, in a light bubble that follows it on the far side of the wave. */
 @Composable
-private fun BoxScope.Bubble(text: String, vertical: Boolean, bulge: Dp, swell: State<Float>, touch: TimelineTouch) {
+private fun BoxScope.Bubble(text: String, swell: State<Float>, touch: TimelineTouch) {
     Box(
         modifier = Modifier
             .matchParentSize()
             .layout { measurable, constraints ->
                 val bubble = measurable.measure(Constraints(maxWidth = BUBBLE_MAX.roundToPx()))
                 layout(constraints.maxWidth, constraints.maxHeight) {
-                    val away = (bulge.toPx() * swell.value).roundToInt()
-                    if (vertical) {
-                        val x = constraints.maxWidth - (LINE_INSET + BUBBLE_BESIDE).roundToPx() - away - bubble.width
-                        val y = (touch.finger - bubble.height / 2f).roundToInt()
-                        bubble.place(x, y.coerceIn(0, (constraints.maxHeight - bubble.height).coerceAtLeast(0)))
-                    } else {
-                        val x = (touch.finger - bubble.width / 2f).roundToInt()
-                        val y = (LINE_INSET - BUBBLE_ABOVE).roundToPx() - away - bubble.height
-                        bubble.place(x.coerceIn(0, (constraints.maxWidth - bubble.width).coerceAtLeast(0)), y)
-                    }
+                    val away = (WAVE_BULGE.toPx() * swell.value).roundToInt()
+                    val x = constraints.maxWidth - (LINE_INSET + BUBBLE_BESIDE).roundToPx() - away - bubble.width
+                    val y = (touch.finger - bubble.height / 2f).roundToInt()
+                    bubble.place(x, y.coerceIn(0, (constraints.maxHeight - bubble.height).coerceAtLeast(0)))
                 }
             }
             .graphicsLayer { alpha = swell.value }
@@ -222,21 +199,15 @@ private fun BoxScope.Bubble(text: String, vertical: Boolean, bulge: Dp, swell: S
     }
 }
 
-private fun DrawScope.drawLine(
-    vertical: Boolean,
-    now: Float,
-    marks: List<BcTimelineMark>,
-    bent: Boolean,
-    lean: (Float) -> Float
-) {
+private fun DrawScope.drawLine(now: Float, marks: List<BcTimelineMark>, bent: Boolean, lean: (Float) -> Float) {
     val inset = LINE_INSET.toPx()
-    val length = if (vertical) size.height else size.width
+    val length = size.height
 
     /** The point of the line at this share of the day, pushed away from its place around the finger. */
     fun at(fraction: Float): Offset {
         val along = fraction * length
         val away = if (bent) lean(along) else 0f
-        return if (vertical) Offset(size.width - inset - away, along) else Offset(along, inset - away)
+        return Offset(size.width - inset - away, along)
     }
 
     fun stretch(from: Float, to: Float) = Path().apply {
@@ -283,23 +254,15 @@ private fun DrawScope.drawLine(
  * Places a label beside the line, centered on its fraction of the day and kept inside the timeline; it follows the
  * line when it [lean]s away from its place.
  */
-private fun Modifier.placeBeside(fraction: Float, vertical: Boolean, lean: Density.(Float) -> Float) =
-    layout { measurable, constraints ->
-        val label = measurable.measure(Constraints())
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            val length = if (vertical) constraints.maxHeight else constraints.maxWidth
-            val away = lean(fraction * length).roundToInt()
-            if (vertical) {
-                val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
-                val y = (fraction * constraints.maxHeight - label.height / 2f).roundToInt()
-                label.place(x - away, y.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
-            } else {
-                val x = (fraction * constraints.maxWidth - label.width / 2f).roundToInt()
-                val y = (LINE_INSET + LABEL_GAP).roundToPx()
-                label.place(x.coerceIn(0, (constraints.maxWidth - label.width).coerceAtLeast(0)), y - away)
-            }
-        }
+private fun Modifier.placeBeside(fraction: Float, lean: Density.(Float) -> Float) = layout { measurable, constraints ->
+    val label = measurable.measure(Constraints())
+    layout(constraints.maxWidth, constraints.maxHeight) {
+        val away = lean(fraction * constraints.maxHeight).roundToInt()
+        val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
+        val y = (fraction * constraints.maxHeight - label.height / 2f).roundToInt()
+        label.place(x - away, y.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
     }
+}
 
 private const val OPEN_DAY = "Voir la journée"
 private const val PAST_ALPHA = 0.55f
@@ -315,18 +278,14 @@ private val NOW_RADIUS = 3.5.dp
 private val GLOW = 11.dp
 private val LABEL_GAP = 12.dp
 
-/** Lying down, the line has the header just above it: it rises less than it leans when standing. */
-private val FLAT_BULGE = 32.dp
-
 /** How finely the bent line is drawn. */
 private val BEND_STEP = 4.dp
 
-/** How wide the standing line takes the finger, from the edge it runs along. */
+/** How wide the line takes the finger, from the edge it runs along. */
 private val FINGER_ZONE = 48.dp
 
-/** The bubble stands clear of the times written beside the standing line, and above the lying one. */
+/** The bubble stands clear of the times written beside the line. */
 private val BUBBLE_BESIDE = 56.dp
-private val BUBBLE_ABOVE = 10.dp
 private val BUBBLE_MAX = 240.dp
 private val BUBBLE_SIDE = 14.dp
 private val BUBBLE_EDGE = 8.dp

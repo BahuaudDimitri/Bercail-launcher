@@ -4,8 +4,6 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.MAX_FAVORITE_PEOPLE
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import kotlinx.coroutines.flow.Flow
 
-enum class TimelineOrientation { Vertical, Horizontal }
-
 /** What is behind the home screen when nothing is loaded in a media app. */
 enum class IdleBackground { Wallpaper, Brume }
 
@@ -13,7 +11,6 @@ enum class IdleBackground { Wallpaper, Brume }
 data class Settings(
     val favoritePeople: List<String> = emptyList(),
     val favoriteApps: List<String> = emptyList(),
-    val timeline: TimelineOrientation = TimelineOrientation.Vertical,
     val drawerExpandedAtStart: Boolean = false,
     val idleBackground: IdleBackground = IdleBackground.Wallpaper,
     /** The city whose weather is shown, or nothing for the place where the phone is. */

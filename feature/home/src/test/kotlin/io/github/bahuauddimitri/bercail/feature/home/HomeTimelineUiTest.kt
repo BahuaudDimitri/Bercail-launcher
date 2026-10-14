@@ -14,7 +14,6 @@ import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import org.junit.Rule
@@ -72,17 +71,5 @@ class HomeTimelineUiTest {
         line.performTouchInput { click(Offset(10f, height * 0.5f)) }
 
         assertThat(home.state.value.dayOpen).isEqualTo(false)
-    }
-
-    @Test
-    fun `couchée, la ligne du temps se parcourt du doigt sans changer d'écran`() {
-        val world = FakeWorld(Moment.Trajet)
-        world.settings.change { it.copy(timeline = TimelineOrientation.Horizontal) }
-        show(world)
-
-        line.performTouchInput { swipe(start = Offset(width * 0.9f, centerY), end = Offset(width * 0.2f, centerY)) }
-
-        assertThat(home.state.value.page).isEqualTo(HomePage.Home)
-        assertThat(home.state.value.dayOpen).isEqualTo(true)
     }
 }

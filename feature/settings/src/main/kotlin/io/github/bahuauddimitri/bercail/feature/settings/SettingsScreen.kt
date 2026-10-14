@@ -18,7 +18,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 
 /**
  * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the favorite apps and
@@ -112,15 +111,6 @@ fun SettingsScreen(
         MessagesRows(state, onAsk = { onAskAccess(Access.Messages) }, onPickPeople)
         BcSectionLabel("Agenda")
         SourceRow(state.agenda, onAsk = { onAskAccess(Access.Calendar) })
-        BcSettingRow("Ligne du temps", subtitle = "Comment afficher l'approche du prochain rendez-vous") {
-            BcSegmented(
-                options = listOf("Horizontale", "Verticale"),
-                selected = if (settings.timeline == TimelineOrientation.Horizontal) 0 else 1,
-                onSelect = {
-                    actions.onTimeline(if (it == 0) TimelineOrientation.Horizontal else TimelineOrientation.Vertical)
-                }
-            )
-        }
         BcSectionLabel("Météo")
         BcSettingRow(
             title = state.weather.title,

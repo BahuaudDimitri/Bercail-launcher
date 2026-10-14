@@ -21,27 +21,26 @@ internal val WAVE_SPREAD = 56.dp
 internal fun bell(distance: Float, spread: Float): Float = exp(-(distance * distance) / (2f * spread * spread))
 
 /**
- * Tells where the finger is along the rail (down it when [vertical], across it otherwise), from the moment it
- * touches it until it lifts, wherever it slides meanwhile. The touch is taken: nothing behind the rail slides with
- * it. [onLift] is the finger leaving the screen; [onCancel], the touch taken away by something else.
+ * Tells how far down the rail the finger is, from the moment it touches it until it lifts, wherever it slides
+ * meanwhile. The touch is taken: nothing behind the rail slides with it. [onLift] is the finger leaving the screen;
+ * [onCancel], the touch taken away by something else.
  */
 internal fun Modifier.followFinger(
-    vertical: Boolean = true,
     onMove: (Float) -> Unit,
     onLift: () -> Unit,
     onCancel: () -> Unit = onLift
-): Modifier = pointerInput(vertical) {
+): Modifier = pointerInput(Unit) {
     awaitEachGesture {
         var lifted = false
         try {
             val down = awaitFirstDown()
             down.consume()
-            onMove(if (vertical) down.position.y else down.position.x)
+            onMove(down.position.y)
             do {
                 val event = awaitPointerEvent()
                 event.changes.forEach { change ->
                     if (change.pressed) {
-                        onMove(if (vertical) change.position.y else change.position.x)
+                        onMove(change.position.y)
                         change.consume()
                     }
                 }

@@ -20,7 +20,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
-import io.github.bahuauddimitri.bercail.core.domain.settings.TimelineOrientation
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -79,14 +78,11 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `la ligne du temps est verticale par défaut, on peut la coucher`() {
+    fun `les Réglages ne proposent plus de coucher la ligne du temps`() {
         show()
 
-        compose.onNodeWithText("Horizontale").performClick()
-        assertThat(stored.timeline).isEqualTo(TimelineOrientation.Horizontal)
-
-        compose.onNodeWithText("Verticale").performClick()
-        assertThat(stored.timeline).isEqualTo(TimelineOrientation.Vertical)
+        compose.onNodeWithText("Ligne du temps").assertDoesNotExist()
+        compose.onNodeWithText("Horizontale").assertDoesNotExist()
     }
 
     @Test
