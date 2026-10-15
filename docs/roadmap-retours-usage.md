@@ -94,11 +94,11 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 
 - **Décision (14 octobre) :** Dimitri veut revoir des fonds façon Brume plutôt qu'un simple accès au sélecteur d'Android. Le point devient 6.6. Rien n'est ajouté aux Réglages en attendant.
 
-### 1.7 Chrome facilement accessible — `À préciser`
+### 1.7 Chrome facilement accessible — `Précisé`
 
 - **Constat :** « Chercher sur le web » n'apparaît que quand la recherche ne trouve rien, et ouvre l'app Google (`ACTION_WEB_SEARCH`), pas Chrome. Chrome peut déjà être mis en app favorite dans les Réglages.
 - **Décidé (14 octobre) :** Chrome s'ouvre tel qu'il a été laissé, comme en touchant son icône.
-- **À préciser :** pas un glissement : Dimitri préfère un bouton ou un autre élément à l'écran. À chercher ensemble à partir des maquettes inspirantes qu'il a trouvées (séance dédiée, à rapprocher de 6.1).
+- **Décision (15 octobre, séance 6.1) :** un **dock** de cinq icônes au trait, sans libellé, dans le bandeau replié de l'accueil, juste au-dessus de la barre « Chercher » : les apps favorites des réglages, cinq au plus, dans l'ordre choisi, Chrome en tête. Icône réelle de l'app rendue en monochrome dans un anneau (pas de glyphes dessinés à la main, pour tenir toutes les apps). Présent sur l'accueil seulement, pas dans la feuille ouverte ni sur Écoute. Le réglage « Apps favorites » devient « Dock ». Livré par la vague 3 de 6.1.
 
 ## Lot 2 — Gestes et transitions
 
@@ -204,17 +204,23 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 
 ## Lot 6 — Direction artistique
 
-### 6.1 Moderniser avec des apps inspirantes — `À préciser`
+### 6.1 Moderniser avec des apps inspirantes — `Précisé`
 
-- **Piste :**
-  - Un moodboard, par exemple Nothing Launcher, Niagara, Météo d'Apple, Arc, Things, Linear.
-  - Puis 2 ou 3 maquettes, comme pour la piste C.
-- **À préciser :** tes apps de référence et ce qui te plaît dans chacune.
+- **Références (15 octobre) :** quatre épingles Pinterest de thèmes KWGT/KLWP. Leur geste commun : un cordon tendu depuis le bord haut avec une poignée ronde, un accent unique sur fond nuit, une rangée d'icônes monochromes. Plus la planche « Bercail — pistes accueil » du 14 octobre (fil à plomb, météo sur le fil, réveil en bout de ligne).
+- **Séance du 15 octobre :** trois planches. [Trois directions](https://claude.ai/artifact/4M2KFj6bJf7ypqCJrXgvC9) (A reskin, B relecture, C carte blanche) ; [Cadran](https://claude.ai/artifact/52Bp3K5kFqkUYEETGp4BaN) (C corrigée sur sept écrans) ; [Bercail Cadran, référence](https://claude.ai/artifact/5NHHJQSjetVk85mu8XfSjD) (onze écrans et états, le tableau des décisions, les vagues). **La référence fait foi pour le rendu** ; `docs/handoff.md` (« Décisions UX figées » et « Direction artistique », révisées le 15 octobre) fait foi pour les règles.
+- **Décisions (15 octobre) :** direction **« Cadran »**. Le rendez-vous reste le héros, pas d'horloge. Le fil tendu depuis le bord, à 3 dp, sans crans, titres des rendez-vous sur le fil, anneau de maintenant, réveil en bout ; lâcher sur un rendez-vous l'ouvre dans l'agenda du téléphone. Le bas de l'accueil replié devient un bandeau plat : résumé, dock, barre « Chercher » en pilule bordée. La pastille musique reste, alignée sur le réveil. La feuille ouverte, en verre givré, ne contient que les gens et la maison, en anneaux. Les bulles restent. Vrais boutons en pilule partout. Trois accents du moment, ceux de Brume.
+- **Reste à préciser :** l'écran Écoute. Figé : rien que le lecteur, ni dock ni barre « Chercher », la pochette dans le cercle. Provisoire : lecteur simple façon Spotify (pochette ronde, barre de progression, précédent / lecture / suivant). Dimitri cherche des références musique ; à reprendre en séance, avec 4.1.
+- **Vagues**, chacune livrable seule sur `main`, en TDD, chaque composant nouveau entrant d'abord dans le design system avec ses tests, sa capture et sa ligne de catalogue :
+  1. **Le fil** : `BcColors` (accents du moment, jeton trait) ; `BcTimeline` (départ au bord, 3 dp, anneau, titres avec la règle d'écartement, réveil en bout, lâcher ouvre l'agenda). L'accueil garde son tiroir d'aujourd'hui.
+  2. **Le bandeau et la feuille** : `BcBand` (plat), `BcSheet` en verre givré (6.2), feuille ouverte réduite aux gens et à la maison, `BcRing` à la place de `BcPersonTile` et `BcHomeToggle`, `BcSearchField` avec son liseré, `HomeDrawer` réécrit.
+  3. **Le dock** : `BcDock`, icônes monochromes depuis `:data:apps`, réglage « Dock » (1.7).
+  4. **Les feuilles** : recherche, conversation, journée, apps média sur `BcSheet` ; lignes à anneau ; `BcButton` en pilule partout ; réglages à plat.
+  5. **Écoute** : après les références musique.
 
-### 6.2 Effet « frozen glass » sur les écrans transparents — `À préciser`
+### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 
 - **Piste :** flou d'arrière-plan avec la bibliothèque Haze (RenderEffect), seulement sur les panneaux et seulement quand rien ne bouge derrière. Coût GPU à mesurer avec Perfetto.
-- **À préciser :** les écrans concernés et l'intensité voulue.
+- **Décision (15 octobre, séance 6.1) :** le verre givré est la feuille, et seulement elle : tiroir ouvert, recherche, conversation, journée, apps média. Le bandeau replié de l'accueil n'a plus de verre du tout. Valeurs : noir bleuté à 46 % (80 % pour la recherche), flou 36 dp, saturation 1,7, reflet blanc 11 % → 0 sur le haut, liseré blanc 16 %, coins 32 dp, poignée. Rendu seulement feuille ouverte et Brume figée ; mesure Perfetto avant d'être gardé. Livré par la vague 2 de 6.1.
 
 ### 6.3 Revoir les effets météo — `À préciser`
 

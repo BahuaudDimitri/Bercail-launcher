@@ -14,7 +14,7 @@ Bercail (« Fil » dans le prototype et dans les premières versions de ce docum
 - **Rien ne bouge.** Les éléments gardent leur place d'un moment à l'autre ; seul le contenu change.
 - **Des activités, pas des apps.** Pas de grille d'icônes sur l'accueil : des gens, une maison, un son, un agenda.
 - **Agir sans ouvrir d'app.** Répondre, piloter la musique, allumer une lumière se font depuis l'accueil.
-- **Un seul langage de tiroir.** Tout ce qui s'ouvre (recherche, conversation, journée, apps média) est le même tiroir en verre, depuis le bas.
+- **Un seul langage de feuille.** Tout ce qui s'ouvre (tiroir, recherche, conversation, journée, apps média) est la même feuille de verre givré, depuis le bas ; replié, le bas de l'accueil est un bandeau plat (révisé le 15 octobre 2026, direction « Cadran »).
 
 **Références**
 
@@ -24,20 +24,23 @@ Bercail (« Fil » dans le prototype et dans les premières versions de ce docum
 
 ## Décisions UX figées
 
-L'accueil a deux écrans (Accueil et Écoute) et un seul tiroir en verre en bas, qui change de contenu selon le contexte.
+Révisées le 15 octobre 2026 avec la direction « Cadran » (feuille de route, point 6.1 ; référence visuelle : [Bercail Cadran, référence](https://claude.ai/artifact/5NHHJQSjetVk85mu8XfSjD)). L'accueil a deux écrans (Accueil et Écoute). Replié, le bas de l'accueil est un bandeau plat ; tout ce qui s'ouvre (tiroir, recherche, conversation, journée, apps média) est la même feuille de verre givré, depuis le bas.
 
 | Zone | Décision |
 | --- | --- |
-| Haut de l'accueil | Météo en une ligne (température + phrase), puis « Dans 1 h 20 · 09:30 », le titre du prochain rendez-vous en grand, et « Ensuite … à … ». Toucher ce bloc ouvre le tiroir « Aujourd'hui ». |
-| Ligne du temps | Verticale par défaut, le long du bord droit, de 7 h (haut) à minuit (au-dessus du tiroir). Passé en trait plein, futur en pointillé, point lumineux pour maintenant, heure écrite à côté de chaque rendez-vous, le prochain entouré. Aucun point de message sur la ligne. (La variante horizontale a été retirée le 14 octobre 2026 : feuille de route, point 1.1.) |
-| Milieu | Zone d'ambiance, non interactive sauf la pastille musique et le glissement horizontal entre écrans. Points de pagination en bas, visibles seulement si un contenu média existe. |
-| Tiroir replié (défaut) | Poignée, puis deux lignes : messages (un point couleur par personne + « 2 non lus · Léa, Tom »), maison (« Salon 60 %, Volets ouverts »). Puis la barre « Chercher ». |
-| Tiroir ouvert (Essentiel) | 4 favoris en tuiles pastel + « Tous » (ouvre Beeper, compte les non-lus hors favoris), 4 commandes maison rondes + « Tout » (ouvre l'app Hue). Barre « Chercher » inchangée. |
-| Écran Écoute | Existe seulement si un contenu est chargé (lecture ou pause). Grande pochette avec halo de sa couleur, titre sur 2 lignes max, artiste, bouton « Ouvrir dans \<app> ». Le tiroir devient la télécommande : progression (touchable), précédent, lecture/pause, suivant. La ligne du temps s'efface. |
-| Pastille musique | Sur l'accueil, en bas à gauche du milieu. Avec contenu : pochette ronde + « Titre · Artiste » + égaliseur animé (figé en pause), ouvre Écoute. Sans contenu : icône note + « Écouter… », ouvre le tiroir des apps média. |
-| Tiroir apps média | App principale en tête (mise en avant, « Reprendre « dernier contenu » », bouton lecture), puis les autres apps média installées. |
-| Recherche | La barre « Chercher » est le champ lui-même. Au toucher, le tiroir grandit jusqu'en haut, ses lignes se replient, la liste apparaît. « Réglages de Fil » en tête, apps favorites, puis A à Z avec alphabet en vague sur le bord (lettres utilisées seulement). En tapant : résultats ancrés en bas, sections Apps, Gens, Messages, Maison, Agenda, Réglages ; sinon propositions web et Play Store. |
-| Conversation | Tiroir : en-tête personne + réseau (« WhatsApp via Beeper ») + lien Beeper, bulles (couleur de la personne / les miennes en clair), dictée, champ, envoyer. Les réponses rapides du prototype ont été retirées le 13 octobre 2026 (voir la vague 8). |
+| Haut de l'accueil | Météo en une ligne (température + phrase, glyphe météo dans l'accent du moment), puis « Dans 1 h 20 · 09:30 », le titre du prochain rendez-vous en grand (34 sp, graisse 200), et « Ensuite … à … ». Toucher ce bloc ouvre la feuille « Aujourd'hui ». Pas d'horloge : l'heure reste dans la barre d'état. |
+| Le fil (ligne du temps) | Vertical, tendu depuis le bord haut de l'écran, à 3 dp, le long du bord droit, jusqu'à minuit au-dessus du bandeau. Passé en trait plein dans l'accent du moment avec un halo, futur en trait fin de 1 dp. Aucun cran, aucune heure écrite hors des rendez-vous. Chaque rendez-vous : un point et « Titre 09:30 » à gauche du fil ; le prochain entouré d'accent ; les passés dans l'accent, atténués. Deux rendez-vous à moins de 30 min : le second ne montre que son heure. Maintenant : un anneau de 16 dp cerclé d'accent, avec halo. Au bout du fil, le réveil du lendemain en anneau creux, « 07:15 · réveil · 9° ». La météo sur le fil (segments colorés, point 3.1) reste possible. Toucher le fil sans glisser ouvre la journée ; glisser le long du fil le courbe autour du doigt et nomme le rendez-vous le plus proche dans une bulle ; lâcher l'ouvre dans l'agenda du téléphone, sur ce rendez-vous. Aucun point de message sur le fil. |
+| Milieu | Zone d'ambiance (Brume), non interactive sauf la pastille musique et le glissement horizontal entre écrans. La pastille musique en bas à gauche, alignée sur l'heure du réveil : pochette ronde + « Titre · Artiste » + égaliseur dans l'accent (figé en pause), ouvre Écoute ; sans contenu : note + « Écouter… », ouvre la feuille des apps média. Points de pagination : deux traits courts sous la pastille, le courant dans l'accent, visibles seulement si un contenu média existe. |
+| Bandeau replié (défaut) | Remplace le tiroir replié en verre. Plat, sans fond ni poignée : une ligne résumé (points couleur par personne + « 2 non lus · Léa, Tom » · « Salon 60 %, Volets ouverts »), le dock, puis la barre « Chercher » en pilule bordée de 48 dp. Toucher une ligne du résumé ou glisser vers le haut ouvre la feuille. La barre « Chercher » ne change jamais de position, quel que soit l'état. |
+| Dock | Cinq icônes au trait, 44 dp, sans libellé, dans le bandeau au-dessus de la barre « Chercher » : les apps favorites des réglages, cinq au plus, dans l'ordre choisi. Icône réelle de l'app rendue en monochrome dans un anneau. Toucher ouvre l'app telle qu'elle a été laissée (point 1.7, Chrome). Présent sur l'accueil seulement. |
+| Feuille ouverte (Essentiel) | Verre givré (voir la direction artistique), avec poignée. Contient seulement « Gens » : 4 favoris en anneaux pastel de 52 dp avec initiale et non-lus dans l'accent, + « Tous » (ouvre Beeper, compte les non-lus hors favoris) ; et « Maison » : 4 commandes en anneaux, allumé en pastel, éteint en gris, + « Tout » (ouvre l'app Hue). Ni dock ni barre « Chercher » dedans : ils restent dans le bandeau, sous la feuille. 62 % de l'écran au plus. |
+| Écran Écoute (à préciser) | Existe seulement si un contenu est chargé (lecture ou pause). Figé : le fil, le bandeau et la pastille s'effacent, le haut de l'accueil reste ; rien que le lecteur, ni dock ni barre « Chercher » ; l'intérieur du cercle est la pochette de ce qui joue. Provisoire, en attendant les références musique de Dimitri : pochette ronde de 224 dp avec halo à sa couleur, titre 24 sp sur deux lignes au plus, artiste, barre de progression touchable avec temps écoulé et durée, précédent / lecture / suivant en boutons ronds (seulement ceux que l'app accepte), « Ouvrir dans ‹app› » en bouton pilule. |
+| Feuille des apps média | Feuille de verre : app principale en tête (mise en avant, « Reprendre « dernier contenu » », bouton lecture), puis les autres apps média installées, en lignes à anneau. |
+| Recherche | La barre « Chercher » est le champ lui-même et ne bouge pas. Au toucher, la feuille monte jusqu'en haut (verre à 80 %). Vide : « Réglages de Bercail » en tête, le dock, puis A à Z avec l'alphabet en vague sur le bord (lettres utilisées seulement). En tapant : résultats ancrés sur la barre, en montant Apps, Gens, Messages, Agenda, Maison, Réglages (point 1.4) ; lettres trouvées dans l'accent ; Entrée ouvre la première app ; sinon propositions web et Play Store. Lignes : anneau de 36 dp avec l'icône monochrome ou l'initiale, texte 17 sp. |
+| Conversation | Feuille de verre : en-tête personne + réseau (« WhatsApp via Beeper ») + bouton « Beeper », bulles (pastel de la personne / les miennes en clair), « Annuler l'envoi » avec son anneau de compte à rebours, champ « Répondre » en pilule bordée, envoi en bouton rond plein d'accent. (Dictée retirée le 14 octobre, réponses rapides le 13 octobre.) |
+| Journée | Feuille de verre : « Aujourd'hui · date », bouton « Agenda », le fil en petit à gauche des lignes : passé dans l'accent, prochain entouré, journée entière en anneau creux. |
+| Réglages | Panneau opaque sans cartes : sections en capitales espacées, lignes séparées d'un filet, sélecteurs en pilule, interrupteurs au trait, boutons en pilule. « Apps favorites » devient « Dock » (cinq au plus, ordre choisi). |
+| Boutons | Toujours une pilule bordée (36 dp, liseré blanc 20 %, fond blanc 6 %) ; plein d'accent pour l'action principale (envoyer, installer). Jamais de texte souligné. |
 | Fond | Brume (taches floues aux couleurs de la pochette) quand un contenu est chargé. Sans contenu : fond d'écran de l'utilisateur, en fondu. Option : garder la brume aux couleurs du moment. |
 | Météo visible | Pluie (traits en biais + gouttes sur la vitre sur l'image), vent (rafales ondulées), neige (flocons), nuit (étoiles, sauf pluie). Image traitée : plus claire et chaude au soleil, plus sombre et froide sous la pluie, pâle sous la neige. |
 
@@ -84,29 +87,35 @@ Chaque règle ci-dessous est vérifiable et doit devenir au moins un test.
 
 ## Direction artistique
 
-Interface sombre unique, en relief doux et en verre, avec des pastels pour les personnes et la maison. Valeurs reprises du prototype v14, à transposer en tokens Compose.
+Révisée le 15 octobre 2026 avec la direction « Cadran ». Interface sombre unique : du texte, un fil, des traits et des anneaux sur un seul fond ; le verre givré réservé à ce qui s'ouvre ; un seul aplat d'accent par écran ; les pastels pour les personnes et la maison. Valeurs de la référence [Bercail Cadran, référence](https://claude.ai/artifact/5NHHJQSjetVk85mu8XfSjD), à transposer en jetons Compose.
 
 | Token | Valeur | Usage |
 | --- | --- | --- |
-| Fond de base | `#15161F` (nuit `#101119` → `#1B1C2A`) | Sous la brume |
+| Fond de base | `#101119` (dégradé `#101119` → `#1B1C2A`) | Sous la brume |
 | Texte | `#ECEBF4` | Texte principal |
 | Texte discret | `#B2B0C4` | Libellés, heures |
-| Verre tiroir | noir bleuté 34 % (ouvert 50 %, recherche 80 %, feuilles 62 %), flou 26 + saturation 1.5 | Tiroir et feuilles |
-| Tuile | blanc 7.5 % + liseré blanc 10 % | Boutons éteints, puces |
+| Accent du moment | pêche `#F6C28B` le matin, bleu-vert `#9FD8C4` la journée, lavande `#B4A7F0` le soir (les couleurs de Brume) | Fil passé, anneau de maintenant, non-lus, égaliseur, bouton principal, progression ; un seul aplat par écran |
+| Halo d'accent | accent à 55 % | Derrière le fil passé, l'anneau, la pochette |
+| Trait | blanc 22 % (fil futur, filets), 35 % (anneaux des listes), 20 % (boutons) ; 1 à 1,5 dp | Tout ce qui est dessiné au trait |
+| Verre de la feuille | noir bleuté `#161722` à 46 %, flou 36 dp saturation 1,7, reflet blanc 11 % → 0 sur le haut, liseré blanc 16 %, coins 32 dp en haut, poignée blanc 38 % ; recherche : 80 % | Feuille ouverte, recherche, conversation, journée, apps média |
+| Bandeau | aucun fond | Le bas de l'accueil replié |
+| Pilule bordée | fond blanc 6 %, liseré blanc 20 %, rayon plein | Boutons, barre « Chercher » (fond `#0A0A10` à 42 %, liseré 18 %), champ « Répondre », pastille musique (blanc 7,5 %, liseré 12 %) |
 | Pastel 1 | `#F2A49A` | Léa, Chauffage |
 | Pastel 2 | `#9CC4F0` | Tom, Volets |
 | Pastel 3 | `#9FD8C4` | Équipe, Spotify |
 | Pastel 4 | `#B4A7F0` | Maman, Cinéma, Beeper |
 | Pastel 5 | `#F6C28B` | Julien, Salon, Home Assistant |
-| Éteint | `#4A4A5C` | Commande éteinte dans la recherche |
+| Éteint | `#5C5B70` | Anneau d'une commande éteinte, interrupteur à l'arrêt |
 
-**Typographie** : Outfit (Google Fonts), graisses 200 à 700. Titre du rendez-vous 30 sp graisse 300 ; texte courant 13,5 à 15 sp ; libellés 11 à 12,5 sp, jamais moins de 10,5 sp.
+**Typographie** : Outfit (Google Fonts), graisses 200 à 700. Titre du rendez-vous 34 sp graisse 200 ; titre d'Écoute 24 sp graisse 300 ; lignes de liste 17 sp ; texte courant 13,5 à 15 sp ; libellés 11 à 12,5 sp, sections des réglages en capitales espacées 11 sp ; jamais moins de 10,5 sp.
 
-**Formes** : tuiles personnes 46 dp rayon 16 ; commandes maison rondes 48 dp ; tiroir et feuilles rayon 30 en haut ; pilules rayon plein ; cibles tactiles ≥ 40 dp.
+**Formes** : anneaux des personnes et des commandes 52 dp, trait 1,5 dp ; anneaux des listes 36 dp ; icônes du dock 44 dp ; anneau de maintenant 16 dp ; boutons en pilule 36 dp ; barre « Chercher » 48 dp ; feuille rayon 32 en haut ; pochette d'Écoute ronde ; cibles tactiles ≥ 40 dp.
 
-**Mouvements** : tiroir et feuilles 350 à 450 ms, courbe (0.2, 0.8, 0.2, 1) ; fondus 200 à 350 ms ; ligne du temps qui se rétracte en 500 ms ; aucune animation ne déplace une cible pendant qu'on la vise. Tout respecte « réduire les animations ».
+**Mouvements** : feuille 350 à 450 ms, courbe (0.2, 0.8, 0.2, 1) ; fondus 200 à 350 ms ; fil qui se rétracte en 500 ms ; aucune animation ne déplace une cible pendant qu'on la vise. Tout respecte « réduire les animations ».
 
-**Brume** : quatre taches radiales aux deux couleurs de la pochette (extraites avec Palette), mélange additif, dérive lente (vent : plus loin et plus vite), légère respiration en lecture, 30 images/s max, pause hors écran. Un voile sombre en haut garantit la lisibilité de l'agenda. Sans pochette : couleurs du moment (matin pêche, journée bleu-vert, soir lavande).
+**Brume** : quatre taches radiales aux deux couleurs de la pochette (extraites avec Palette), mélange additif, dérive lente (vent : plus loin et plus vite), légère respiration en lecture, 20 images/s max, pause hors écran. Un voile sombre en haut garantit la lisibilité de l'agenda. Sans pochette : couleurs du moment (matin pêche, journée bleu-vert, soir lavande), les mêmes que l'accent.
+
+**Verre givré** : rendu seulement quand une feuille est ouverte, et seulement si rien ne bouge derrière (Brume figée) ; coût mesuré avec Perfetto avant d'être gardé (feuille de route, point 6.2).
 
 ## Réglages de Fil
 
