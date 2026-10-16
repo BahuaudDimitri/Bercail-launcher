@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 
 /**
@@ -74,7 +75,7 @@ fun BcReplyField(
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = placeholder },
                 textStyle = BcType.message.copy(color = BcColors.text),
                 maxLines = MAX_LINES,
-                cursorBrush = SolidColor(BcColors.text),
+                cursorBrush = SolidColor(BcTheme.moment.accent),
                 interactionSource = interactions,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
