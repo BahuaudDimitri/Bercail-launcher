@@ -9,10 +9,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
@@ -83,6 +86,37 @@ class BcButtonUiTest {
     }
 
     @Test
+    fun `le bouton Envoyer d'une réponse est un rond de 48 dp plein de l'accent du moment`() {
+        show { BcReplyField(value = "J'arrive", onValueChange = {}, onSend = {}) }
+
+        val send = compose.onNodeWithContentDescription("Envoyer")
+        send.assertHeightIsEqualTo(48.dp).assertWidthIsEqualTo(48.dp)
+        val pixels = send.captureToImage().toPixelMap()
+        val inside = with(compose.density) { SEND_INSIDE.roundToPx() }
+        assertThat(pixels[inside, pixels.height / 2].distanceTo(BcMoment.Day.accent)).isLessThan(TOLERANCE)
+    }
+
+    @Test
+    fun `le champ Répondre est une pilule d'au moins 48 dp`() {
+        show { BcReplyField(value = "", onValueChange = {}, onSend = {}) }
+
+        compose.onNodeWithTag(REPLY_FIELD_TAG).assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
+    fun `annuler l'envoi n'a pas de fond, son anneau se vide dans l'accent sur un reste blanc`() {
+        show { BcUndoButton(remaining = 0.5f, onUndo = {}) }
+
+        val pixels = compose.onNodeWithText("Annuler l'envoi").captureToImage().toPixelMap()
+        fun at(x: Dp, y: Dp) = with(compose.density) { pixels[x.roundToPx(), y.roundToPx()] }
+        // The ring, 16 dp wide, is centered on the 40 dp target; half of it is left, on the right.
+        assertThat(at(UNDO_RING_RIGHT, UNDO_MIDDLE).distanceTo(BcMoment.Day.accent)).isLessThan(TOLERANCE)
+        val rest = BcColors.strokeButton.compositeOver(BcColors.base)
+        assertThat(at(UNDO_RING_LEFT, UNDO_MIDDLE).distanceTo(rest)).isLessThan(TOLERANCE)
+        assertThat(at(UNDO_BETWEEN, UNDO_TOP).distanceTo(BcColors.base)).isLessThan(TOLERANCE)
+    }
+
+    @Test
     fun `le texte posé sur l'accent est sombre`() {
         assertThat(BcColors.onAccent).isEqualTo(Color(0xFF1B1B24))
     }
@@ -112,6 +146,16 @@ class BcButtonUiTest {
     private companion object {
         /** Inside the round end of the pill, before the 16 dp padding where the label starts. */
         val SURFACE_SIDE = 10.dp
+
+        /** Inside the round send button, left of its arrow. */
+        val SEND_INSIDE = 8.dp
+
+        /** The middle of the stroke of the undo ring, on its right and on its left, and a point beside it. */
+        val UNDO_RING_RIGHT = 15.25.dp
+        val UNDO_RING_LEFT = 0.75.dp
+        val UNDO_MIDDLE = 20.dp
+        val UNDO_BETWEEN = 20.dp
+        val UNDO_TOP = 2.dp
         const val TOLERANCE = 0.03f
     }
 }

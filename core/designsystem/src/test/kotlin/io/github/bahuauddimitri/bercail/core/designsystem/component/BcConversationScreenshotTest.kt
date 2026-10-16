@@ -55,12 +55,14 @@ class BcConversationScreenshotTest {
     }
 
     @Test
-    fun `le champ de réponse, vide puis rempli, correspond à sa capture`() = compose.captureComponent("reply_field") {
-        Column(Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
-            BcReplyField(value = "", onValueChange = {}, onSend = {})
-            BcReplyField(value = "J'arrive dans 10 minutes", onValueChange = {}, onSend = {})
+    fun `le champ de réponse, vide, rempli puis sur quatre lignes, correspond à sa capture`() =
+        compose.captureComponent("reply_field") {
+            Column(Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
+                BcReplyField(value = "", onValueChange = {}, onSend = {})
+                BcReplyField(value = "J'arrive dans 10 minutes", onValueChange = {}, onSend = {})
+                BcReplyField(value = "J'arrive\ndans 10 minutes,\ngarde-moi\nune part", onValueChange = {}, onSend = {})
+            }
         }
-    }
 
     @Test
     fun `la pastille musique correspond à sa capture`() = compose.captureComponent("music_pill") {

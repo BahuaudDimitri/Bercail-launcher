@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -28,8 +29,9 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 
 /**
- * Where an answer is written, at the bottom of a conversation: the field, which grows with the text up to a few
- * lines, and the send button, disabled while there is nothing to send.
+ * Where an answer is written, at the bottom of a conversation: the field, a sunken pill like the "Chercher" bar that
+ * stays a pill as it grows with the text up to four lines, and the round send button filled with the accent of the
+ * moment, disabled while there is nothing to send.
  */
 @Composable
 fun BcReplyField(
@@ -50,9 +52,10 @@ fun BcReplyField(
         Box(
             modifier = Modifier
                 .weight(1f)
+                .testTag(REPLY_FIELD_TAG)
                 .defaultMinSize(minHeight = FIELD_MIN_HEIGHT)
-                .background(BcColors.inset, BcShapes.card)
-                .border(1.dp, if (focused) BcColors.glassEdge else BcColors.tile, BcShapes.card)
+                .background(BcColors.inset, BcShapes.pill)
+                .border(1.dp, if (focused) BcColors.fieldEdgeFocused else BcColors.fieldEdge, BcShapes.pill)
                 .padding(horizontal = FIELD_SIDE, vertical = FIELD_EDGE),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -80,14 +83,17 @@ fun BcReplyField(
             BcIcons.Send,
             contentDescription = "Envoyer",
             onClick = onSend,
-            variant = BcIconButtonVariant.Light,
-            enabled = canSend
+            variant = BcIconButtonVariant.Accent,
+            enabled = canSend,
+            size = SEND_SIZE
         )
     }
 }
 
+internal const val REPLY_FIELD_TAG = "reply-field"
 private const val MAX_LINES = 4
-private val FIELD_MIN_HEIGHT = 44.dp
-private val FIELD_SIDE = 16.dp
-private val FIELD_EDGE = 10.dp
-private val GAP = 8.dp
+private val FIELD_MIN_HEIGHT = 48.dp
+private val SEND_SIZE = 48.dp
+private val FIELD_SIDE = 18.dp
+private val FIELD_EDGE = 12.dp
+private val GAP = 10.dp

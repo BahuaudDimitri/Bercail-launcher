@@ -28,6 +28,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPressVeil
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 
 /**
  * A message bubble. Theirs are in the person's pastel, mine are light. A bubble is always announced
@@ -59,32 +60,37 @@ fun BcBubble(
     }
 }
 
-/** "Annuler l'envoi", under a message just sent, with a ring counting down the time left ([remaining] from 1 to 0). */
+/**
+ * "Annuler l'envoi", under a message just sent: bare muted text after a ring counting down the time left
+ * ([remaining] from 1 to 0), the accent arc over a faint white rest. All of it, at least 40 dp high, is touchable.
+ */
 @Composable
 fun BcUndoButton(remaining: Float, onUndo: () -> Unit, modifier: Modifier = Modifier) {
+    val accent = BcTheme.moment.accent
     Row(
         modifier = modifier
             .defaultMinSize(minHeight = BcSizes.minTouch)
-            .background(BcColors.tile, BcShapes.pill)
-            .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onUndo)
-            .padding(start = UNDO_START, end = UNDO_END),
+            .clickable(null, BcPressVeil.OnDark, role = Role.Button, onClick = onUndo),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(UNDO_GAP)
     ) {
         Canvas(Modifier.size(RING)) {
             val stroke = RING_STROKE.toPx()
             val inset = stroke / 2
+            val topLeft = Offset(inset, inset)
+            val ring = Size(size.width - stroke, size.height - stroke)
+            drawArc(BcColors.strokeButton, 0f, FULL_TURN, false, topLeft, ring, style = Stroke(stroke))
             drawArc(
-                color = BcColors.text,
+                color = accent,
                 startAngle = START_ANGLE,
                 sweepAngle = FULL_TURN * remaining.coerceIn(0f, 1f),
                 useCenter = false,
-                topLeft = Offset(inset, inset),
-                size = Size(size.width - stroke, size.height - stroke),
+                topLeft = topLeft,
+                size = ring,
                 style = Stroke(width = stroke, cap = StrokeCap.Round)
             )
         }
-        BcText("Annuler l'envoi", style = BcTextStyle.LabelStrong)
+        BcText("Annuler l'envoi", style = BcTextStyle.Label, color = BcTextColor.Muted)
     }
 }
 
@@ -112,8 +118,6 @@ private const val START_ANGLE = -90f
 private const val FULL_TURN = 360f
 private val PADDING_H = 13.dp
 private val PADDING_V = 9.dp
-private val UNDO_START = 10.dp
-private val UNDO_END = 14.dp
 private val UNDO_GAP = 8.dp
-private val RING = 18.dp
-private val RING_STROKE = 2.dp
+private val RING = 16.dp
+private val RING_STROKE = 1.5.dp

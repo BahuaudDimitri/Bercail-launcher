@@ -38,7 +38,7 @@ internal class BcPressVeil private constructor(private val color: Color, private
         /** On a light surface: the main button. */
         val OnLight = BcPressVeil(BcColors.pressVeilOnLight)
 
-        /** On a pill: the music pill, « Annuler l'envoi », the handle of the drawer. */
+        /** On a pill: the music pill, the handle of the drawer. */
         val Pill = BcPressVeil(BcColors.pressVeil, fitted = true)
     }
 }
