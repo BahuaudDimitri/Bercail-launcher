@@ -220,14 +220,14 @@ private fun SettingsRow(note: String?, onOpen: () -> Unit) {
     BcListRow("Réglages de Bercail", onClick = onOpen, subtitle = note, leading = BcLeading.Icon(BcIcons.Settings))
 }
 
-/** An app with its icon; until the icon is drawn, or without one, its initial on the neutral tile. */
+/** An app with its icon in one colour in its ring; until it is drawn, or without one, its initial. */
 @Composable
 private fun AppRow(app: App, icons: AppIcons, onOpen: (String) -> Unit) {
-    val icon by produceState(initialValue = icons.known(app.id), app.id) { value = icons.of(app.id) }
+    val glyph by produceState(initialValue = icons.known(app.id), app.id) { value = icons.of(app.id) }
     BcListRow(
         title = app.name,
         onClick = { onOpen(app.id) },
-        leading = icon?.let { BcLeading.Picture(it) } ?: BcLeading.Initials(app.name.take(1).uppercase())
+        leading = glyph?.let { BcLeading.Glyph(it) } ?: BcLeading.Initials(app.name.take(1).uppercase())
     )
 }
 

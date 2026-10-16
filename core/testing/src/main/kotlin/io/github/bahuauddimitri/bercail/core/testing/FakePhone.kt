@@ -38,9 +38,15 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
         return glyphs[appId]
     }
 
-    /** Gives an app a glyph: a white square filling the picture. */
-    fun paintGlyph(appId: String, size: Int = 4) {
-        glyphs[appId] = Picture(size, size, IntArray(size * size) { OPAQUE_WHITE })
+    /**
+     * Gives an app a glyph: a white square filling the picture or, [framed] as a real icon is, filling only its
+     * middle third.
+     */
+    fun paintGlyph(appId: String, size: Int = 4, framed: Boolean = false) {
+        val edge = if (framed) size / FRAME_PARTS else 0
+        fun inside(at: Int) = at >= edge && at < size - edge
+        val pixels = IntArray(size * size) { if (inside(it % size) && inside(it / size)) OPAQUE_WHITE else CLEAR }
+        glyphs[appId] = Picture(size, size, pixels)
     }
 
     override fun open(appId: String) {
@@ -74,6 +80,10 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 }
 
 private const val OPAQUE_WHITE = -0x1
+private const val CLEAR = 0
+
+/** A framed glyph leaves a third of its width clear on each side. */
+private const val FRAME_PARTS = 3
 
 /** A phone that only remembers where it was sent. */
 class FakePhone : Phone {

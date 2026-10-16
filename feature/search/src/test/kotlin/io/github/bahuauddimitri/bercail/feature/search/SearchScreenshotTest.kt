@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -39,8 +40,8 @@ class SearchScreenshotTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val world = FakeWorld(Moment.Matin).apply {
-        apps.paintIcon("spotify", color = SPOTIFY_GREEN)
-        apps.paintIcon("agenda", color = AGENDA_BLUE)
+        apps.paintGlyph("spotify", size = GLYPH_PX, framed = true)
+        apps.paintGlyph("agenda", size = GLYPH_PX, framed = true)
     }
 
     private fun capture(name: String, typed: String = "") {
@@ -67,34 +68,36 @@ class SearchScreenshotTest {
     fun `les propositions web et Play Store correspondent à leur capture`() = capture("search_nothing", typed = "ramen")
 
     @Test
-    fun `l'icône d'une app n'est demandée au téléphone qu'une seule fois`() = runBlocking {
-        val apps = FakeAppsSource(Samples.apps).apply { paintIcon("spotify", color = SPOTIFY_GREEN) }
-        val icons = AppIcons(apps)
-        assertThat(icons.known("spotify")).isNull()
+    fun `le dessin d'une app n'est demandé au téléphone qu'une seule fois, jamais son icône en couleurs`() =
+        runBlocking {
+            val apps = FakeAppsSource(Samples.apps).apply { paintGlyph("spotify") }
+            val icons = AppIcons(apps)
+            assertThat(icons.known("spotify")).isNull()
 
-        val first = icons.of("spotify")
-        val second = icons.of("spotify")
+            val first = icons.of("spotify")
+            val second = icons.of("spotify")
 
-        assertThat(apps.iconRequests).containsExactly("spotify")
-        assertThat(second).isEqualTo(first)
-        assertThat(icons.known("spotify")!!.asAndroidBitmap().getPixel(0, 0)).isEqualTo(SPOTIFY_GREEN)
-    }
+            assertThat(apps.glyphRequests).containsExactly("spotify")
+            assertThat(apps.iconRequests).isEmpty()
+            assertThat(second).isEqualTo(first)
+            assertThat(icons.known("spotify")!!.asAndroidBitmap().getPixel(0, 0)).isEqualTo(OPAQUE_WHITE)
+        }
 
     @Test
-    fun `une app sans icône garde son initiale, sans être redemandée`() = runBlocking {
+    fun `une app sans dessin garde son initiale, sans être redemandée`() = runBlocking {
         val apps = FakeAppsSource(Samples.apps)
         val icons = AppIcons(apps)
 
         assertThat(icons.of("beeper")).isNull()
         assertThat(icons.of("beeper")).isNull()
 
-        assertThat(apps.iconRequests).containsExactly("beeper")
+        assertThat(apps.glyphRequests).containsExactly("beeper")
     }
 
     @Test
-    fun `seules les icônes les plus récentes sont gardées en mémoire`() = runBlocking {
+    fun `seuls les dessins les plus récents sont gardés en mémoire`() = runBlocking {
         val apps = FakeAppsSource(Samples.apps).apply {
-            listOf("spotify", "agenda", "beeper").forEach { paintIcon(it, color = SPOTIFY_GREEN) }
+            listOf("spotify", "agenda", "beeper").forEach { paintGlyph(it) }
         }
         val icons = AppIcons(apps, capacity = 2)
 
@@ -107,8 +110,8 @@ class SearchScreenshotTest {
     }
 
     private companion object {
-        const val SPOTIFY_GREEN = 0xFF1ED760.toInt()
-        const val AGENDA_BLUE = 0xFF4285F4.toInt()
+        const val OPAQUE_WHITE = 0xFFFFFFFF.toInt()
+        const val GLYPH_PX = 30
 
         /** Full screens are kept at half size: readable, and four times lighter in the repository. */
         val HALF_SIZE = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(resizeScale = 0.5))

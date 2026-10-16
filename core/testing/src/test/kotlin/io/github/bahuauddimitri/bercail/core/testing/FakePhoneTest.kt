@@ -63,6 +63,16 @@ class FakePhoneTest {
     }
 
     @Test
+    fun `un dessin d'app factice peut être cadré comme une vraie icône, le carré blanc au milieu`() = runTest {
+        val apps = FakeAppsSource(Samples.apps).apply { paintGlyph("maps", size = 3, framed = true) }
+
+        val clear = 0
+        val white = -1
+        assertThat(apps.glyph("maps")!!.pixels.toList())
+            .containsExactly(clear, clear, clear, clear, white, clear, clear, clear, clear)
+    }
+
+    @Test
     fun `le téléphone factice retient où on l'envoie`() {
         val phone = FakePhone()
 
