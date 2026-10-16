@@ -75,6 +75,30 @@ fun search(query: String, scope: SearchScope): SearchResults {
     )
 }
 
+/**
+ * Where [query] sits in [text] as it is written, as the search finds it (whatever the accents and capitals): the
+ * letters a row shows as found. Nothing when the text does not hold it, or when nothing is typed.
+ */
+fun foundIn(text: String, query: String): IntRange? {
+    val typed = query.searchable()
+    // The text as the search compares it, with the place each of its letters was written at.
+    val written = mutableListOf<Int>()
+    val compared = buildString {
+        text.forEachIndexed { index, letter ->
+            letter.toString().comparable().forEach {
+                append(it)
+                written += index
+            }
+        }
+    }
+    val start = if (typed.isEmpty()) -1 else compared.indexOf(typed)
+    if (start < 0) return null
+    var end = written[start + typed.length - 1]
+    // An accent written apart, after the last letter found, belongs to it.
+    while (end + 1 < text.length && text[end + 1].toString().comparable().isEmpty()) end++
+    return written[start]..end
+}
+
 /** The messaging app is only asked once enough is typed to mean something. */
 fun searchesMessages(query: String): Boolean = query.searchable().length >= MESSAGES_MIN_LENGTH
 
@@ -92,8 +116,11 @@ private fun messageLines(found: List<FoundMessage>, people: List<Conversation>):
     .take(MOST_MESSAGES)
 
 /** A text as the search compares it: no accents, no capitals, no spaces around. */
-internal fun String.searchable(): String =
-    Normalizer.normalize(trim(), Normalizer.Form.NFD).replace(ACCENTS, "").lowercase()
+internal fun String.searchable(): String = trim().comparable()
+
+/** A text without accents nor capitals, its spaces kept. */
+private fun String.comparable(): String =
+    Normalizer.normalize(this, Normalizer.Form.NFD).replace(ACCENTS, "").lowercase()
 
 private fun App.letter(): String {
     val first = name.searchable().firstOrNull()?.uppercaseChar()

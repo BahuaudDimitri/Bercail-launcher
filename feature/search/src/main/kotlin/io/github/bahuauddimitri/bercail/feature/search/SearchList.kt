@@ -36,6 +36,7 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.search.AppDirectory
 import io.github.bahuauddimitri.bercail.core.domain.search.SearchResults
+import io.github.bahuauddimitri.bercail.core.domain.search.foundIn
 import io.github.bahuauddimitri.bercail.core.domain.time.asClockTime
 import kotlinx.coroutines.launch
 
@@ -159,14 +160,16 @@ private fun LazyListScope.found(
             title = control.name,
             onClick = { actions.onToggleControl(control.id) },
             subtitle = control.state,
-            leading = BcLeading.Icon(control.icon)
+            leading = BcLeading.Icon(control.icon),
+            found = foundIn(control.name, state.query)
         )
     }
     family("Agenda", results.events, key = { "event ${it.id}" }) { event ->
         BcListRow(
             title = event.title,
             onClick = { links.onOpenDay(event.id) },
-            leading = BcLeading.Time(event.start.toLocalTime().asClockTime())
+            leading = BcLeading.Time(event.start.toLocalTime().asClockTime()),
+            found = foundIn(event.title, state.query)
         )
     }
     family("Messages", results.messages, key = { "message ${it.person.id} ${it.text}" }) { line ->
@@ -182,10 +185,13 @@ private fun LazyListScope.found(
             title = person.name,
             onClick = { links.onOpenConversation(person.id) },
             subtitle = person.network,
-            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople))
+            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople)),
+            found = foundIn(person.name, state.query)
         )
     }
-    family("Apps", results.apps, key = { "app ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
+    family("Apps", results.apps, key = { "app ${it.id}" }) { app ->
+        AppRow(app, icons, actions::onOpenApp, found = foundIn(app.name, state.query))
+    }
 }
 
 private fun <T> LazyListScope.family(title: String, members: List<T>, key: (T) -> Any, row: @Composable (T) -> Unit) {
@@ -222,12 +228,13 @@ private fun SettingsRow(note: String?, onOpen: () -> Unit) {
 
 /** An app with its icon in one colour in its ring; until it is drawn, or without one, its initial. */
 @Composable
-private fun AppRow(app: App, icons: AppIcons, onOpen: (String) -> Unit) {
+private fun AppRow(app: App, icons: AppIcons, onOpen: (String) -> Unit, found: IntRange? = null) {
     val glyph by produceState(initialValue = icons.known(app.id), app.id) { value = icons.of(app.id) }
     BcListRow(
         title = app.name,
         onClick = { onOpen(app.id) },
-        leading = glyph?.let { BcLeading.Glyph(it) } ?: BcLeading.Initials(app.name.take(1).uppercase())
+        leading = glyph?.let { BcLeading.Glyph(it) } ?: BcLeading.Initials(app.name.take(1).uppercase()),
+        found = found
     )
 }
 

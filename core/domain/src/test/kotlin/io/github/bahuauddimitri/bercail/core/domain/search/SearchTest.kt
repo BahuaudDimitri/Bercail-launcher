@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
@@ -80,6 +81,27 @@ class SearchTest {
     @Test
     fun `la recherche trouve au milieu d'un nom`() {
         assertThat(find("photo").apps.map { it.name }).containsExactly("Appareil photo")
+    }
+
+    @Test
+    fun `les lettres trouvées sont repérées dans le nom tel qu'il s'écrit, accents et majuscules compris`() {
+        assertThat(foundIn("Gmail", "MA")).isEqualTo(1..2)
+        assertThat(foundIn("Écouteurs", "ecou")).isEqualTo(0..3)
+        assertThat(foundIn("Ciné à la maison", "a la")).isEqualTo(5..8)
+        assertThat(foundIn("Café", " fé ")).isEqualTo(2..3)
+    }
+
+    @Test
+    fun `rien n'est repéré quand le nom ne contient pas ce qui est tapé, ou que rien n'est tapé`() {
+        assertThat(foundIn("Gmail", "maps")).isNull()
+        assertThat(foundIn("Gmail", "  ")).isNull()
+    }
+
+    @Test
+    fun `un accent écrit à part dans le nom reste dans les lettres repérées`() {
+        val decomposed = "Café noir"
+
+        assertThat(foundIn(decomposed, "cafe")).isEqualTo(0..4)
     }
 
     @Test

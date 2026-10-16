@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -90,6 +91,16 @@ class SearchListUiTest {
         .maxBy { it.boundsInRoot.top }
         .config[SemanticsProperties.Text]
         .map { it.text }
+
+    /** The letters of this title drawn apart from the others, as found: nothing when none is. */
+    private fun foundLetters(title: String): String {
+        val text = compose.onAllNodes(hasText(title), useUnmergedTree = true)
+            .onFirst()
+            .fetchSemanticsNode()
+            .config[SemanticsProperties.Text]
+            .first()
+        return text.spanStyles.joinToString("") { text.text.substring(it.start, it.end) }
+    }
 
     private fun railLetter(letter: String) = compose.onNode(hasText(letter) and hasAnyAncestor(hasTestTag(RAIL_TAG)))
 
@@ -220,6 +231,22 @@ class SearchListUiTest {
 
         search.onSubmit()
         assertThat(world.apps.opened).containsExactly("spotify")
+    }
+
+    @Test
+    fun `en tapant, les lettres trouvées sont mises en avant dans le nom des apps, des gens et des rendez-vous`() {
+        show(typed = "LÉ")
+
+        assertThat(foundLetters("Léa")).isEqualTo("Lé")
+        assertThat(foundLetters("Téléphone")).isEqualTo("lé")
+        assertThat(foundLetters("Déjeuner avec Léa")).isEqualTo("Lé")
+    }
+
+    @Test
+    fun `avant de taper, aucune lettre n'est mise en avant`() {
+        show()
+
+        assertThat(foundLetters("Chrome")).isEqualTo("")
     }
 
     @Test
