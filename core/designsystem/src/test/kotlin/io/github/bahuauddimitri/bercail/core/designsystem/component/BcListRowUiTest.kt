@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,7 @@ import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
@@ -47,7 +48,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(qualifiers = PIXEL_9)
 class BcListRowUiTest {
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val moment = mutableStateOf(BcMoment.Day)
     private val content = mutableStateOf<@Composable () -> Unit>({})
@@ -67,7 +68,7 @@ class BcListRowUiTest {
         show { BcListRow("Spotify", onClick = {}, modifier = Modifier.testTag(ROW), leading = BcLeading.Initials("S")) }
 
         val pixels = rowPixels()
-        assertThat(pixels.at(RING_STROKE, MIDDLE).distanceTo(BcColors.strokeRing.compositeOver(BcColors.base)))
+        assertThat(pixels.ringDistanceTo(BcColors.strokeRing.compositeOver(BcColors.base)))
             .isLessThan(TOLERANCE)
         assertThat(pixels.at(INSIDE_RING, MIDDLE).distanceTo(BcColors.base)).isLessThan(TOLERANCE)
     }
@@ -83,7 +84,7 @@ class BcListRowUiTest {
             )
         }
 
-        assertThat(rowPixels().at(RING_STROKE, MIDDLE).distanceTo(BcColors.pastelCoral)).isLessThan(TOLERANCE)
+        assertThat(rowPixels().ringDistanceTo(BcColors.pastelCoral)).isLessThan(TOLERANCE)
     }
 
     @Test
@@ -103,7 +104,7 @@ class BcListRowUiTest {
             compose.waitForIdle()
 
             val pixels = rowPixels()
-            assertThat(pixels.at(RING_STROKE, MIDDLE).distanceTo(each.accent)).isLessThan(TOLERANCE)
+            assertThat(pixels.ringDistanceTo(each.accent)).isLessThan(TOLERANCE)
             assertThat(pixels[pixels.width - 2, pixels.height / 2].distanceTo(BcColors.base)).isLessThan(TOLERANCE)
         }
     }
@@ -157,12 +158,38 @@ class BcListRowUiTest {
         compose.waitForIdle()
     }
 
-    private fun rowPixels(): PixelMap = compose.onNodeWithTag(ROW).captureToImage().toPixelMap()
+    /**
+     * The row as drawn. A window whose content did not change since the last test may hand back a blank picture
+     * (its own background, not the row): it is asked to draw again first.
+     */
+    private fun rowPixels(): PixelMap {
+        redraw()
+        return compose.onNodeWithTag(ROW).captureToImage().toPixelMap()
+    }
+
+    private fun redraw() {
+        compose.runOnUiThread { compose.activity.window.decorView.invalidate() }
+        compose.waitForIdle()
+    }
 
     private fun PixelMap.at(x: Dp, y: Dp): Color = with(compose.density) { this@at[x.roundToPx(), y.roundToPx()] }
 
+    /**
+     * How close the stroke of the ring comes to [color], read across its whole 1.5 dp width at the left of the ring,
+     * halfway down the row: a single pixel may fall on its soft edge.
+     */
+    private fun PixelMap.ringDistanceTo(color: Color): Float = with(compose.density) {
+        val middle = MIDDLE.roundToPx()
+        var closest = 1f
+        for (x in 0..RING_STROKE_WIDTH.roundToPx()) {
+            for (y in middle - 1..middle + 1) closest = minOf(closest, this@ringDistanceTo[x, y].distanceTo(color))
+        }
+        closest
+    }
+
     /** How close the drawn [text] comes to [color], over all its pixels. */
     private fun closestTo(color: Color, text: String): Float {
+        redraw()
         val pixels = compose.onNodeWithText(text, useUnmergedTree = true).captureToImage().toPixelMap()
         var closest = 1f
         for (x in 0 until pixels.width) {
@@ -179,8 +206,8 @@ class BcListRowUiTest {
         val ROW_WIDTH = 360.dp
         val NARROW = 200.dp
 
-        /** The middle of the 1.5 dp stroke of the ring, at its left, halfway down the 50 dp row. */
-        val RING_STROKE = 0.75.dp
+        /** The 1.5 dp stroke of the ring, at its left, read halfway down the 50 dp row. */
+        val RING_STROKE_WIDTH = 1.5.dp
         val MIDDLE = 25.dp
 
         /** Inside the ring, beside its initial. */
