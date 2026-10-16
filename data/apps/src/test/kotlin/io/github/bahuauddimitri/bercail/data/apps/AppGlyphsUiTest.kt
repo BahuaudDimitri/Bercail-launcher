@@ -135,7 +135,34 @@ class AppGlyphsUiTest {
         assertThat(apps.glyph(id)).isNotSameInstanceAs(first)
     }
 
+    @Test
+    fun `seuls les dessins des 64 apps vues en dernier restent en mémoire, les autres sont redessinés`() = runBlocking {
+        val ids = (0..KEPT).map { app ->
+            val component = ComponentName("com.app$app", "com.app$app.Main")
+            shadowOf(phone.packageManager).installPackage(
+                PackageInfo().apply {
+                    packageName = component.packageName
+                    lastUpdateTime = 1L
+                    applicationInfo = ApplicationInfo().apply { packageName = component.packageName }
+                }
+            )
+            shadowOf(phone.packageManager).addActivityIfNotPresent(component)
+            shadowOf(phone.packageManager).addActivityIcon(
+                component,
+                AdaptiveIconDrawable(ColorDrawable(Color.BLUE), null, middle(Color.BLACK, 0.3f))
+            )
+            component.flattenToShortString()
+        }
+        val first = apps.glyph(ids.first())
+        val drawn = ids.drop(1).map { apps.glyph(it) }
+
+        // 65 apps seen: the first one, seen longest ago, was let go and is drawn again.
+        assertThat(apps.glyph(ids.first())).isNotSameInstanceAs(first)
+        assertThat(apps.glyph(ids.last())).isSameInstanceAs(drawn.last())
+    }
+
     private companion object {
         const val ALPHA_SHIFT = 24
+        const val KEPT = 64
     }
 }

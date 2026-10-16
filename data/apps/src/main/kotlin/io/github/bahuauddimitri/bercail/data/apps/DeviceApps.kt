@@ -13,13 +13,13 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
+import android.util.LruCache
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.iconGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.monochromeGlyph
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -80,21 +80,25 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         } catch (_: PackageManager.NameNotFoundException) {
             NEVER_UPDATED
         }
-        glyphs[appId]?.takeIf { it.updated == updated }?.let { return@withContext it.glyph }
+        glyphs.get(appId)?.takeIf { it.updated == updated }?.let { return@withContext it.glyph }
         val drawable = try {
             packages.getActivityIcon(component)
         } catch (_: PackageManager.NameNotFoundException) {
             return@withContext null
         }
         val glyph = drawable.glyph(context)
-        glyphs[appId] = Drawn(updated, glyph)
+        glyphs.put(appId, Drawn(updated, glyph))
         glyph
     }
 
     /** A glyph drawn for one version of an app; nothing when it has none that reads. */
     private class Drawn(val updated: Long, val glyph: Picture?)
 
-    private val glyphs = ConcurrentHashMap<String, Drawn>()
+    /**
+     * The glyphs drawn lately: only the [GLYPHS_KEPT] apps seen last, about 3 MB, so that a long list of apps does
+     * not fill the memory. An app let go is drawn again when it shows.
+     */
+    private val glyphs = LruCache<String, Drawn>(GLYPHS_KEPT)
 
     override fun open(appId: String) {
         val component = ComponentName.unflattenFromString(appId) ?: return
@@ -131,6 +135,9 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
 
         /** A package Android tells nothing about: its glyph is drawn once and kept. */
         const val NEVER_UPDATED = -1L
+
+        /** How many glyphs are kept: enough for the dock, the media sheet and a screen of the search. */
+        const val GLYPHS_KEPT = 64
     }
 }
 
