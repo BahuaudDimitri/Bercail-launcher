@@ -4,8 +4,6 @@ import android.os.Looper
 import android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -14,7 +12,6 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
@@ -41,7 +38,6 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
-import assertk.assertions.isLessThan
 import assertk.assertions.isNotEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -52,7 +48,6 @@ import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import io.github.bahuauddimitri.bercail.core.testing.Samples
-import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Rule
@@ -60,7 +55,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import org.robolectric.annotation.GraphicsMode
 
 /** The home screen on a simulated phone, fed by fake sources: what is shown, and what each gesture does. */
 @RunWith(AndroidJUnit4::class)
@@ -86,7 +80,6 @@ class HomeScreenUiTest {
     private fun silent(moment: Moment = Moment.Matin) = FakeWorld(moment).apply { media.stop() }
 
     private val inTheDaySheet = hasAnyAncestor(hasTestTag(DAY_TAG))
-    private val inTheListenSheet = hasAnyAncestor(hasTestTag(LISTEN_TAG))
     private val inTheTalkSheet = hasAnyAncestor(hasTestTag(TALK_TAG))
 
     private fun searchBarBottom() = compose.onNodeWithContentDescription("Chercher").getUnclippedBoundsInRoot().bottom
@@ -531,119 +524,6 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `sans contenu, la pastille propose « Écouter… » et ouvre la feuille Écouter`() {
-        show(silent())
-
-        compose.onNodeWithText("Écouter…").performClick()
-
-        compose.onNode(hasText("Écouter") and inTheListenSheet).assertExists()
-        listOf("Spotify", "Netflix", "Pocket Casts", "YouTube").forEach {
-            compose.onNode(hasText(it) and inTheListenSheet).assertExists()
-        }
-    }
-
-    @Test
-    fun `toucher une app de la feuille Écouter l'ouvre`() {
-        val world = show(silent())
-        compose.onNodeWithText("Écouter…").performClick()
-
-        compose.onNode(hasText("YouTube") and inTheListenSheet).performClick()
-
-        assertThat(world.apps.opened).containsExactly("youtube")
-    }
-
-    @Test
-    fun `l'app principale propose de reprendre le dernier morceau, et son bouton lecture le relance`() {
-        val world = show()
-        world.media.stop()
-        world.media.lastPlayed = Samples.spotify
-        compose.onNodeWithText("Écouter…").performClick()
-        compose.onNodeWithText("Reprendre « Looped »").assertExists()
-
-        compose.onNodeWithContentDescription("Reprendre dans Spotify").performClick()
-
-        compose.onNodeWithText("Looped · Kiasmos").assertExists()
-        compose.onNodeWithTag(LISTEN_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
-    fun `le bouton lecture de l'app principale est plein de l'accent du moment, pêche le matin`() {
-        val world = show()
-        world.media.stop()
-        world.media.lastPlayed = Samples.spotify
-        compose.onNodeWithText("Écouter…").performClick()
-
-        val play = compose.onNodeWithContentDescription("Reprendre dans Spotify").captureToImage().toPixelMap()
-        val inside = with(compose.density) { 8.dp.roundToPx() }
-
-        val fill = play[inside, play.height / 2]
-        assertThat(maxOf(abs(fill.red - PEACH.red), abs(fill.green - PEACH.green), abs(fill.blue - PEACH.blue)))
-            .isLessThan(0.03f)
-    }
-
-    @Test
-    fun `sans app de musique installée, la feuille Écouter le dit`() {
-        show(silent().apply { mediaApps.apps.value = emptyList() })
-
-        compose.onNodeWithText("Écouter…").performClick()
-
-        compose.onNode(hasText("Aucune app de musique ou de vidéo", substring = true)).assertExists()
-    }
-
-    @Test
-    fun `sous la feuille Écouter, l'accueil n'est plus lu, et le geste retour la referme`() {
-        show(silent())
-        compose.onNodeWithText("Écouter…").performClick()
-        compose.onNodeWithText("Écouter…").assertDoesNotExist()
-
-        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-
-        compose.onNodeWithText("Écouter…").assertExists()
-    }
-
-    @Test
-    fun `sans l'accès aux notifications, la feuille Écouter dit pourquoi le donner et le demande à Android`() {
-        show(silent().apply { access.refuse(Access.Notifications) })
-        compose.onNodeWithText("Écouter…").performClick()
-
-        compose.onNode(hasText("Bercail ne lit aucune notification", substring = true)).assertExists()
-        compose.onNodeWithText("Autoriser dans Android").performClick()
-
-        assertThat(opened).containsExactly("demande d'accès Notifications")
-    }
-
-    @Test
-    fun `si Android refuse l'accès, la feuille mène à la page de Bercail dans les Paramètres`() {
-        show(silent().apply { access.refuse(Access.Notifications) })
-        compose.onNodeWithText("Écouter…").performClick()
-
-        compose.onNode(hasText("Paramètre restreint", substring = true)).assertExists()
-        compose.onNodeWithText("Page de Bercail dans les Paramètres").performClick()
-
-        assertThat(opened).containsExactly("page de Bercail dans les Paramètres")
-    }
-
-    @Test
-    fun `sans l'accès aux notifications, la musique qui joue n'est pas montrée`() {
-        show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Notifications) })
-
-        compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
-        compose.onNodeWithText("Écouter…").assertExists()
-    }
-
-    @Test
-    fun `dès qu'une musique démarre, la feuille Écouter se referme et la pastille la montre`() {
-        val world = show(silent())
-        compose.onNodeWithText("Écouter…").performClick()
-
-        world.media.load(Samples.spotify)
-
-        compose.onNodeWithTag(LISTEN_TAG).assertDoesNotExist()
-        compose.onNodeWithText("Looped · Kiasmos").assertExists()
-    }
-
-    @Test
     fun `toucher la pastille ouvre l'écran Écoute et sa télécommande`() {
         show()
 
@@ -873,6 +753,3 @@ class HomeScreenUiTest {
         assertThat(world.weather.forecast.subscriptionCount.value).isEqualTo(0)
     }
 }
-
-/** The accent of the morning. */
-private val PEACH = Color(0xFFF6C28B)

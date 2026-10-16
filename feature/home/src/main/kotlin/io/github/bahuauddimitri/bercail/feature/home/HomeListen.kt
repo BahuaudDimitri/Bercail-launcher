@@ -22,6 +22,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -55,18 +56,20 @@ internal fun ListenSheet(state: HomeUiState, actions: HomeActions, links: HomeLi
 }
 
 @Composable
-private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenActions) {
+private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: HomeActions) {
     Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
         rows.forEach { row ->
-            // Drawn once, when the line first shows; until then, and for an app without icon, its initial.
-            val icon by produceState<Picture?>(null, row.app.id) { value = actions.iconOf(row.app.id) }
+            // In one colour in its ring, drawn when the line first shows; until then, and without one, its initial.
+            val glyph by produceState<Picture?>(null, row.app.id) { value = actions.glyphOf(row.app.id) }
             val resume: (@Composable () -> Unit)? = row.resume?.let {
                 {
                     BcIconButton(
                         icon = BcIcons.Play,
                         contentDescription = "Reprendre dans ${row.app.name}",
                         onClick = { actions.onResume(row.app.id) },
-                        variant = BcIconButtonVariant.Accent
+                        variant = BcIconButtonVariant.Accent,
+                        // Round, 40 dp: it sits within the 50 dp row.
+                        size = BcSizes.minTouch
                     )
                 }
             }
@@ -75,7 +78,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenAction
                 onClick = { actions.onOpenApp(row.app.id) },
                 subtitle = row.resume,
                 leading =
-                    icon.asImage()?.let(BcLeading::Picture) ?: BcLeading.Initials(row.app.name.take(1).uppercase()),
+                    glyph.asImage()?.let(BcLeading::Glyph) ?: BcLeading.Initials(row.app.name.take(1).uppercase()),
                 emphasis = if (row.main) BcRowEmphasis.Accent else BcRowEmphasis.Normal,
                 trailing = resume
             )
