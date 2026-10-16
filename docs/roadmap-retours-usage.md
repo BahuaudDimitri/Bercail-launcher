@@ -261,6 +261,16 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   - Recherche, vide : « Réglages de Bercail » en tête, puis les apps du dock (les mêmes cinq), puis A à Z.
   - Choix techniques acceptés : le dessin d'une seule couleur est fait par `:data:apps`, cadré comme l'icône sur 44 dp, gardé jusqu'à la mise à jour de l'app ; le dock lit la liste des apps installées tant que l'accueil est visible, rien d'autre ; pas de pastille de non-lus.
   - En cours de code : quatre raccourcis au plus, comme le launcher du Pixel, ceux que l'app déclare d'abord, puis ceux de l'usage, puis les épinglés, chacun dans l'ordre que l'app lui donne ; le menu est un verre teinté à 80 % comme la recherche (rien n'est givré au-dessus du bandeau), coins de 22 dp, lignes de 48 dp, anneaux de 32 dp ; le bouton Accueil et l'accueil caché referment aussi le menu ; un lecteur d'écran trouve l'action « Raccourcis » sur chaque icône du dock.
+- **Vague 4 : décisions (16 octobre)**, prises avec Dimitri avant le code :
+  - Recherche : plein écran, sans coins ni poignée, dans le verre de la feuille à 80 % (noir bleuté proche de `#101119`), givré ; Brume se fige pendant la recherche, comme sous les autres feuilles.
+  - Conversation, journée et apps média : plus de voile sombre derrière la feuille, mais toucher au-dessus la ferme toujours.
+  - Feuille des apps média : l'app principale est une ligne à anneau comme les autres, mais son anneau est dans l'accent du moment, « Reprendre ‹ dernier contenu › » dessous, et à droite un bouton lecture rond, plein d'accent.
+  - Journée : l'anneau d'accent marque toujours le prochain rendez-vous, comme sur le fil ; ouvrir la journée sur un rendez-vous fait seulement défiler jusqu'à lui.
+  - Bouton plein d'accent : seulement Envoyer (message), Installer (mise à jour) et le bouton lecture de l'app média principale. Tout le reste (« Autoriser … », « Relier l'agenda », « Beeper », « Agenda »…) est une pilule bordée. Sur Écoute, lecture-pause reste plein clair (la vague 5 refera Écoute, sa mise en page ne bouge pas).
+  - Réglages, lignes d'accès (« Musique en cours », « Messages de Beeper », agenda, position…) : plus d'interrupteur. Tant que l'accès manque, une pilule « Autoriser » à droite ; une fois accordé, « Autorisé » en gris, et toucher la ligne ouvre la page d'Android pour le retirer.
+  - Réglages, ligne de mise à jour : quand une version attend, une pilule d'accent « Installer » à droite ; seul le bouton installe (toucher la ligne n'installe plus).
+  - Réglages, filets entre les lignes : blanc 10 % (les 22 % restent pour le fil futur) ; la direction artistique est corrigée.
+  - Choix techniques acceptés : les boutons sont dessinés à 36 dp dans une cible de 40 dp au moins (les tests des 40 dp portent sur la cible) ; les commandes faites d'une seule icône (flèche retour, × qui vide la recherche) restent des icônes nues ; le champ « Répondre » reste une pilule entière même quand il grandit jusqu'à 4 lignes ; le fond de base `BcColors.base` devient `#101119`, comme dans la direction artistique.
 
 ### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 
