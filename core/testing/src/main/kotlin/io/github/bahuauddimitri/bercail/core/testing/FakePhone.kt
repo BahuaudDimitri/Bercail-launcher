@@ -28,6 +28,20 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
         icons[appId] = Picture(size, size, IntArray(size * size) { color })
     }
 
+    /** The apps whose glyph was asked for so far, in order. */
+    val glyphRequests = mutableListOf<String>()
+    private val glyphs = mutableMapOf<String, Picture>()
+
+    override suspend fun glyph(appId: String): Picture? {
+        glyphRequests += appId
+        return glyphs[appId]
+    }
+
+    /** Gives an app a glyph: a white square filling the picture. */
+    fun paintGlyph(appId: String, size: Int = 4) {
+        glyphs[appId] = Picture(size, size, IntArray(size * size) { OPAQUE_WHITE })
+    }
+
     override fun open(appId: String) {
         opened += appId
     }
@@ -36,6 +50,8 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 
     fun uninstall(appId: String) = apps.update { all -> all.filterNot { it.id == appId } }
 }
+
+private const val OPAQUE_WHITE = -0x1
 
 /** A phone that only remembers where it was sent. */
 class FakePhone : Phone {
