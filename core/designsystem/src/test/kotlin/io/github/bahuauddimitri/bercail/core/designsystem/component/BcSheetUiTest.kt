@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import io.github.bahuauddimitri.bercail.core.designsystem.redraw
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import org.junit.Rule
 import org.junit.Test
@@ -94,6 +95,7 @@ class BcSheetUiTest {
             }
         }
 
+        compose.redraw()
         val pixels = compose.onRoot().captureToImage().toPixelMap()
 
         assertThat(pixels[pixels.width / 2, 2]).isEqualTo(Color.Magenta)

@@ -31,6 +31,7 @@ import assertk.assertions.isFalse
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
+import io.github.bahuauddimitri.bercail.core.designsystem.redraw
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
@@ -163,15 +164,9 @@ class BcListRowUiTest {
      * (its own background, not the row): it is asked to draw again first.
      */
     private fun rowPixels(): PixelMap {
-        redraw()
+        compose.redraw()
         return compose.onNodeWithTag(ROW).captureToImage().toPixelMap()
     }
-
-    private fun redraw() {
-        compose.runOnUiThread { compose.activity.window.decorView.invalidate() }
-        compose.waitForIdle()
-    }
-
     private fun PixelMap.at(x: Dp, y: Dp): Color = with(compose.density) { this@at[x.roundToPx(), y.roundToPx()] }
 
     /**
@@ -189,7 +184,7 @@ class BcListRowUiTest {
 
     /** How close the drawn [text] comes to [color], over all its pixels. */
     private fun closestTo(color: Color, text: String): Float {
-        redraw()
+        compose.redraw()
         val pixels = compose.onNodeWithText(text, useUnmergedTree = true).captureToImage().toPixelMap()
         var closest = 1f
         for (x in 0 until pixels.width) {

@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
@@ -15,7 +16,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -27,6 +28,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
+import io.github.bahuauddimitri.bercail.core.designsystem.redraw
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
@@ -43,7 +45,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(qualifiers = PIXEL_9)
 class BcDayListUiTest {
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val opened = mutableListOf<String>()
     private val accent = BcMoment.Day.accent
@@ -137,7 +139,10 @@ class BcDayListUiTest {
         compose.onNodeWithText("Rendez-vous 15").assertIsNotDisplayed()
     }
 
-    private fun pixels(): PixelMap = compose.onNodeWithTag(LIST).captureToImage().toPixelMap()
+    private fun pixels(): PixelMap {
+        compose.redraw()
+        return compose.onNodeWithTag(LIST).captureToImage().toPixelMap()
+    }
 
     private fun PixelMap.at(x: Dp, y: Dp): Color = with(compose.density) { this@at[x.roundToPx(), y.roundToPx()] }
 

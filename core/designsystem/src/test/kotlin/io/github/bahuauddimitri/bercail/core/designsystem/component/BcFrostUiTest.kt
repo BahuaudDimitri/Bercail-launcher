@@ -3,6 +3,7 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 import android.content.Context
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +18,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
@@ -26,6 +27,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThan
+import io.github.bahuauddimitri.bercail.core.designsystem.redraw
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import kotlin.math.abs
 import org.junit.Rule
@@ -39,7 +41,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BcFrostUiTest {
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private var open by mutableStateOf(true)
@@ -191,6 +193,7 @@ class BcFrostUiTest {
         frostable = false
         showSearch()
 
+        compose.redraw()
         val pixels = compose.onNodeWithTag(BAND).captureToImage().toPixelMap()
         val middle = pixels.height / 2
         // The top corner is glass, not the background: no rounded corner.

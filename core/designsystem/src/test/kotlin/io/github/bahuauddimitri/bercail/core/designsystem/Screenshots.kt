@@ -1,11 +1,13 @@
 package io.github.bahuauddimitri.bercail.core.designsystem
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -35,4 +37,13 @@ fun ComposeContentTestRule.captureComponent(
     mainClock.advanceTimeByFrame()
     waitForIdle()
     onNodeWithTag(CAPTURE).captureRoboImage("src/test/screenshots/$name.png")
+}
+
+/**
+ * Asks the window to draw again, before reading its pixels: a window showing the same thing as in the test before
+ * may otherwise hand back a blank picture (its own background).
+ */
+fun AndroidComposeTestRule<*, out ComponentActivity>.redraw() {
+    runOnUiThread { activity.window.decorView.invalidate() }
+    waitForIdle()
 }
