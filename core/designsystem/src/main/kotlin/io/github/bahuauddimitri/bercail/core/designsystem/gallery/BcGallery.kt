@@ -41,6 +41,9 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayEntry
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayList
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockMenu
@@ -259,6 +262,17 @@ private fun Lists() {
     BcListRow("Léa", onClick = {}, subtitle = "WhatsApp", leading = BcLeading.Initials("L", BcPastel.Coral))
     BcListRow("Stand-up", onClick = {}, leading = BcLeading.Time("08:00"), emphasis = BcRowEmphasis.Dimmed)
     BcListRow("Café avec Tom", onClick = {}, leading = BcLeading.Time("09:30"), emphasis = BcRowEmphasis.Accent)
+    BcDayList(
+        entries = listOf(
+            BcDayEntry("anniversaire", "Journée", "Anniversaire de Léa", BcDayMark.AllDay),
+            BcDayEntry("standup", "08:00", "Stand-up", BcDayMark.Past),
+            BcDayEntry("cafe", "09:30", "Café avec Tom", BcDayMark.Next),
+            BcDayEntry("courses", "18:30", "Courses", BcDayMark.Coming)
+        ),
+        onOpen = {},
+        // The list scrolls by itself: within the scrolling gallery, it needs a height.
+        modifier = Modifier.height(DAY_LIST_HEIGHT)
+    )
 }
 
 @Composable
@@ -438,6 +452,7 @@ private const val UNDO_MILLIS = 6_000
 private const val NOW = 0.1f
 private val SWATCH = 28.dp
 private val TALL = 260.dp
+private val DAY_LIST_HEIGHT = 200.dp
 private val TIMELINE_WIDTH = 200.dp
 private val MOMENT_WIDTH = 64.dp
 private val BRUME_HEIGHT = 420.dp

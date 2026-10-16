@@ -91,6 +91,22 @@ class BcControlsScreenshotTest {
     }
 
     @Test
+    fun `la liste de la journée correspond à sa capture`() = compose.captureComponent("day_list") {
+        BcDayList(
+            entries = listOf(
+                BcDayEntry("anniversaire", "Journée", "Anniversaire de Léa", BcDayMark.AllDay),
+                BcDayEntry("standup", "09:30", "Stand-up", BcDayMark.Past),
+                BcDayEntry("dejeuner", "12:30", "Déjeuner avec Léa", BcDayMark.Past),
+                BcDayEntry("design", "15:00", "Point design", BcDayMark.Next),
+                BcDayEntry("cafe", "15:25", "Café avec Tom", BcDayMark.Coming),
+                BcDayEntry("courses", "18:30", "Courses", BcDayMark.Coming)
+            ),
+            onOpen = {},
+            modifier = Modifier.width(360.dp)
+        )
+    }
+
+    @Test
     fun `les réglages correspondent à leur capture`() = compose.captureComponent("settings_controls") {
         Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
             BcProgress(0.35f, onSeek = {}, modifier = Modifier.width(280.dp))

@@ -3,6 +3,7 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 import android.graphics.BlurMaskFilter
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
@@ -70,15 +71,28 @@ internal fun DrawScope.drawLine(
     drawPath(past, moment.accent, style = Stroke(PAST_WIDTH.toPx(), cap = StrokeCap.Round))
     marks.forEach { mark ->
         val center = at(day.yOf(mark.position))
-        if (mark.next) {
-            drawCircle(BcColors.nightTop, NEXT_GAP.toPx(), center)
-            drawCircle(moment.accent, NEXT_RING.toPx(), center, style = Stroke(RING_WIDTH.toPx()))
-        }
-        val color = if (mark.position <= now) moment.accent else BcColors.text.copy(alpha = FUTURE_DOT_ALPHA)
-        drawCircle(color, MARK_RADIUS.toPx(), center)
+        val color = if (mark.position <= now) moment.accent else FUTURE_DOT
+        drawAppointment(center, MARK_RADIUS.toPx(), color, next = mark.next, accent = moment.accent)
     }
     drawNow(at(nowY), moment)
 }
+
+/**
+ * The dot of an appointment, of [radius], in [color]. The [next] one is circled in the [accent], a dark gap between
+ * the dot and its ring, so that the ring stands apart from the line it sits on. Shared with the list of the day.
+ */
+internal fun DrawScope.drawAppointment(center: Offset, radius: Float, color: Color, next: Boolean, accent: Color) {
+    if (next) {
+        val gap = radius + NEXT_GAP.toPx()
+        val ring = RING_WIDTH.toPx()
+        drawCircle(BcColors.nightTop, gap, center)
+        drawCircle(accent, gap + ring / 2, center, style = Stroke(ring))
+    }
+    drawCircle(color, radius, center)
+}
+
+/** A coming appointment: a white dot at 90 %. */
+internal val FUTURE_DOT = BcColors.text.copy(alpha = 0.9f)
 
 /** The soft glow of the accent under [path]. */
 private fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { canvas ->
@@ -112,7 +126,6 @@ private fun DrawScope.drawNow(center: Offset, moment: BcMoment) {
     drawCircle(moment.accent, NOW_RADIUS.toPx() - border / 2, center, style = Stroke(border))
 }
 
-private const val FUTURE_DOT_ALPHA = 0.9f
 private const val NOW_OUTLINE_ALPHA = 0.7f
 internal val LINE_INSET = 12.dp
 private val PAST_WIDTH = 3.dp
@@ -122,8 +135,9 @@ private val FUTURE_WIDTH = 1.dp
 private val GLOW_WIDTH = 6.dp
 private val GLOW_BLUR = 7.dp
 private val MARK_RADIUS = 3.dp
-private val NEXT_GAP = 6.dp
-private val NEXT_RING = 6.75.dp
+
+/** The dark gap between the dot of the next appointment and its ring. */
+private val NEXT_GAP = 3.dp
 private val RING_WIDTH = 1.5.dp
 private val NOW_RADIUS = 8.dp
 private val NOW_BORDER = 2.5.dp
