@@ -43,6 +43,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVari
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockMenu
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -65,6 +66,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLab
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcShortcut
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcShortcutMenu
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwipeBlock
@@ -221,9 +224,22 @@ private fun PeopleAndHome() {
 @Composable
 private fun Dock() {
     var opened by remember { mutableStateOf("") }
+    var menuOf by remember { mutableStateOf<String?>(null) }
     val names = listOf("Chrome", "Téléphone", "Beeper", "Appareil photo", "Agenda")
-    BcDock(names.map { name -> BcDockApp(name, glyph = null) { opened = name } })
-    BcText(opened.ifEmpty { "Toucher une app du dock" }, style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
+    val shortcuts = listOf("Nouvel onglet", "Navigation privée").map { label ->
+        BcShortcut(label, glyph = null) {
+            opened = label
+            menuOf = null
+        }
+    }
+    val apps = names.map { name -> BcDockApp(name, glyph = null, onLongClick = { menuOf = name }) { opened = name } }
+    BcDock(apps, menu = menuOf?.let { BcDockMenu(it, shortcuts) { menuOf = null } })
+    BcText(
+        opened.ifEmpty { "Toucher une app du dock, ou la garder sous le doigt" },
+        style = BcTextStyle.LabelSmall,
+        color = BcTextColor.Muted
+    )
+    BcShortcutMenu(shortcuts)
 }
 
 @Composable
