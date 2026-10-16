@@ -239,11 +239,24 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   - Haut de l'accueil : un commit de plus dans la vague 1 : titre du rendez-vous en 34 sp graisse 200, glyphe météo dans l'accent du moment.
   - Halo dessiné une fois, sans animation ; `DeviceAlarm` dans `:app`, comme `DeviceClock`.
   - En cours de code (16 octobre) : une nuit claire montre la lune au lieu du soleil dans la ligne météo ; ouvrir les alarmes demande le droit `SET_ALARM` (accordé à l'installation, sans question), que l'horloge exige pour cet écran.
+- **Vague 2 livrée le 16 octobre 2026**, en cinq commits poussés sur `main` : les gens et la maison en anneaux, `BcRing` à la place de `BcPersonTile` et `BcHomeToggle` (`d1f19cb`) ; la barre Chercher en pilule bordée de 48 dp, curseur dans l'accent (`6415f21`) ; le verre des feuilles séparé de leur voile (`5f58480`, sans changement visible) ; le bandeau plat et la feuille posée dessus, `BcBand` et `BcBandSheet` à la place de `BcDrawer` (`378b2fc`) ; le verre givré (`afb8908`, voir 6.2). Pas encore essayée sur le Pixel : voir 6.2 pour la mesure, et à regarder la ligne résumé unique, la feuille qui monte et le glissement vers le bas.
+- **Vague 2 : décisions (16 octobre)**, prises avec Dimitri avant le code :
+  - Sur le fond d'écran de l'utilisateur, que le système dessine hors de portée de Bercail, le flou est impossible : la feuille garde un verre teinté sans flou, plus opaque (62 %).
+  - Avec la musique : la feuille ouverte fige Brume, pour que le verre soit givré tout de suite et que rien ne se redessine derrière elle. La règle vaut pour toutes les feuilles (gens et maison, journée, apps média, conversation).
+  - Résumé : une seule ligne, les messages puis la maison après un petit point. La glisser vers la droite ouvre Beeper ; la toucher ouvre la feuille.
+  - La feuille ouverte se ferme par sa poignée, en glissant vers le bas ou par le geste retour. Toucher à côté ne la ferme pas : le fil et la pastille restent touchables.
+  - Conversation, journée et apps média passent au verre givré dès la vague 2 : c'est le même `BcSheet`.
+  - On suit la planche : la feuille ouverte couvre le bandeau, donc le dock et la barre Chercher. Celle-ci ne bouge jamais ; elle revient à sa place quand la feuille se ferme.
+  - Choix techniques acceptés : `RenderEffect` natif d'Android, sans la bibliothèque Haze ; le commit du verre givré peut être annulé seul si la mesure Perfetto le refuse, la feuille gardant alors son verre teinté à 62 %.
+  - En cours de code : le réglage « Tiroir » devient « Feuille » (« Gens et maison », état de départ « Fermée » ou « Ouverte ») ; sur Écoute, jusqu'à la vague 5, la télécommande reste dans le bandeau, à plat ; la recherche monte toujours dans son verre à 80 %, sans flou, jusqu'à la vague 4 ; le dock aura sa place dans le bandeau, entre le résumé et la barre (vague 3), sans place vide d'ici là.
 
 ### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 
 - **Piste :** flou d'arrière-plan avec la bibliothèque Haze (RenderEffect), seulement sur les panneaux et seulement quand rien ne bouge derrière. Coût GPU à mesurer avec Perfetto.
 - **Décision (15 octobre, séance 6.1) :** le verre givré est la feuille, et seulement elle : tiroir ouvert, recherche, conversation, journée, apps média. Le bandeau replié de l'accueil n'a plus de verre du tout. Valeurs : noir bleuté à 46 % (80 % pour la recherche), flou 36 dp, saturation 1,7, reflet blanc 11 % → 0 sur le haut, liseré blanc 16 %, coins 32 dp, poignée. Rendu seulement feuille ouverte et Brume figée ; mesure Perfetto avant d'être gardé. Livré par la vague 2 de 6.1.
+- **Décisions (16 octobre, vague 2)** : le flou ne touche que Brume, que Bercail dessine ; sur le fond d'écran de l'utilisateur, dessiné par le système, la feuille reste teintée à 62 %. Une feuille ouverte fige Brume. Flou par `RenderEffect` natif (minimum Android 16, rien à prévoir pour les anciennes versions), sans dépendance. Pas de flou en économie d'énergie ni quand Android supprime les animations.
+- **Développé le 16 octobre (`afb8908`), pas encore gardé** : Brume n'est enregistrée pour le verre que tant qu'une feuille est ouverte ; figée, elle l'est une fois. Vérifié par les tests (`BcFrostUiTest`, `HomeLooksTest`) : givré seulement feuille ouverte sur Brume, aucun enregistrement feuille fermée, teinté en économie d'énergie, sans animations ou sans Brume, Brume figée sous toute feuille. Les captures Robolectric ne montrent sans doute pas le flou : il se juge sur le Pixel.
+- **Reste à faire, sur le Pixel** (avant de passer à `Livré`) : `BRUME_MODES="still still+tinted still+frosted still+blinking still+toggling" bash scripts/measure-brume.sh` ; à garder si la feuille givrée immobile coûte autant que la feuille teintée (à l'écart de mesure près) et si les images ratées restent sous 1 %, sinon annuler `afb8908` seul.
 
 ### 6.3 Revoir les effets météo — `À préciser`
 
