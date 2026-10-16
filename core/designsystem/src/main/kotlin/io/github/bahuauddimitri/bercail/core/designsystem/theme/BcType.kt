@@ -26,7 +26,7 @@ val Outfit = FontFamily(
 /** Named text styles, from the prototype's scale. Nothing smaller than 10.5 sp. */
 object BcType {
     /** Title of the next appointment. */
-    val agendaTitle = style(size = 30.sp, weight = FontWeight.Light, letterSpacing = (-0.02).em)
+    val agendaTitle = style(size = 34.sp, weight = FontWeight.ExtraLight, letterSpacing = (-0.025).em)
 
     /** Track title on the Listen screen. */
     val display = style(size = 22.sp, weight = FontWeight.Normal, lineHeight = 26.sp)

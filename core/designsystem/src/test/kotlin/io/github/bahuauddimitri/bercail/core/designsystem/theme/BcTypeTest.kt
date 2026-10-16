@@ -20,10 +20,10 @@ class BcTypeTest {
     }
 
     @Test
-    fun `le titre du rendez-vous est en grand et léger`() {
+    fun `le titre du rendez-vous est en grand et très léger, 34 sp graisse 200`() {
         assertThat(BcType.agendaTitle).all {
-            prop("taille") { it.fontSize }.isEqualTo(30.sp)
-            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Light)
+            prop("taille") { it.fontSize }.isEqualTo(34.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.ExtraLight)
         }
     }
 

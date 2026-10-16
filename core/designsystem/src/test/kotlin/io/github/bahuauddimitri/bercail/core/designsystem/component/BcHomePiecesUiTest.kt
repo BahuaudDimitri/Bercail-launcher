@@ -141,6 +141,15 @@ class BcHomePiecesUiTest {
     }
 
     @Test
+    fun `la ligne météo commence par le glyphe de son ciel, la lune pour une nuit claire`() {
+        assertThat(BcWeather.Clear.glyph(night = false)).isEqualTo(BcIcons.Sun)
+        assertThat(BcWeather.Clear.glyph(night = true)).isEqualTo(BcIcons.Moon)
+        assertThat(BcWeather.Rain.glyph(night = true)).isEqualTo(BcIcons.Rain)
+        assertThat(BcWeather.Wind.glyph(night = false)).isEqualTo(BcIcons.Wind)
+        assertThat(BcWeather.Snow.glyph(night = false)).isEqualTo(BcIcons.Snow)
+    }
+
+    @Test
     fun `un bouton rond peut être agrandi pour la télécommande`() {
         compose.setContent {
             BcTheme { BcIconButton(BcIcons.Pause, "Pause", onClick = {}, size = 66.dp) }

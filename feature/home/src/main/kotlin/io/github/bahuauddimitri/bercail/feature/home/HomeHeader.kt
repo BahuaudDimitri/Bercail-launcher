@@ -60,7 +60,14 @@ internal fun HomeHeader(
             onClickLabel = if (calendar) OPEN_CALENDAR else "Voir la journée",
             verticalArrangement = Arrangement.spacedBy(LINE_GAP)
         ) {
-            state.weatherLine?.let { BcWeatherLine(it, state.weather.look, Modifier.padding(bottom = WEATHER_GAP)) }
+            state.weatherLine?.let {
+                BcWeatherLine(
+                    text = it,
+                    weather = state.weather.look,
+                    modifier = Modifier.padding(bottom = WEATHER_GAP),
+                    night = state.dayPart.isDark
+                )
+            }
             BcText(state.glance.countdown, style = BcTextStyle.LabelStrong, color = BcTextColor.Muted, maxLines = 1)
             BcText(state.glance.title, style = BcTextStyle.AgendaTitle, maxLines = 1)
             state.glance.after?.let { BcText(it, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 1) }

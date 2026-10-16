@@ -14,6 +14,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.captureComponent
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import org.junit.Rule
@@ -37,6 +39,7 @@ class BcHomePiecesScreenshotTest {
                 BcWeatherLine("14° · Pluie cet après-midi", BcWeather.Rain)
                 BcWeatherLine("12° · Vent ce soir", BcWeather.Wind)
                 BcWeatherLine("0° · Neige cette nuit", BcWeather.Snow)
+                BcMomentScope(BcMoment.Evening) { BcWeatherLine("12° · Nuit claire", BcWeather.Clear, night = true) }
                 BcSummaryRow(
                     text = "Léa, Tom",
                     strong = "2 non lus",

@@ -66,7 +66,14 @@ enum class BcIcons(private val draw: () -> ImageVector) {
     Send({ glyph(16f, 16f) { stroke("M3 8h10M9 4l4 4-4 4", width = 1.8f) } }),
     Back({ glyph(18f, 18f) { stroke("M11 3 5 9l6 6", width = 1.8f) } }),
     Search({ glyph(16f, 16f) { stroke(circle(7f, 7f, 5f) + "M11 11l3.5 3.5", width = 1.6f) } }),
-    Close({ glyph(14f, 14f) { stroke("M3 3l8 8M11 3l-8 8", width = 1.8f) } })
+    Close({ glyph(14f, 14f) { stroke("M3 3l8 8M11 3l-8 8", width = 1.8f) } }),
+
+    // The sky of the weather line, from the Cadran reference.
+    Sun({ line24 { stroke(circle(12f, 12f, 4f) + SUN_RAYS) } }),
+    Moon({ line24 { stroke("M19 14.5A7.5 7.5 0 1 1 9.5 5a6 6 0 0 0 9.5 9.5z") } }),
+    Rain({ line24 { stroke(CLOUD + "M8 17l-1 3M12 17l-1 3M16 17l-1 3") } }),
+    Wind({ line24 { stroke("M3 9h11a2.5 2.5 0 1 0-2.5-2.5M3 14h14a2.5 2.5 0 1 1-2.5 2.5") } }),
+    Snow({ line24 { stroke("M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 6l2.5-1.5M9.5 19.5 12 18l2.5 1.5") } })
     ;
 
     internal val vector: ImageVector by lazy { draw() }
@@ -96,6 +103,10 @@ private const val FLAME =
 private const val CHAT =
     "M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-8l-4.5 3.5V16H5a1.5 1.5 0 0 1-1.5-1.5v-8" +
         "A1.5 1.5 0 0 1 5 5z"
+
+private const val SUN_RAYS = "M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"
+
+private const val CLOUD = "M7 14a4 4 0 0 1 .5-8A5.5 5.5 0 0 1 18 8a3 3 0 0 1 0 6z"
 
 private const val WEB = "M4 12h16M12 4c2.5 2.5 2.5 13.5 0 16M12 4c-2.5 2.5-2.5 13.5 0 16"
 
