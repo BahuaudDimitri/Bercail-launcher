@@ -12,6 +12,7 @@ import io.github.bahuauddimitri.bercail.core.domain.access.weatherSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
+import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.mainMediaApp
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
@@ -31,7 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** What the settings screen shows: the settings as stored, the apps to choose favorites from, the sources. */
+/** What the settings screen shows: the settings as stored, the apps to choose the dock from, the sources. */
 data class SettingsUiState(
     val settings: Settings = Settings(),
     /** Every app, from A to Z. */
@@ -71,19 +72,19 @@ data class SettingsUiState(
     /** The media app the « Écouter » sheet shows first: the chosen one, otherwise Spotify or the first one. */
     val mainMediaApp: App? get() = mainMediaApp(mediaApps, settings.mainMediaApp)
 
-    /** The favorite apps by name, as their row lists them. */
-    val favoriteAppNames: String
-        get() = settings.favoriteApps
-            .mapNotNull { id -> apps.firstOrNull { it.id == id }?.name }
-            .joinToString(", ")
-            .ifEmpty { "Aucune pour l'instant" }
+    /** The apps of the dock, in their order. */
+    val dock: List<App> get() = dockOf(apps, settings.dockApps)
+
+    /** The apps of the dock by name, as their row lists them, with the room it has. */
+    val dockNames: String
+        get() = dock.joinToString(", ") { it.name }.ifEmpty { "Aucune pour l'instant" } + " · cinq au plus"
 }
 
 /** What the settings screen does. Every change is stored at once. */
 interface SettingsActions {
     fun onIdleBackground(background: IdleBackground)
     fun onDrawerExpandedAtStart(expanded: Boolean)
-    fun onToggleFavoriteApp(appId: String)
+    fun onToggleDockApp(appId: String)
     fun onMainMediaApp(appId: String)
     fun onToggleFavoritePerson(id: String)
 
@@ -136,7 +137,10 @@ class SettingsViewModel(
 
     override fun onDrawerExpandedAtStart(expanded: Boolean) = change { it.copy(drawerExpandedAtStart = expanded) }
 
-    override fun onToggleFavoriteApp(appId: String) = change { it.withFavoriteAppToggled(appId) }
+    override fun onToggleDockApp(appId: String) {
+        val installed = state.value.apps.map { it.id }
+        change { it.withDockAppToggled(appId, installed) }
+    }
 
     override fun onMainMediaApp(appId: String) = change { it.copy(mainMediaApp = appId) }
 

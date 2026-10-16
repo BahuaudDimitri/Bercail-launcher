@@ -69,12 +69,13 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `les apps favorites des réglages sont en tête`() = runTest(dispatcher) {
+    fun `le dock des réglages est en tête`() = runTest(dispatcher) {
         show()
 
         search.onOpenChange(true)
 
-        assertThat(state.directory.favorites.map { it.name }).containsExactly("Spotify", "YouTube", "Beeper", "Agenda")
+        assertThat(state.directory.dock.map { it.name })
+            .containsExactly("Chrome", "Téléphone", "Beeper", "Appareil photo", "Agenda")
     }
 
     @Test

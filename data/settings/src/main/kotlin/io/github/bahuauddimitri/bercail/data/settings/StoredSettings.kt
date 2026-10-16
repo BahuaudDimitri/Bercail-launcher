@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
@@ -33,7 +34,7 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
         store.edit { saved ->
             val wanted = transform(saved.toSettings())
             saved[FAVORITE_PEOPLE] = wanted.favoritePeople.joinToString(SEPARATOR)
-            saved[FAVORITE_APPS] = wanted.favoriteApps.joinToString(SEPARATOR)
+            saved[FAVORITE_APPS] = wanted.dockApps.joinToString(SEPARATOR)
             // The line of the day could lie down in older versions; it no longer can.
             saved.remove(TIMELINE)
             saved[DRAWER_EXPANDED] = wanted.drawerExpandedAtStart
@@ -47,7 +48,8 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
         val defaults = Settings()
         return Settings(
             favoritePeople = this[FAVORITE_PEOPLE]?.toList() ?: defaults.favoritePeople,
-            favoriteApps = this[FAVORITE_APPS]?.toList() ?: defaults.favoriteApps,
+            // The favorite apps of the versions before the dock: the five first make it.
+            dockApps = this[FAVORITE_APPS]?.toList()?.take(MAX_DOCK_APPS) ?: defaults.dockApps,
             drawerExpandedAtStart = this[DRAWER_EXPANDED] ?: defaults.drawerExpandedAtStart,
             idleBackground = IdleBackground.entries.firstOrNull { it.name == this[IDLE_BACKGROUND] }
                 ?: defaults.idleBackground,

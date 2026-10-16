@@ -76,7 +76,7 @@ fun SearchList(
     }
 }
 
-/** Every app: Bercail's settings first, the favorites, then the alphabet. */
+/** Every app: Bercail's settings first, the dock, then the alphabet. */
 @Composable
 private fun Directory(
     directory: AppDirectory,
@@ -88,17 +88,17 @@ private fun Directory(
 ) {
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    // Where each letter starts in the list: the settings row, the favorites and their title come before.
+    // Where each letter starts in the list: the settings row, the dock and its title come before.
     val letterStarts = remember(directory) {
-        var next = 1 + if (directory.favorites.isEmpty()) 0 else directory.favorites.size + 1
+        var next = 1 + if (directory.dock.isEmpty()) 0 else directory.dock.size + 1
         directory.sections.associate { section -> section.letter to next.also { next += section.apps.size + 1 } }
     }
     Box(modifier) {
         LazyColumn(Modifier.fillMaxSize().padding(end = RAIL_ROOM), state = list) {
             item(key = "settings") { SettingsRow(settingsNote, links::onOpenSettings) }
-            if (directory.favorites.isNotEmpty()) {
-                item(key = "favorites") { BcSectionLabel("Apps favorites") }
-                items(directory.favorites, key = { "favorite ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
+            if (directory.dock.isNotEmpty()) {
+                item(key = "dock") { BcSectionLabel("Dock") }
+                items(directory.dock, key = { "dock ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
             }
             directory.sections.forEach { section ->
                 item(key = "letter ${section.letter}") { BcSectionLabel(section.letter) }

@@ -76,11 +76,11 @@ class SettingsScreenshotTest {
     }
 
     @Test
-    fun `la liste des apps favorites correspond à sa capture`() {
+    fun `la liste du dock, ses apps à leur place puis les autres, correspond à sa capture`() {
         show()
-        compose.onNodeWithText("Apps favorites").performScrollTo().performClick()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
 
-        capture("settings_favorite_apps")
+        capture("settings_dock")
     }
 
     @Test

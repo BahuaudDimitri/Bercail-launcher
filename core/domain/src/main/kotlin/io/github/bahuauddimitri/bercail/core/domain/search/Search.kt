@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail.core.domain.search
 
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
 import io.github.bahuauddimitri.bercail.core.domain.messages.FoundMessage
@@ -10,20 +11,20 @@ import java.text.Normalizer
 /** The apps under one letter of the alphabet. */
 data class AppSection(val letter: String, val apps: List<App>)
 
-/** What the search list shows before anything is typed: favorite apps, then every app from A to Z. */
-data class AppDirectory(val favorites: List<App>, val sections: List<AppSection>) {
+/** What the search list shows before anything is typed: the dock, then every app from A to Z. */
+data class AppDirectory(val dock: List<App>, val sections: List<AppSection>) {
     /** The alphabet along the edge: only the letters that have at least one app. */
     val letters: List<String> get() = sections.map { it.letter }
 }
 
-fun appDirectory(apps: List<App>, favoriteIds: List<String>): AppDirectory {
+fun appDirectory(apps: List<App>, dockIds: List<String>): AppDirectory {
     val sections = apps
         .sortedBy { it.name.searchable() }
         .groupBy { it.letter() }
         .map { (letter, sameLetter) -> AppSection(letter, sameLetter) }
         .sortedBy { it.letter }
     return AppDirectory(
-        favorites = favoriteIds.mapNotNull { id -> apps.firstOrNull { it.id == id } },
+        dock = dockOf(apps, dockIds),
         sections = sections
     )
 }

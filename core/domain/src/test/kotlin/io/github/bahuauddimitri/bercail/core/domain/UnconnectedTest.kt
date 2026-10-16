@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.domain.home.homeSummary
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.messages.messagesSummary
-import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.first
@@ -38,13 +37,5 @@ class UnconnectedTest {
 
         assertThat(Unconnected.media.state.first()).isEqualTo(MediaState.None)
         assertThat(Unconnected.media.position.first()).isEqualTo(Duration.ZERO)
-    }
-
-    @Test
-    fun `toucher une app favorite l'ajoute aux favorites, la retoucher l'enlève`() {
-        val added = Settings().withFavoriteAppToggled("spotify").withFavoriteAppToggled("agenda")
-        assertThat(added.favoriteApps).isEqualTo(listOf("spotify", "agenda"))
-
-        assertThat(added.withFavoriteAppToggled("spotify").favoriteApps).isEqualTo(listOf("agenda"))
     }
 }

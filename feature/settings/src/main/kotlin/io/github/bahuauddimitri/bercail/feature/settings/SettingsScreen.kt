@@ -20,8 +20,8 @@ import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 
 /**
- * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the favorite apps and
- * the place of the weather.
+ * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the dock and the
+ * place of the weather.
  */
 @Composable
 fun SettingsRoute(
@@ -35,7 +35,7 @@ fun SettingsRoute(
     var shown by rememberSaveable { mutableStateOf(Shown.Settings) }
     val backToSettings = { shown = Shown.Settings }
     when (shown) {
-        Shown.Apps -> FavoriteAppsScreen(state, viewModel::onToggleFavoriteApp, backToSettings, modifier)
+        Shown.Dock -> DockScreen(state, viewModel::onToggleDockApp, backToSettings, modifier)
 
         Shown.People -> FavoritePeopleScreen(state, viewModel::onToggleFavoritePerson, backToSettings, modifier)
 
@@ -62,7 +62,7 @@ fun SettingsRoute(
             state = state,
             actions = viewModel,
             onBack = onBack,
-            onPickApps = { shown = Shown.Apps },
+            onPickDock = { shown = Shown.Dock },
             modifier = modifier,
             onAskAccess = onAskAccess,
             onPickPlace = { shown = Shown.Place },
@@ -73,7 +73,7 @@ fun SettingsRoute(
 }
 
 /** What the settings panel shows: itself, or one of the lists it opens. */
-private enum class Shown { Settings, Apps, Place, MediaApp, People }
+private enum class Shown { Settings, Dock, Place, MediaApp, People }
 
 /** What Bercail reads only once allowed: its row says where it stands, and a touch asks Android for it. */
 @Composable
@@ -90,7 +90,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     actions: SettingsActions,
     onBack: () -> Unit,
-    onPickApps: () -> Unit,
+    onPickDock: () -> Unit,
     modifier: Modifier = Modifier,
     onAskAccess: (Access) -> Unit = {},
     onPickPlace: () -> Unit = {},
@@ -117,6 +117,8 @@ fun SettingsScreen(
             subtitle = state.weather.detail,
             onClick = onPickPlace
         )
+        BcSectionLabel("Bandeau")
+        BcSettingRow("Dock", subtitle = state.dockNames, onClick = onPickDock)
         BcSectionLabel("Feuille")
         BcSettingRow("Gens et maison", subtitle = "État de départ de la feuille") {
             BcSegmented(
@@ -125,8 +127,6 @@ fun SettingsScreen(
                 onSelect = { actions.onDrawerExpandedAtStart(it == 1) }
             )
         }
-        BcSectionLabel("Recherche")
-        BcSettingRow("Apps favorites", subtitle = state.favoriteAppNames, onClick = onPickApps)
         BcSectionLabel("Mise à jour")
         BcSettingRow(
             title = state.update.title,
@@ -140,27 +140,6 @@ fun SettingsScreen(
             onClick = actions::onOpenHomeScreenSettings
         )
         BcSettingRow("Paramètres du téléphone", onClick = actions::onOpenPhoneSettings)
-    }
-}
-
-/** Every app from A to Z with a switch: the favorites show at the top of the search, in the order chosen. */
-@Composable
-fun FavoriteAppsScreen(
-    state: SettingsUiState,
-    onToggle: (String) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    BcPanel("Apps favorites", onBack, backDescription = "Retour aux réglages", modifier = modifier) {
-        state.apps.forEach { app ->
-            val favorite = app.id in state.settings.favoriteApps
-            BcListRow(
-                title = app.name,
-                onClick = { onToggle(app.id) },
-                leading = BcLeading.Initials(app.name.take(1).uppercase()),
-                trailing = { BcSwitch(favorite, onCheckedChange = { onToggle(app.id) }, contentDescription = null) }
-            )
-        }
     }
 }
 

@@ -58,7 +58,7 @@ class SearchScreenshotTest {
     }
 
     @Test
-    fun `toutes les apps, avec les favorites et l'alphabet, correspondent à leur capture`() = capture("search_all_apps")
+    fun `toutes les apps, avec le dock et l'alphabet, correspondent à leur capture`() = capture("search_all_apps")
 
     @Test
     fun `les résultats par famille correspondent à leur capture`() = capture("search_results", typed = "l")

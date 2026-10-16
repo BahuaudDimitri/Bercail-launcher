@@ -63,7 +63,7 @@ class StoredSettingsTest {
         withSettings {
             it.update { current ->
                 current.copy(
-                    favoriteApps = listOf("com.spotify.music/.Main", "com.beeper/.Home"),
+                    dockApps = listOf("com.spotify.music/.Main", "com.beeper/.Home"),
                     favoritePeople = listOf("lea", "tom"),
                     drawerExpandedAtStart = true,
                     idleBackground = IdleBackground.Brume
@@ -73,7 +73,7 @@ class StoredSettingsTest {
 
         val afterRestart = withSettings { it.settings.first() }
 
-        assertThat(afterRestart.favoriteApps).containsExactly("com.spotify.music/.Main", "com.beeper/.Home")
+        assertThat(afterRestart.dockApps).containsExactly("com.spotify.music/.Main", "com.beeper/.Home")
         assertThat(afterRestart.favoritePeople).containsExactly("lea", "tom")
         assertThat(afterRestart.drawerExpandedAtStart).isTrue()
         assertThat(afterRestart.idleBackground).isEqualTo(IdleBackground.Brume)
@@ -100,21 +100,21 @@ class StoredSettingsTest {
     }
 
     @Test
-    fun `l'ordre des favoris est conservé`() {
-        withSettings { it.update { current -> current.copy(favoriteApps = listOf("c", "a", "b")) } }
+    fun `l'ordre du dock est conservé`() {
+        withSettings { it.update { current -> current.copy(dockApps = listOf("c", "a", "b")) } }
 
-        assertThat(withSettings { it.settings.first() }.favoriteApps).containsExactly("c", "a", "b")
+        assertThat(withSettings { it.settings.first() }.dockApps).containsExactly("c", "a", "b")
     }
 
     @Test
     fun `changer un réglage ne touche pas aux autres`() {
         val settings = withSettings {
-            it.update { current -> current.copy(favoriteApps = listOf("a")) }
+            it.update { current -> current.copy(dockApps = listOf("a")) }
             it.update { current -> current.copy(drawerExpandedAtStart = true) }
             it.settings.first()
         }
 
-        assertThat(settings.favoriteApps).containsExactly("a")
+        assertThat(settings.dockApps).containsExactly("a")
         assertThat(settings.drawerExpandedAtStart).isTrue()
     }
 
@@ -142,4 +142,18 @@ class StoredSettingsTest {
 
         assertThat(saved[stringPreferencesKey("timeline")]).isNull()
     }
+
+    @Test
+    fun `les apps favorites d'une version précédente passent dans le dock, les cinq premières seulement`() =
+        runBlocking {
+            val job = Job()
+            val store = settingsStore(file, CoroutineScope(Dispatchers.IO + job))
+            val sevenFavorites = listOf("a", "b", "c", "d", "e", "f", "g").joinToString("\n")
+            store.edit { it[stringPreferencesKey("favorite_apps")] = sevenFavorites }
+
+            val settings = StoredSettings(store).settings.first()
+            job.cancelAndJoin()
+
+            assertThat(settings.dockApps).containsExactly("a", "b", "c", "d", "e")
+        }
 }

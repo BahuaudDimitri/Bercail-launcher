@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 data class SearchUiState(
     val open: Boolean = false,
     val query: String = "",
-    val directory: AppDirectory = AppDirectory(favorites = emptyList(), sections = emptyList()),
+    val directory: AppDirectory = AppDirectory(dock = emptyList(), sections = emptyList()),
     /** The favorite people, who keep their own pastel everywhere. */
     val favoritePeople: List<String> = emptyList(),
     /** Absent until something is typed. */
@@ -102,7 +102,7 @@ class SearchViewModel(
                 agenda.eventsOn(clock.now().toLocalDate()),
                 settings.settings
             ) { installed, people, controls, events, current ->
-                Known(SearchScope(installed, people, controls, events), current.favoriteApps, current.favoritePeople)
+                Known(SearchScope(installed, people, controls, events), current.dockApps, current.favoritePeople)
             }
         }
         .onEach { known.value = it }
@@ -130,7 +130,7 @@ class SearchViewModel(
             SearchUiState(
                 open = isOpen,
                 query = typed,
-                directory = appDirectory(known.scope.apps, known.favoriteApps),
+                directory = appDirectory(known.scope.apps, known.dockApps),
                 favoritePeople = known.favoritePeople,
                 results = if (typed.isBlank()) null else search(typed, known.scope.copy(messages = typing.found)),
                 settingsNote = updateNotice(update)
@@ -178,7 +178,7 @@ class SearchViewModel(
 
     private data class Known(
         val scope: SearchScope = SearchScope(),
-        val favoriteApps: List<String> = emptyList(),
+        val dockApps: List<String> = emptyList(),
         val favoritePeople: List<String> = emptyList()
     )
 

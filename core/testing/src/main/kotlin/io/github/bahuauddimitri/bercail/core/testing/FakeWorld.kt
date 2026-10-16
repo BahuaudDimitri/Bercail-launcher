@@ -76,7 +76,7 @@ object Samples {
 
     val settings = Settings(
         favoritePeople = listOf("lea", "tom", "team", "mum"),
-        favoriteApps = listOf("spotify", "youtube", "beeper", "agenda")
+        dockApps = listOf("chrome", "téléphone", "beeper", "appareil photo", "agenda")
     )
 
     /** The apps of the prototype's phone. Their id is their name, in lower case. */

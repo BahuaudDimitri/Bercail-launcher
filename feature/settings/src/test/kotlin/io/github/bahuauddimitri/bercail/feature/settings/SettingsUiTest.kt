@@ -1,9 +1,12 @@
 package io.github.bahuauddimitri.bercail.feature.settings
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -366,35 +369,60 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `les apps favorites sont nommées sur leur ligne`() {
+    fun `la ligne « Dock » nomme ses apps dans leur ordre et rappelle qu'il en tient cinq`() {
         show()
 
-        compose.onNodeWithText("Spotify, YouTube, Beeper, Agenda").assertExists()
+        compose.onNodeWithText("Dock").performScrollTo().assertExists()
+        compose.onNodeWithText("Chrome, Téléphone, Beeper, Appareil photo, Agenda · cinq au plus").assertExists()
     }
 
     @Test
-    fun `sans app favorite, la ligne le dit`() {
-        world.settings.change { it.copy(favoriteApps = emptyList()) }
+    fun `sans app dans le dock, la ligne le dit`() {
+        world.settings.change { it.copy(dockApps = emptyList()) }
         show()
 
-        compose.onNodeWithText("Aucune pour l'instant").assertExists()
+        compose.onNodeWithText("Aucune pour l'instant · cinq au plus").assertExists()
     }
 
     @Test
-    fun `toucher « Apps favorites » ouvre la liste des apps, où l'on coche et décoche`() {
+    fun `la liste du dock montre d'abord ses apps avec leur place, puis les autres`() {
         show()
 
-        compose.onNodeWithText("Apps favorites").performScrollTo().performClick()
-        compose.onNodeWithText("Banque").performScrollTo().performClick()
-        compose.onNodeWithText("YouTube").performScrollTo().performClick()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
 
-        assertThat(stored.favoriteApps).containsExactly("spotify", "beeper", "agenda", "banque")
+        compose.onNode(hasText("Chrome") and hasText("Place 1")).assertExists()
+        compose.onNode(hasText("Agenda") and hasText("Place 5")).assertExists()
+        compose.onNodeWithText("Autres apps").performScrollTo().assertExists()
+        compose.onAllNodesWithText("Beeper").assertCountEquals(1)
     }
 
     @Test
-    fun `le retour de la liste des apps ramène aux réglages`() {
+    fun `toucher une app du dock l'en retire, toucher une autre app la met au bout`() {
         show()
-        compose.onNodeWithText("Apps favorites").performScrollTo().performClick()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
+
+        compose.onNodeWithText("Beeper").performScrollTo().performClick()
+        compose.onNodeWithText("Spotify").performScrollTo().performClick()
+
+        assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "appareil photo", "agenda", "spotify")
+        compose.onNode(hasText("Spotify") and hasText("Place 5")).assertExists()
+    }
+
+    @Test
+    fun `avec cinq apps dans le dock, une sixième ne s'ajoute pas`() {
+        show()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
+        compose.onNodeWithText("Cinq au plus : retire une app pour en ajouter une autre").assertExists()
+
+        compose.onNodeWithText("Spotify").performScrollTo().performClick()
+
+        assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "beeper", "appareil photo", "agenda")
+    }
+
+    @Test
+    fun `le retour de la liste du dock ramène aux réglages`() {
+        show()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
 
         compose.onNodeWithContentDescription("Retour aux réglages").performClick()
 

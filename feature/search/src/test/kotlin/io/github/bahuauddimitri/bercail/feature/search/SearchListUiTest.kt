@@ -104,20 +104,20 @@ class SearchListUiTest {
     }
 
     @Test
-    fun `les apps favorites viennent ensuite, puis les apps de A à Z`() {
+    fun `le dock vient ensuite, sous son titre, puis les apps de A à Z`() {
         show()
 
-        compose.onNodeWithText("Apps favorites").assertIsDisplayed()
-        compose.onNodeWithText("Appareil photo").assertExists()
+        compose.onNodeWithText("Dock").assertIsDisplayed()
+        compose.onNodeWithText("Banque").assertExists()
     }
 
     @Test
     fun `toucher une app la lance et ferme la recherche`() {
         show()
 
-        compose.onNodeWithText("Appareil photo").performClick()
+        compose.onNodeWithText("Banque").performClick()
 
-        assertThat(world.apps.opened).containsExactly("appareil photo")
+        assertThat(world.apps.opened).containsExactly("banque")
         assertThat(search.state.value.open).isFalse()
     }
 

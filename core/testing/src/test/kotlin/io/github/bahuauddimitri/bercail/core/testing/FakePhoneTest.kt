@@ -6,6 +6,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
 import io.github.bahuauddimitri.bercail.core.domain.search.appDirectory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -23,12 +24,12 @@ class FakePhoneTest {
     }
 
     @Test
-    fun `les apps favorites factices sont Spotify, YouTube, Beeper et Agenda`() = runTest {
+    fun `le dock factice est celui de la planche, Chrome, Téléphone, Beeper, Appareil photo et Agenda`() = runTest {
         val world = FakeWorld()
 
-        val directory = appDirectory(world.apps.apps.first(), world.settings.settings.first().favoriteApps)
+        val dock = dockOf(world.apps.apps.first(), world.settings.settings.first().dockApps)
 
-        assertThat(directory.favorites.map { it.name }).containsExactly("Spotify", "YouTube", "Beeper", "Agenda")
+        assertThat(dock.map { it.name }).containsExactly("Chrome", "Téléphone", "Beeper", "Appareil photo", "Agenda")
     }
 
     @Test

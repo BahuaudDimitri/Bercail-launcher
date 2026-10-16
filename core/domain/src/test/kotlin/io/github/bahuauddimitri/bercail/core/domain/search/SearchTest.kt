@@ -38,7 +38,7 @@ class SearchTest {
 
     @Test
     fun `les apps sont rangées de A à Z, sans tenir compte des accents ni des majuscules`() {
-        val directory = appDirectory(apps, favoriteIds = emptyList())
+        val directory = appDirectory(apps, dockIds = emptyList())
 
         assertThat(directory.sections.flatMap { it.apps }.map { it.name })
             .containsExactly("1Password", "Agenda", "Appareil photo", "Écouteurs", "Spotify", "Téléphone", "YouTube")
@@ -46,7 +46,7 @@ class SearchTest {
 
     @Test
     fun `chaque lettre a sa section, une app accentuée va sous sa lettre sans accent`() {
-        val directory = appDirectory(apps, favoriteIds = emptyList())
+        val directory = appDirectory(apps, dockIds = emptyList())
 
         assertThat(directory.sections.map { it.letter }).containsExactly("#", "A", "E", "S", "T", "Y")
         assertThat(directory.sections.first { it.letter == "E" }.apps.map { it.name }).containsExactly("Écouteurs")
@@ -54,16 +54,18 @@ class SearchTest {
 
     @Test
     fun `l'alphabet ne propose que les lettres qui ont au moins une app`() {
-        val directory = appDirectory(apps, favoriteIds = emptyList())
+        val directory = appDirectory(apps, dockIds = emptyList())
 
         assertThat(directory.letters).containsExactly("#", "A", "E", "S", "T", "Y")
     }
 
     @Test
-    fun `les apps favorites viennent en tête, dans l'ordre choisi`() {
-        val directory = appDirectory(apps, favoriteIds = listOf("youtube", "spotify", "désinstallée"))
+    fun `le dock vient en tête, dans son ordre, cinq apps au plus`() {
+        val chosen = listOf("youtube", "spotify", "désinstallée", "agenda", "téléphone", "1password", "appareil photo")
+        val directory = appDirectory(apps, dockIds = chosen)
 
-        assertThat(directory.favorites.map { it.name }).containsExactly("YouTube", "Spotify")
+        assertThat(directory.dock.map { it.name })
+            .containsExactly("YouTube", "Spotify", "Agenda", "Téléphone", "1Password")
     }
 
     // ---------- while typing ----------
