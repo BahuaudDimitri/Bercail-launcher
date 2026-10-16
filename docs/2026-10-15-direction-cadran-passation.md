@@ -24,7 +24,7 @@ Documents du chantier :
 ## 2. Ce qui reste, dans l'ordre
 
 1. ~~Se mettre d'accord sur le lecteur~~ : fait le 15 octobre (arche, planche 4, référence v4, handoff et feuille de route à jour, commit `e6bdec0`).
-2. **Vague 1, le fil** (`BcColors`, `BcTimeline`) : sur un poste avec l'outillage Android, pas ici. Dépend de rien.
+2. ~~**Vague 1, le fil**~~ : livrée le 16 octobre 2026 (voir la fiche 6.1 de la feuille de route, « Vague 1 livrée »).
 3. Vagues 2 à 5 dans l'ordre de la feuille de route 6.1 ; la vague 2 (bandeau et feuille) porte aussi 6.2 ; la vague 3 (dock) ferme 1.7 ; la vague 5 (Écoute, l'arche) porte aussi la première transition de 2.4 et le masquage de la barre native.
 
 ## 3. Décisions — verrouillées et ouvertes

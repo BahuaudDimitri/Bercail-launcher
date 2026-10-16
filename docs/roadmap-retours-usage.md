@@ -225,6 +225,7 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   3. **Le dock** : `BcDock`, icônes monochromes depuis `:data:apps`, réglage « Dock » (1.7).
   4. **Les feuilles** : recherche, conversation, journée, apps média sur `BcSheet` ; lignes à anneau ; `BcButton` en pilule partout ; réglages à plat.
   5. **Écoute** : l'arche. `BcCover` devient l'arche (300 × 440 dp depuis le bord haut), l'arc de progression tiré en Canvas (rayon 164 dp, angle du doigt autour du centre), temps et textes sous l'arc, lecteur seul ; la transition tenue par le doigt dans le pager de l'accueil, dans les deux sens, sortie en glissant vers le haut ; la barre native cachée sur Écoute seulement (`WindowInsetsControllerCompat`, à vérifier sur le Pixel) ; la pastille gagne son chevron et perd ses points de pagination. Règle de 2.4 appliquée à cet écran.
+- **Vague 1 livrée le 16 octobre 2026**, en cinq commits poussés sur `main` : le fil part du bord dans l'accent du moment (`d58eb38`), les titres des rendez-vous (`70b591b`), lâcher ouvre le rendez-vous dans l'agenda et écarter le doigt annule (`4361cf3`), le réveil du lendemain au bout du fil (`f61db77`), le haut de l'accueil en 34 sp graisse 200 avec le glyphe du ciel (`eb86e9a`). Pas encore essayée sur le Pixel : à vérifier, le passage du trait dans la barre d'état près de la batterie, l'ouverture d'un rendez-vous et des alarmes (Agenda et Horloge de Google), le geste d'annulation sous le pouce.
 - **Vague 1 : décisions (16 octobre)**, prises avec Dimitri avant le code :
   - Haut du fil : le trait part du bord haut de l'écran, et 7 h est placé juste sous la barre d'état : aucun rendez-vous, titre ni anneau de maintenant ne tombe dans la barre.
   - L'échelle reste 7 h → minuit, minuit à une place fixe ; le réveil du lendemain est un anneau juste après minuit, sans segment de nuit (la prolongation de `docs/passation-meteo-sur-le-fil.md` est remplacée).
@@ -237,6 +238,7 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   - Règle batterie : lire le prochain réveil est permis, programmer une alarme ou un travail reste interdit (`BatteryRulesTest`).
   - Haut de l'accueil : un commit de plus dans la vague 1 : titre du rendez-vous en 34 sp graisse 200, glyphe météo dans l'accent du moment.
   - Halo dessiné une fois, sans animation ; `DeviceAlarm` dans `:app`, comme `DeviceClock`.
+  - En cours de code (16 octobre) : une nuit claire montre la lune au lieu du soleil dans la ligne météo ; ouvrir les alarmes demande le droit `SET_ALARM` (accordé à l'installation, sans question), que l'horloge exige pour cet écran.
 
 ### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 
