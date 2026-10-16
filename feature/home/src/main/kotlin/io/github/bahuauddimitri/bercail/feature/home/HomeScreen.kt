@@ -133,7 +133,7 @@ fun HomeScreen(
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
             BcMomentScope(state.dayPart.moment) {
-                HomeBackdrop(state, brume, frost)
+                HomeBackdrop(state, brume, frost, searching = search?.open == true)
                 // Under a sheet, a screen reader must not read the screen either.
                 Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
                     DrawerOverScreen(

@@ -87,7 +87,8 @@ internal fun HomeDrawer(
         ) {
             BcBand(
                 onOpen = if (listening) null else ({ actions.onDrawerExpandedChange(true) }),
-                searching = searching
+                searching = searching,
+                frost = frost
             ) {
                 val content = when {
                     searching -> BandContent.Search

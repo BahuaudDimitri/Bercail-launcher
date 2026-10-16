@@ -29,7 +29,7 @@ import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
  * over the user's wallpaper. While Brume covers the screen, the system no longer draws the wallpaper under it.
  */
 @Composable
-internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState, frost: BcFrost) {
+internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState, frost: BcFrost, searching: Boolean) {
     val fade = tween<Float>(BcTheme.motion.fadeMillis)
     val wanted = remember(state.background, state.dayPart) {
         (state.background as? HomeBackground.Brume)?.let { it.cover?.brume ?: state.dayPart.brume }
@@ -48,7 +48,7 @@ internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState, frost: BcFros
         val second by animateColorAsState(shown.second, tween(BcTheme.motion.fadeMillis), label = "brume second")
         BcBrume(
             colors = remember(first, second) { BcBrumeColors.of(first, second) },
-            playing = state.brumeMoves,
+            playing = state.brumeMoves(searching),
             modifier = Modifier.fillMaxSize().testTag(BRUME_TAG).graphicsLayer { alpha = opacity }.frostSource(frost),
             state = brume,
             weather = state.weather.look,

@@ -64,19 +64,24 @@ class HomeLooksTest {
 
     @Test
     fun `Brume bouge pendant la lecture tant qu'aucune feuille ne la couvre`() {
-        assertThat(playing.brumeMoves).isTrue()
-        assertThat(playing.copy(media = MediaState.None).brumeMoves).isFalse()
+        assertThat(playing.brumeMoves(searching = false)).isTrue()
+        assertThat(playing.copy(media = MediaState.None).brumeMoves(searching = false)).isFalse()
     }
 
     @Test
     fun `une feuille ouverte fige Brume, pour que son verre soit givré tout de suite`() {
-        assertThat(playing.copy(drawerExpanded = true).brumeMoves).isFalse()
-        assertThat(playing.copy(dayOpen = true).brumeMoves).isFalse()
-        assertThat(playing.copy(listenOpen = true).brumeMoves).isFalse()
+        assertThat(playing.copy(drawerExpanded = true).brumeMoves(searching = false)).isFalse()
+        assertThat(playing.copy(dayOpen = true).brumeMoves(searching = false)).isFalse()
+        assertThat(playing.copy(listenOpen = true).brumeMoves(searching = false)).isFalse()
+    }
+
+    @Test
+    fun `la recherche ouverte fige Brume aussi, comme les autres feuilles`() {
+        assertThat(playing.brumeMoves(searching = true)).isFalse()
     }
 
     @Test
     fun `sur l'écran Écoute, la feuille des gens n'est pas ouverte et ne fige pas Brume`() {
-        assertThat(playing.copy(drawerExpanded = true, page = HomePage.Listen).brumeMoves).isTrue()
+        assertThat(playing.copy(drawerExpanded = true, page = HomePage.Listen).brumeMoves(searching = false)).isTrue()
     }
 }
