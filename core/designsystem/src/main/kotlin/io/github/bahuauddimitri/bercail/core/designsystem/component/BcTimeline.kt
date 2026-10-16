@@ -5,11 +5,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -60,21 +64,24 @@ internal const val TIMELINE_BUBBLE = "timeline-bubble"
 
 /**
  * An appointment on the timeline: where it falls in the day (0 = 7 am, 1 = midnight), its time, whether it is
- * next. Its [title] is what the bubble says under the finger; its [key] tells the caller which one was opened.
+ * next. Its [title] is written beside the line, before the time, and said by the bubble under the finger; a [brief]
+ * mark (too close to the one before) only writes its time. Its [key] tells the caller which one was opened.
  */
 data class BcTimelineMark(
     val position: Float,
     val label: String,
     val next: Boolean = false,
     val title: String = "",
-    val key: String? = null
+    val key: String? = null,
+    val brief: Boolean = false
 )
 
 /**
  * The day from 7 am to midnight, along the right edge, in the accent of the moment: the past as a thick line with
  * a glow, rising to the top edge, the future as a hairline, a ring for now, the time of each appointment beside it,
- * the past ones in the accent and the next one circled. [headroom] is left free above 7 am (for the status bar):
- * the line still rises through it to the edge. Marks outside the day are not drawn.
+ * "Title 09:30" beside each appointment, the past ones in the accent and the next one circled. [headroom] is left
+ * free above 7 am (for the status bar): the line still rises through it to the edge. Above [titlesBelow] (the top of
+ * the screen, where its own title stands), appointments only write their time. Marks outside the day are not drawn.
  *
  * With [onOpen], the line answers to the finger like the alphabet of the search: while it is touched, it bends
  * around the finger, a bubble names the appointment the finger is closest to (with a tick at each new one), and
@@ -86,6 +93,7 @@ fun BcTimeline(
     marks: List<BcTimelineMark>,
     modifier: Modifier = Modifier,
     headroom: Dp = 0.dp,
+    titlesBelow: Dp = 0.dp,
     description: String? = null,
     onOpen: ((BcTimelineMark?) -> Unit)? = null
 ) {
@@ -98,7 +106,7 @@ fun BcTimeline(
         WAVE_BULGE.toPx() * swell.value * bell(y - touch.finger, WAVE_SPREAD.toPx())
     }
     val bubbleShown by remember { derivedStateOf { swell.value > 0f && touch.last >= 0 } }
-    Box(
+    BoxWithConstraints(
         modifier
             .onSizeChanged { touch.length = it.height }
             .semantics {
@@ -115,21 +123,55 @@ fun BcTimeline(
             val day = DayScale(headroom.toPx(), size.height)
             drawLine(now.coerceIn(0f, 1f), visible, day, moment, bent = swell.value > 0f) { lean(it) }
         }
+        val scale = with(LocalDensity.current) { DayScale(headroom.toPx(), maxHeight.toPx()) }
+        val titlesFrom = with(LocalDensity.current) { (titlesBelow + TITLE_CLEARANCE).toPx() }
         visible.forEachIndexed { index, mark ->
-            val past = mark.position <= now
-            BcText(
-                text = mark.label,
-                style = BcTextStyle.Micro,
-                color = if (mark.next || index == touch.reached) BcTextColor.Primary else BcTextColor.Muted,
-                maxLines = 1,
-                modifier = Modifier
-                    .matchParentSize()
-                    .placeBeside(mark.position, headroom, lean)
-                    .graphicsLayer { alpha = if (past && !mark.next) PAST_LABEL_ALPHA else 1f }
+            MarkLabel(
+                mark = mark,
+                // The bubble names the appointment under the finger: it is not written twice.
+                named = touch.down && index == touch.reached,
+                titled = !mark.brief && mark.title.isNotBlank() && scale.yOf(mark.position) >= titlesFrom,
+                past = mark.position <= now,
+                modifier = Modifier.matchParentSize().placeBeside(mark.position, headroom, lean)
             )
         }
         if (onOpen != null) FingerZone(visible, headroom, touch, onOpen)
         if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), swell, touch)
+    }
+}
+
+/**
+ * What is written beside an appointment: "Title 09:30", or only its time. The next one stands out, the past ones
+ * fade.
+ */
+@Composable
+private fun MarkLabel(mark: BcTimelineMark, named: Boolean, titled: Boolean, past: Boolean, modifier: Modifier) {
+    Row(
+        modifier.graphicsLayer {
+            alpha = when {
+                named -> 0f
+                past && !mark.next -> PAST_LABEL_ALPHA
+                else -> 1f
+            }
+        },
+        horizontalArrangement = Arrangement.spacedBy(TITLE_GAP)
+    ) {
+        if (titled) {
+            BcText(
+                text = mark.title,
+                style = if (mark.next) BcTextStyle.Label else BcTextStyle.LabelSmall,
+                color = if (mark.next) BcTextColor.Primary else BcTextColor.Muted,
+                maxLines = 1,
+                modifier = Modifier.alignByBaseline().widthIn(max = TITLE_MAX)
+            )
+        }
+        BcText(
+            text = mark.label,
+            style = BcTextStyle.Micro,
+            color = BcTextColor.Muted,
+            maxLines = 1,
+            modifier = Modifier.alignByBaseline().graphicsLayer { alpha = TIME_ALPHA }
+        )
     }
 }
 
@@ -308,6 +350,7 @@ private fun Modifier.placeBeside(fraction: Float, headroom: Dp, lean: Density.(F
 
 private const val OPEN_DAY = "Voir la journée"
 private const val PAST_LABEL_ALPHA = 0.5f
+private const val TIME_ALPHA = 0.7f
 private const val FUTURE_DOT_ALPHA = 0.9f
 private const val NOW_OUTLINE_ALPHA = 0.7f
 private val LINE_INSET = 12.dp
@@ -326,6 +369,11 @@ private val NOW_BORDER = 2.5.dp
 private val NOW_OUTLINE = 4.dp
 private val NOW_GLOW = 18.dp
 private val LABEL_GAP = 18.dp
+private val TITLE_GAP = 5.dp
+private val TITLE_MAX = 150.dp
+
+/** A title starts this far below the height given to the titles: half its own height. */
+private val TITLE_CLEARANCE = 8.dp
 
 /** How finely the bent line is drawn. */
 private val BEND_STEP = 4.dp

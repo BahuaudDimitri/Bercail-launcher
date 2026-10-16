@@ -166,7 +166,8 @@ class AgendaUiTest {
         allowTheAgenda()
         showHome().use { home ->
             awaitText("Stand-up")
-            compose.onNodeWithText("Stand-up").performClick()
+            // The top of the home screen, not the same title written beside the line of the day.
+            compose.onNode(hasText("Stand-up") and !hasAnyAncestor(hasTestTag("home-timeline"))).performClick()
             awaitText("Aujourd'hui")
 
             home.onActivity { activity ->

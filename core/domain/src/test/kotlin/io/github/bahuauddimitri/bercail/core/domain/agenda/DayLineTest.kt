@@ -72,6 +72,29 @@ class DayLineTest {
         assertThat(line.marks.map { it.time }).containsExactly("09:30", "12:30", "21:00")
     }
 
+    @Test
+    fun `deux rendez-vous à moins de 30 min, le second ne montre que son heure`() {
+        val line = dayLineAt(at(8, 10), listOf(event("Point design", 15, 0), event("Café avec Tom", 15, 25)))
+
+        assertThat(line.marks.map { it.brief }).containsExactly(false, true)
+    }
+
+    @Test
+    fun `à 30 min d'écart, les deux rendez-vous gardent leur titre`() {
+        val line = dayLineAt(at(8, 10), listOf(event("Point design", 15, 0), event("Café avec Tom", 15, 30)))
+
+        assertThat(line.marks.map { it.brief }).containsExactly(false, false)
+    }
+
+    @Test
+    fun `trois rendez-vous rapprochés, seul le premier garde son titre`() {
+        val close = listOf(event("Point design", 15, 0), event("Café", 15, 20), event("Appel", 15, 40))
+
+        val line = dayLineAt(at(8, 10), close)
+
+        assertThat(line.marks.map { it.brief }).containsExactly(false, true, true)
+    }
+
     private fun at(hour: Int, minute: Int): LocalDateTime = day.atTime(hour, minute)
 
     private fun event(title: String, hour: Int, minute: Int) =

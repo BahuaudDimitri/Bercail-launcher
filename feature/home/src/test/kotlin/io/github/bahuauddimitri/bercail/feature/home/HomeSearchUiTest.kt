@@ -160,7 +160,7 @@ class HomeSearchUiTest {
         compose.onNodeWithContentDescription("Chercher").performClick()
 
         compose.onNodeWithTag(TIMELINE_TAG).assertDoesNotExist()
-        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+        compose.onHeaderTitle("Stand-up").assertDoesNotExist()
         compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
     }
 
@@ -174,7 +174,7 @@ class HomeSearchUiTest {
         compose.waitForIdle()
 
         assertThat(compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()).isEqualTo(before)
-        compose.onNodeWithText("Stand-up").assertExists()
+        compose.onHeaderTitle("Stand-up").assertExists()
     }
 
     @Test

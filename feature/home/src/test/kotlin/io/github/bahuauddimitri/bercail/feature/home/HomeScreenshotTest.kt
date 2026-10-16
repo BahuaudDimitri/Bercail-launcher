@@ -100,7 +100,7 @@ class HomeScreenshotTest {
         val birthday = AgendaEvent("b", "Anniversaire de Léa", day.atStartOfDay(), day.plusDays(1).atStartOfDay(), true)
         world.agenda.set(Samples.eventsOn(day) + birthday)
         show(world)
-        compose.onNodeWithText("Point design").performClick()
+        compose.onHeaderTitle("Point design").performClick()
 
         capture("home_day_sheet")
     }

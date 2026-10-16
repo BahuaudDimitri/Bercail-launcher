@@ -77,9 +77,17 @@ private fun countdown(now: LocalDateTime, start: LocalDateTime): String {
 
 /**
  * An appointment on the line of the day: where it falls (0 = 7 am, 1 = midnight), its time, whether it is next,
- * and which appointment it is ([id], [title]), so that the line can show it and open the day on it.
+ * and which appointment it is ([id], [title]), so that the line can show it and open it. A [brief] mark comes less
+ * than 30 minutes after the one before: it only writes its time, so that two titles never overlap.
  */
-data class DayMark(val position: Float, val time: String, val next: Boolean, val id: String, val title: String)
+data class DayMark(
+    val position: Float,
+    val time: String,
+    val next: Boolean,
+    val id: String,
+    val title: String,
+    val brief: Boolean = false
+)
 
 /** The day as a line from 7 am to midnight, with the point of now. */
 data class DayLine(val now: Float, val marks: List<DayMark>)
@@ -89,9 +97,17 @@ fun dayLineAt(now: LocalDateTime, events: List<AgendaEvent>): DayLine {
     val next = sorted.firstOrNull { it.start > now }
     return DayLine(
         now = positionOf(now.toLocalTime()),
-        marks = sorted.map { event ->
+        marks = sorted.mapIndexed { index, event ->
             val time = event.start.toLocalTime()
-            DayMark(positionOf(time), time.asClockTime(), next = event == next, id = event.id, title = event.title)
+            val before = sorted.getOrNull(index - 1)
+            DayMark(
+                position = positionOf(time),
+                time = time.asClockTime(),
+                next = event == next,
+                id = event.id,
+                title = event.title,
+                brief = before != null && Duration.between(before.start, event.start) < TITLES_APART
+            )
         }
     )
 }
@@ -104,3 +120,6 @@ private const val MINUTES_PER_HOUR = 60L
 private const val SECONDS_PER_HOUR = 3600
 private const val LINE_START_HOUR = 7
 private const val LINE_HOURS = 17
+
+/** Two titles on the line stand at least this far apart in time. */
+private val TITLES_APART: Duration = Duration.ofMinutes(30)

@@ -27,6 +27,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
@@ -193,7 +194,7 @@ class BcNavigationUiTest {
     private val openedOn = mutableListOf<String?>()
 
     /** The line of the day, 400 dp long, tagged "line"; what it opens is noted in [openedOn]. */
-    private fun showLine(marks: List<BcTimelineMark> = day, haptics: HapticFeedback? = null) {
+    private fun showLine(marks: List<BcTimelineMark> = day, haptics: HapticFeedback? = null, titlesBelow: Dp = 0.dp) {
         compose.setContent {
             CompositionLocalProvider(LocalHapticFeedback provides (haptics ?: LocalHapticFeedback.current)) {
                 BcTheme {
@@ -201,6 +202,7 @@ class BcNavigationUiTest {
                         BcTimeline(
                             now = 0.1f,
                             marks = marks,
+                            titlesBelow = titlesBelow,
                             modifier = Modifier.height(400.dp).width(78.dp).testTag("line"),
                             onOpen = { openedOn += it?.key }
                         )
@@ -342,6 +344,34 @@ class BcNavigationUiTest {
         assertThat(((seven.top + seven.bottom) / 2 - line.top).value).isCloseTo(40f, 1f)
         // Halfway between 7 am and midnight: halfway between the room left at the top and the bottom.
         assertThat(((halfway.top + halfway.bottom) / 2 - line.top).value).isCloseTo(240f, 1f)
+    }
+
+    @Test
+    fun `chaque rendez-vous écrit son titre puis son heure à gauche du fil`() {
+        showLine()
+
+        val title = compose.onNodeWithText("Point design").getUnclippedBoundsInRoot()
+        val time = compose.onNodeWithText("15:00").getUnclippedBoundsInRoot()
+        val line = compose.onNodeWithTag("line").getUnclippedBoundsInRoot()
+        assertThat(title.right).isLessThanOrEqualTo(time.left)
+        assertThat(time.right).isLessThan(line.right - 24.dp)
+    }
+
+    @Test
+    fun `un rendez-vous trop proche du précédent n'écrit que son heure`() {
+        showLine(marks = day + BcTimelineMark(0.49f, "15:25", title = "Café avec Léa", key = "lea", brief = true))
+
+        compose.onNodeWithText("15:25").assertExists()
+        compose.onNodeWithText("Café avec Léa").assertDoesNotExist()
+    }
+
+    @Test
+    fun `au-dessus de la hauteur donnée aux titres, un rendez-vous n'écrit que son heure`() {
+        showLine(titlesBelow = 100.dp)
+
+        compose.onNodeWithText("08:00").assertExists()
+        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+        compose.onNodeWithText("Point design").assertExists()
     }
 
     @Test

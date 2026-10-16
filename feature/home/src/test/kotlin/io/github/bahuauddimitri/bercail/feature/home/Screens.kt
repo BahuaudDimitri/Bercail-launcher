@@ -1,5 +1,9 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import io.github.bahuauddimitri.bercail.core.domain.Unconnected
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeAccess
@@ -33,3 +37,10 @@ fun unconnectedHomeViewModel(hour: Int = 9) = HomeViewModel(
     settings = FakeSettingsSource(),
     access = FakeAccess(granted = emptySet())
 )
+
+/**
+ * The title of an appointment at the top of the home screen. The line of the day may write the same title beside
+ * it: that one is not the top of the screen.
+ */
+fun SemanticsNodeInteractionsProvider.onHeaderTitle(title: String) =
+    onNode(hasText(title) and !hasAnyAncestor(hasTestTag(TIMELINE_TAG)))

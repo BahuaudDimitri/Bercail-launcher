@@ -103,7 +103,7 @@ class HomeHeaderUiTest {
     fun `avec des rendez-vous, toucher l'en-tête ouvre la feuille et pas l'app agenda`() {
         val world = show()
 
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNodeWithText("Aujourd'hui").assertExists()
         assertThat(world.agenda.opened).isEmpty()
@@ -113,7 +113,7 @@ class HomeHeaderUiTest {
     fun `glisser l'en-tête vers la droite ouvre l'app agenda du téléphone`() {
         val world = show()
 
-        compose.onNodeWithText("Stand-up").performTouchInput { swipeToTheRight() }
+        compose.onHeaderTitle("Stand-up").performTouchInput { swipeToTheRight() }
 
         assertThat(world.agenda.opened).containsExactly("calendar: 2026-10-02")
         compose.onNodeWithText("Aujourd'hui").assertDoesNotExist()

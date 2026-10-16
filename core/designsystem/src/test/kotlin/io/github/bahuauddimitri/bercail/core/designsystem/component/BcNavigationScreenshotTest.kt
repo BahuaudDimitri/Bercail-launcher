@@ -47,7 +47,7 @@ class BcNavigationScreenshotTest {
         compose.captureComponent("alphabet_timeline") {
             Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
                 BcAlphabetRail(alphabet, onLetter = {}, modifier = Modifier.height(360.dp))
-                BcTimeline(now = 0.1f, marks = day, modifier = Modifier.height(360.dp).width(64.dp))
+                BcTimeline(now = 0.1f, marks = day, modifier = Modifier.height(360.dp).width(220.dp))
             }
         }
 
@@ -63,13 +63,35 @@ class BcNavigationScreenshotTest {
                     BcMomentScope(moment) {
                         BcTimeline(
                             now = now,
-                            marks = day.map { it.copy(next = it == day.firstOrNull { mark -> mark.position > now }) },
+                            // Only the times: the titles would run into the next column.
+                            marks = day.map {
+                                it.copy(title = "", next = it == day.firstOrNull { m -> m.position > now })
+                            },
                             headroom = 24.dp,
                             modifier = Modifier.height(360.dp).width(64.dp)
                         )
                     }
                 }
             }
+        }
+
+    @Test
+    fun `le fil avec ses titres, un rendez-vous trop proche et le haut réservé correspond à sa capture`() =
+        compose.captureComponent("timeline_titles") {
+            BcTimeline(
+                now = 0.46f,
+                marks = listOf(
+                    BcTimelineMark(0.147f, "09:30", title = "Stand-up"),
+                    BcTimelineMark(0.324f, "12:30", title = "Déjeuner avec Léa"),
+                    BcTimelineMark(0.471f, "15:00", next = true, title = "Point design"),
+                    BcTimelineMark(0.495f, "15:25", title = "Café avec Tom", brief = true),
+                    BcTimelineMark(0.676f, "18:30", title = "Courses"),
+                    BcTimelineMark(0.824f, "21:00", title = "Un ciné à la maison avec toute la famille")
+                ),
+                headroom = 24.dp,
+                titlesBelow = 80.dp,
+                modifier = Modifier.height(520.dp).width(260.dp)
+            )
         }
 
     @Test

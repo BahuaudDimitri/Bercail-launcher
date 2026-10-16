@@ -327,7 +327,11 @@ private fun Navigation() {
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
         BcMoment.entries.forEach { moment ->
             BcMomentScope(moment) {
-                BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH))
+                BcTimeline(
+                    now = NOW,
+                    marks = day.map { it.copy(title = "") },
+                    modifier = Modifier.height(TALL).width(MOMENT_WIDTH)
+                )
             }
         }
     }
@@ -380,7 +384,8 @@ private const val UNDO_MILLIS = 6_000
 private const val NOW = 0.1f
 private val SWATCH = 28.dp
 private val TALL = 260.dp
-private val TIMELINE_WIDTH = 64.dp
+private val TIMELINE_WIDTH = 200.dp
+private val MOMENT_WIDTH = 64.dp
 private val BRUME_HEIGHT = 420.dp
 private val COVER_GAP = 48.dp
 private val REMOTE = 52.dp

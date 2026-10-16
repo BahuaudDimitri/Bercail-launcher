@@ -4,6 +4,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -14,10 +17,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import io.github.bahuauddimitri.bercail.core.testing.Samples
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +50,23 @@ class HomeTimelineUiTest {
         show()
 
         assertThat(line.getUnclippedBoundsInRoot().top).isEqualTo(0.dp)
+    }
+
+    @Test
+    fun `à la hauteur du haut de l'accueil, un rendez-vous n'écrit que son heure`() {
+        val world = FakeWorld(Moment.Matin)
+        world.agenda.set(listOf(event("Café", 7, 30), event("Déjeuner avec Léa", 12, 30)))
+        show(world)
+
+        compose.onNode(hasText("07:30") and onTheLine).assertExists()
+        compose.onNodeWithText("Café").assertDoesNotExist()
+        compose.onNode(hasText("Déjeuner avec Léa") and onTheLine).assertExists()
+    }
+
+    private val onTheLine = hasAnyAncestor(hasTestTag(TIMELINE_TAG))
+
+    private fun event(title: String, hour: Int, minute: Int) = Samples.day.atTime(hour, minute).let { start ->
+        AgendaEvent(id = title, title = title, start = start, end = start.plusMinutes(30))
     }
 
     @Test

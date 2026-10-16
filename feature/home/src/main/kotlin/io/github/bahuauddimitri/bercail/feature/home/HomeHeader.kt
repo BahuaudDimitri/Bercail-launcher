@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwipeBlock
@@ -73,7 +74,12 @@ internal fun HomeHeader(
  * the day on the one reached.
  */
 @Composable
-internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
+internal fun VerticalTimeline(
+    state: HomeUiState,
+    onOpenDay: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+    titlesBelow: Dp = 0.dp
+) {
     val motion = BcTheme.motion
     AnimatedVisibility(
         visible = state.page == HomePage.Home,
@@ -88,6 +94,8 @@ internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, 
             marks = state.dayLine.timelineMarks,
             // The line rises to the top edge; 7 am waits under the status bar, so that nothing of the day hides there.
             headroom = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + UNDER_STATUS_BAR,
+            // Beside the top of the screen, where its own title stands, the line only writes the times.
+            titlesBelow = titlesBelow,
             description = TIMELINE_DESCRIPTION,
             onOpen = { onOpenDay(it?.key) },
             modifier = Modifier
@@ -100,7 +108,7 @@ internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, 
 }
 
 private val DayLine.timelineMarks
-    get() = marks.map { BcTimelineMark(it.position, label = it.time, next = it.next, title = it.title, key = it.id) }
+    get() = marks.map { BcTimelineMark(it.position, it.time, it.next, it.title, key = it.id, brief = it.brief) }
 
 private const val TIMELINE_DESCRIPTION = "Ligne du temps de la journée"
 private const val OPEN_CALENDAR = "Ouvrir l'agenda"

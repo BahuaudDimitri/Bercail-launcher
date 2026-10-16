@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
@@ -108,6 +112,7 @@ fun HomeScreen(
     search: HomeSearch? = null
 ) {
     val brume = rememberBcBrumeState()
+    var headerHeight by remember { mutableIntStateOf(0) }
     // A sheet is tinted glass: what it covers fades away, so that nothing shows through it.
     val covered = state.dayOpen || state.listenOpen || state.talk != null
     val uncovered by animateFloatAsState(
@@ -130,14 +135,16 @@ fun HomeScreen(
                                     HomeHeader(
                                         state = state,
                                         onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                        onOpenCalendar = actions::onOpenCalendar
+                                        onOpenCalendar = actions::onOpenCalendar,
+                                        modifier = Modifier.onSizeChanged { headerHeight = it.height }
                                     )
                                     HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
                                 }
                                 VerticalTimeline(
                                     state = state,
                                     onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                    modifier = Modifier.align(Alignment.TopEnd).then(fading)
+                                    modifier = Modifier.align(Alignment.TopEnd).then(fading),
+                                    titlesBelow = with(LocalDensity.current) { headerHeight.toDp() }
                                 )
                             }
                         },

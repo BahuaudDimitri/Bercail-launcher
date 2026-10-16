@@ -93,7 +93,7 @@ class HomeScreenUiTest {
 
         compose.onNodeWithText("11° · Ciel dégagé, 17° cet après-midi").assertExists()
         compose.onNodeWithText("Dans 1 h 20 · 09:30").assertExists()
-        compose.onNodeWithText("Stand-up").assertExists()
+        compose.onHeaderTitle("Stand-up").assertExists()
         compose.onNodeWithText("Ensuite Déjeuner avec Léa à 12:30").assertExists()
     }
 
@@ -102,7 +102,7 @@ class HomeScreenUiTest {
         show(FakeWorld(Moment.Soir))
 
         compose.onNodeWithText("12° · Vent 35 km/h cette nuit").assertExists()
-        compose.onNodeWithText("Ciné à la maison").assertExists()
+        compose.onHeaderTitle("Ciné à la maison").assertExists()
         compose.onNodeWithText("Rien d'autre aujourd'hui").assertExists()
     }
 
@@ -112,7 +112,7 @@ class HomeScreenUiTest {
     fun `toucher l'en-tête ouvre la feuille « Aujourd'hui », avec la date et les rendez-vous du jour`() {
         show()
 
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNodeWithText("Aujourd'hui").assertExists()
         compose.onNodeWithText("vendredi 2 octobre").assertExists()
@@ -124,7 +124,7 @@ class HomeScreenUiTest {
     @Test
     fun `sous la feuille de la journée, l'accueil n'est plus lu`() {
         show()
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNodeWithText("Dans 1 h 20 · 09:30").assertDoesNotExist()
         compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
@@ -133,7 +133,7 @@ class HomeScreenUiTest {
     @Test
     fun `la feuille de la journée se referme par sa poignée, et l'accueil revient`() {
         show()
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNodeWithContentDescription("Fermer la feuille").performClick()
         compose.waitForIdle()
@@ -145,7 +145,7 @@ class HomeScreenUiTest {
     @Test
     fun `le geste retour referme la feuille de la journée`() {
         show()
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.waitForIdle()
 
@@ -159,7 +159,7 @@ class HomeScreenUiTest {
     @Test
     fun `toucher un rendez-vous de la feuille l'ouvre dans l'app agenda du téléphone`() {
         val world = show()
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNode(hasText("Point design") and inTheDaySheet).performClick()
 
@@ -169,7 +169,7 @@ class HomeScreenUiTest {
     @Test
     fun `le bouton Agenda de la feuille ouvre l'app agenda du téléphone à la date du jour`() {
         val world = show()
-        compose.onNodeWithText("Stand-up").performClick()
+        compose.onHeaderTitle("Stand-up").performClick()
 
         compose.onNodeWithText("Agenda").performClick()
 
@@ -189,7 +189,7 @@ class HomeScreenUiTest {
     fun `sans autorisation, l'accueil propose de relier l'agenda, et la feuille de la demander à Android`() {
         show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Calendar) })
         compose.onNodeWithText("Agenda pas encore relié").assertExists()
-        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+        compose.onHeaderTitle("Stand-up").assertDoesNotExist()
 
         compose.onNodeWithText("Relier l'agenda").performClick()
         compose.onNodeWithText("Autoriser la lecture de l'agenda").performClick()
