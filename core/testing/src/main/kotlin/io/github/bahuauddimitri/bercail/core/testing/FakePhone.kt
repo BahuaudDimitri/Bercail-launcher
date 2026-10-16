@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail.core.testing
 
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,27 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 
     override fun open(appId: String) {
         opened += appId
+    }
+
+    /** The shortcuts each app offers, as given by the tests; none unless given. */
+    val offeredShortcuts = mutableMapOf<String, List<AppShortcut>>()
+
+    /** The apps whose shortcuts were read so far, in order. */
+    val shortcutRequests = mutableListOf<String>()
+
+    /** The shortcuts opened so far, in order. */
+    val openedShortcuts = mutableListOf<AppShortcut>()
+
+    override suspend fun shortcuts(appId: String): List<AppShortcut> {
+        shortcutRequests += appId
+        return offeredShortcuts[appId].orEmpty()
+    }
+
+    /** A shortcut has the glyph painted under its id ([paintGlyph]). */
+    override suspend fun shortcutGlyph(shortcut: AppShortcut): Picture? = glyphs[shortcut.id]
+
+    override fun openShortcut(shortcut: AppShortcut) {
+        openedShortcuts += shortcut
     }
 
     fun install(app: App) = apps.update { it + app }

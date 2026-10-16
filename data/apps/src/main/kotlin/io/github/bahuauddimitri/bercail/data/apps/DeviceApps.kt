@@ -15,6 +15,7 @@ import android.os.Looper
 import android.os.UserHandle
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.iconGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.monochromeGlyph
@@ -85,20 +86,9 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         } catch (_: PackageManager.NameNotFoundException) {
             return@withContext null
         }
-        val glyph = drawable.glyph()
+        val glyph = drawable.glyph(context)
         glyphs[appId] = Drawn(updated, glyph)
         glyph
-    }
-
-    /** The monochrome layer of an adaptive icon, framed as the icon is; without it, the whole icon in one colour. */
-    private fun Drawable.glyph(): Picture? {
-        val size = (GLYPH_DP * context.resources.displayMetrics.density).roundToInt()
-        val monochrome = (this as? AdaptiveIconDrawable)?.monochrome
-        return if (monochrome != null) {
-            monochromeGlyph(monochrome.drawn(size, asLayer = true))
-        } else {
-            iconGlyph(drawn(size, asLayer = false))
-        }
     }
 
     /** A glyph drawn for one version of an app; nothing when it has none that reads. */
@@ -115,6 +105,15 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         context.startSafely(launch)
     }
 
+    private val shortcuts = DeviceShortcuts(this.context)
+
+    override suspend fun shortcuts(appId: String): List<AppShortcut> = withContext(background) { shortcuts.of(appId) }
+
+    override suspend fun shortcutGlyph(shortcut: AppShortcut): Picture? =
+        withContext(background) { shortcuts.iconOf(shortcut)?.glyph(context) }
+
+    override fun openShortcut(shortcut: AppShortcut) = shortcuts.open(shortcut)
+
     /** Every activity Android offers to open from a launcher, except Bercail's own. */
     private fun installed(): List<App> = packages
         .queryIntentActivities(LAUNCHABLE, PackageManager.ResolveInfoFlags.of(0))
@@ -130,13 +129,27 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         /** Icons are drawn once, a little larger than the 34 dp they are shown at. */
         const val ICON_DP = 40
 
-        /** Glyphs are drawn at the size of the ring of the dock, as the icon would fill it. */
-        const val GLYPH_DP = 44
-
         /** A package Android tells nothing about: its glyph is drawn once and kept. */
         const val NEVER_UPDATED = -1L
     }
 }
+
+/**
+ * The drawable in one colour, at the size of the ring of the dock: the monochrome layer of an adaptive icon, framed
+ * as the icon is; without it, the whole icon in one colour.
+ */
+internal fun Drawable.glyph(context: Context): Picture? {
+    val size = (GLYPH_DP * context.resources.displayMetrics.density).roundToInt()
+    val monochrome = (this as? AdaptiveIconDrawable)?.monochrome
+    return if (monochrome != null) {
+        monochromeGlyph(monochrome.drawn(size, asLayer = true))
+    } else {
+        iconGlyph(drawn(size, asLayer = false))
+    }
+}
+
+/** Glyphs are drawn at the size of the ring of the dock, as the icon would fill it. */
+private const val GLYPH_DP = 44
 
 /**
  * The drawable as plain pixels, [size] square. A layer of an adaptive icon is half as large again as the icon,

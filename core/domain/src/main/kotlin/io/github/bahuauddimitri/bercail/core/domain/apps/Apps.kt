@@ -20,6 +20,19 @@ interface AppsSource {
     suspend fun glyph(appId: String): Picture?
 
     fun open(appId: String)
+
+    /**
+     * The shortcuts an app offers into itself, read when asked (a long press in the dock), in no order
+     * ([shortcutsShown] sorts them). None when it has none, or while Android does not let Bercail read them: only
+     * the default home app may.
+     */
+    suspend fun shortcuts(appId: String): List<AppShortcut>
+
+    /** The icon of a shortcut as a white glyph, like the glyph of an app; nothing when it has none that reads. */
+    suspend fun shortcutGlyph(shortcut: AppShortcut): Picture?
+
+    /** Opens the app on its shortcut. A shortcut that is gone or turned off opens nothing. */
+    fun openShortcut(shortcut: AppShortcut)
 }
 
 /** The few places outside Bercail the search and the settings send to. */
