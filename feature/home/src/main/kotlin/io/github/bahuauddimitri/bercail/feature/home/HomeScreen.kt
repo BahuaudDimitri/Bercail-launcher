@@ -143,6 +143,7 @@ fun HomeScreen(
                                 VerticalTimeline(
                                     state = state,
                                     onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                                    onOpenEvent = actions::onOpenEvent,
                                     modifier = Modifier.align(Alignment.TopEnd).then(fading),
                                     titlesBelow = with(LocalDensity.current) { headerHeight.toDp() }
                                 )

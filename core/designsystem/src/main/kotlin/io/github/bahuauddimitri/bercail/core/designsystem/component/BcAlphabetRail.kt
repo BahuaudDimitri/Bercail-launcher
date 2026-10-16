@@ -75,7 +75,7 @@ fun BcAlphabetRail(letters: List<String>, onLetter: (String) -> Unit, modifier: 
             .width(RAIL_WIDTH)
             .onSizeChanged { height = it.height }
             .followFinger(
-                onMove = { y ->
+                onMove = { (_, y) ->
                     if (height == 0 || current.isEmpty()) return@followFinger
                     finger = y.coerceIn(0f, height.toFloat())
                     val index = (y / height * current.size).toInt().coerceIn(0, current.lastIndex)

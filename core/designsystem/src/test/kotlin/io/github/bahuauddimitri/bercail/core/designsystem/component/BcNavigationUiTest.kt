@@ -191,9 +191,11 @@ class BcNavigationUiTest {
         BcTimelineMark(position = 0.47f, label = "15:00", title = "Point design", key = "design"),
         BcTimelineMark(position = 0.76f, label = "20:00", title = "Dîner", key = "diner")
     )
-    private val openedOn = mutableListOf<String?>()
 
-    /** The line of the day, 400 dp long, tagged "line"; what it opens is noted in [openedOn]. */
+    /** What the line opened: "day: design" for the day brought to an appointment, "mark: diner" for an appointment. */
+    private val opened = mutableListOf<String>()
+
+    /** The line of the day, 400 dp long, tagged "line", at the right of a 400 dp wide box; it opens [opened]. */
     private fun showLine(marks: List<BcTimelineMark> = day, haptics: HapticFeedback? = null, titlesBelow: Dp = 0.dp) {
         compose.setContent {
             CompositionLocalProvider(LocalHapticFeedback provides (haptics ?: LocalHapticFeedback.current)) {
@@ -204,7 +206,8 @@ class BcNavigationUiTest {
                             marks = marks,
                             titlesBelow = titlesBelow,
                             modifier = Modifier.height(400.dp).width(78.dp).testTag("line"),
-                            onOpen = { openedOn += it?.key }
+                            onOpenDay = { opened += "day: ${it?.key}" },
+                            onOpenMark = { opened += "mark: ${it.key}" }
                         )
                     }
                 }
@@ -220,11 +223,11 @@ class BcNavigationUiTest {
 
         compose.onNodeWithTag("line").performTouchInput { click(Offset(centerX, height * 0.45f)) }
 
-        assertThat(openedOn).containsExactly("design")
+        assertThat(opened).containsExactly("day: design")
     }
 
     @Test
-    fun `en glissant le long de la ligne, une bulle nomme le rendez-vous sous le doigt, et lâcher ouvre la journée`() {
+    fun `en glissant le long du fil, une bulle nomme le rendez-vous sous le doigt, et lâcher l'ouvre`() {
         showLine()
         bubble.assertDoesNotExist()
 
@@ -232,11 +235,11 @@ class BcNavigationUiTest {
         bubble.assert(hasAnyDescendant(hasText("08:00 · Stand-up")) or hasText("08:00 · Stand-up"))
         compose.onNodeWithTag("line").performTouchInput { moveTo(Offset(centerX, height * 0.8f)) }
         bubble.assert(hasAnyDescendant(hasText("20:00 · Dîner")) or hasText("20:00 · Dîner"))
-        assertThat(openedOn).isEmpty()
+        assertThat(opened).isEmpty()
 
         compose.onNodeWithTag("line").performTouchInput { up() }
 
-        assertThat(openedOn).containsExactly("diner")
+        assertThat(opened).containsExactly("mark: diner")
         bubble.assertDoesNotExist()
     }
 
@@ -248,7 +251,53 @@ class BcNavigationUiTest {
         bubble.assertDoesNotExist()
         compose.onNodeWithTag("line").performTouchInput { up() }
 
-        assertThat(openedOn).containsExactly(null)
+        assertThat(opened).containsExactly("day: null")
+    }
+
+    @Test
+    fun `un doigt qui tremble à peine reste un toucher, qui ouvre la journée`() {
+        showLine()
+
+        compose.onNodeWithTag("line").performTouchInput {
+            down(Offset(centerX, height * 0.76f))
+            moveBy(Offset(1f, 2f))
+            up()
+        }
+
+        assertThat(opened).containsExactly("day: diner")
+    }
+
+    @Test
+    fun `écarter le doigt vers la gauche, au-delà de la bulle, annule, la bulle s'efface et lâcher n'ouvre rien`() {
+        showLine()
+        compose.onNodeWithTag("line").performTouchInput {
+            down(Offset(centerX, height * 0.06f))
+            moveTo(Offset(centerX, height * 0.47f))
+        }
+        bubble.assertExists()
+
+        compose.onNodeWithTag("line").performTouchInput { moveTo(Offset(centerX - 300.dp.toPx(), height * 0.47f)) }
+        compose.waitForIdle()
+        bubble.assertDoesNotExist()
+        compose.onNodeWithTag("line").performTouchInput { up() }
+
+        assertThat(opened).isEmpty()
+    }
+
+    @Test
+    fun `revenir sur le fil après l'avoir écarté reprend le geste`() {
+        showLine()
+        compose.onNodeWithTag("line").performTouchInput {
+            down(Offset(centerX, height * 0.06f))
+            moveTo(Offset(centerX, height * 0.47f))
+            moveTo(Offset(centerX - 300.dp.toPx(), height * 0.47f))
+            moveTo(Offset(centerX, height * 0.76f))
+        }
+        bubble.assertExists()
+
+        compose.onNodeWithTag("line").performTouchInput { up() }
+
+        assertThat(opened).containsExactly("mark: diner")
     }
 
     @Test
@@ -303,7 +352,7 @@ class BcNavigationUiTest {
             .assert(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))
             .performSemanticsAction(SemanticsActions.OnClick)
 
-        assertThat(openedOn).containsExactly(null)
+        assertThat(opened).containsExactly("day: null")
     }
 
     @Test

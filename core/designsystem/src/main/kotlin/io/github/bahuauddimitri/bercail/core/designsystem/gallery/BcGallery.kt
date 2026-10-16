@@ -321,7 +321,7 @@ private fun Navigation() {
         BcAlphabetRail(listOf("A", "B", "D", "G", "M", "S", "W"), onLetter = {
             reached.value = it
         }, modifier = Modifier.height(TALL))
-        BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpen = {})
+        BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpenDay = {})
     }
     // The same line at each moment of the day, in its accent.
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {

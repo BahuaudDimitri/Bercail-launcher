@@ -70,13 +70,14 @@ internal fun HomeHeader(
 /**
  * The day along the right edge, rising from the top edge of the screen (7 am under the status bar) to midnight
  * above the drawer, in the accent of the moment.
- * It fades and retracts on the Listen screen. Sliding a finger along it names each appointment, and lifting it opens
- * the day on the one reached.
+ * It fades and retracts on the Listen screen. A touch opens the day; sliding a finger along it names each
+ * appointment, and lifting it opens the one reached in the phone's calendar app.
  */
 @Composable
 internal fun VerticalTimeline(
     state: HomeUiState,
     onOpenDay: (String?) -> Unit,
+    onOpenEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
     titlesBelow: Dp = 0.dp
 ) {
@@ -97,7 +98,8 @@ internal fun VerticalTimeline(
             // Beside the top of the screen, where its own title stands, the line only writes the times.
             titlesBelow = titlesBelow,
             description = TIMELINE_DESCRIPTION,
-            onOpen = { onOpenDay(it?.key) },
+            onOpenDay = { onOpenDay(it?.key) },
+            onOpenMark = { mark -> mark.key?.let(onOpenEvent) },
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)

@@ -15,10 +15,10 @@ import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
-import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
@@ -28,7 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-/** The line of the day under the finger, on a simulated phone: it names the appointments and opens the day. */
+/** The line of the day under the finger, on a simulated phone: it names the appointments and opens them. */
 @RunWith(AndroidJUnit4::class)
 @Config(qualifiers = PIXEL_9)
 class HomeTimelineUiTest {
@@ -79,8 +79,9 @@ class HomeTimelineUiTest {
     }
 
     @Test
-    fun `glisser le long de la ligne du temps nomme le rendez-vous atteint, et lâcher ouvre la journée sur lui`() {
-        show()
+    fun `glisser le long du fil nomme le rendez-vous atteint, et lâcher l'ouvre dans l'agenda du téléphone`() {
+        val world = FakeWorld(Moment.Matin)
+        show(world)
 
         // « Courses » is at 18:30: two thirds of the way from 7 am to midnight.
         line.performTouchInput {
@@ -90,8 +91,8 @@ class HomeTimelineUiTest {
         compose.onNodeWithText("18:30 · Courses").assertExists()
         line.performTouchInput { up() }
 
-        compose.onNodeWithText("Aujourd'hui").assertExists()
-        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Courses")
+        assertThat(world.agenda.opened).containsExactly("event: Courses")
+        compose.onNodeWithText("Aujourd'hui").assertDoesNotExist()
     }
 
     @Test

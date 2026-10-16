@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -78,14 +79,16 @@ data class BcTimelineMark(
 
 /**
  * The day from 7 am to midnight, along the right edge, in the accent of the moment: the past as a thick line with
- * a glow, rising to the top edge, the future as a hairline, a ring for now, the time of each appointment beside it,
- * "Title 09:30" beside each appointment, the past ones in the accent and the next one circled. [headroom] is left
- * free above 7 am (for the status bar): the line still rises through it to the edge. Above [titlesBelow] (the top of
- * the screen, where its own title stands), appointments only write their time. Marks outside the day are not drawn.
+ * a glow, rising to the top edge, the future as a hairline, a ring for now, "Title 09:30" beside each appointment,
+ * the past ones in the accent and the next one circled. [headroom] is left free above 7 am (for the status bar): the
+ * line still rises through it to the edge. Above [titlesBelow] (the top of the screen, where its own title stands),
+ * appointments only write their time. Marks outside the day are not drawn.
  *
- * With [onOpen], the line answers to the finger like the alphabet of the search: while it is touched, it bends
- * around the finger, a bubble names the appointment the finger is closest to (with a tick at each new one), and
- * lifting the finger calls [onOpen] with that appointment, or with nothing on a day without any.
+ * With [onOpenDay], the line answers to the finger like the alphabet of the search. A touch without sliding calls
+ * [onOpenDay] with the appointment closest to the finger (or nothing on a day without any). While the finger slides
+ * along it, the line bends around the finger and a bubble names the closest appointment (with a tick at each new
+ * one); lifting the finger then calls [onOpenMark] with it. Moving the finger away to the left, past the bubble,
+ * cancels: the bubble fades, the line straightens, and lifting opens nothing; coming back to the line resumes.
  */
 @Composable
 fun BcTimeline(
@@ -95,12 +98,13 @@ fun BcTimeline(
     headroom: Dp = 0.dp,
     titlesBelow: Dp = 0.dp,
     description: String? = null,
-    onOpen: ((BcTimelineMark?) -> Unit)? = null
+    onOpenDay: ((BcTimelineMark?) -> Unit)? = null,
+    onOpenMark: (BcTimelineMark) -> Unit = {}
 ) {
     val visible = marks.filter { it.position in 0f..1f }
     val moment = BcTheme.moment
     val touch = remember { TimelineTouch() }
-    val swell = animateFloatAsState(if (touch.down) 1f else 0f, tween(BcTheme.motion.fadeMillis), label = "day wave")
+    val swell = animateFloatAsState(if (touch.engaged) 1f else 0f, tween(BcTheme.motion.fadeMillis), label = "day wave")
     // How far the line stands away from its place, this many pixels down.
     val lean: Density.(Float) -> Float = { y ->
         WAVE_BULGE.toPx() * swell.value * bell(y - touch.finger, WAVE_SPREAD.toPx())
@@ -108,12 +112,15 @@ fun BcTimeline(
     val bubbleShown by remember { derivedStateOf { swell.value > 0f && touch.last >= 0 } }
     BoxWithConstraints(
         modifier
-            .onSizeChanged { touch.length = it.height }
+            .onSizeChanged {
+                touch.length = it.height
+                touch.width = it.width
+            }
             .semantics {
                 if (description != null) contentDescription = description
-                if (onOpen != null) {
+                if (onOpenDay != null) {
                     onClick(label = OPEN_DAY) {
-                        onOpen(null)
+                        onOpenDay(null)
                         true
                     }
                 }
@@ -129,13 +136,13 @@ fun BcTimeline(
             MarkLabel(
                 mark = mark,
                 // The bubble names the appointment under the finger: it is not written twice.
-                named = touch.down && index == touch.reached,
+                named = touch.engaged && index == touch.reached,
                 titled = !mark.brief && mark.title.isNotBlank() && scale.yOf(mark.position) >= titlesFrom,
                 past = mark.position <= now,
                 modifier = Modifier.matchParentSize().placeBeside(mark.position, headroom, lean)
             )
         }
-        if (onOpen != null) FingerZone(visible, headroom, touch, onOpen)
+        if (onOpenDay != null) FingerZone(visible, headroom, touch, onOpenDay, onOpenMark)
         if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), swell, touch)
     }
 }
@@ -182,18 +189,38 @@ private class DayScale(private val headroom: Float, private val length: Float) {
 
 /** Where the finger is on the line, and which appointment it is closest to. */
 private class TimelineTouch {
-    /** The length of the line, in pixels. */
+    /** The length and the width of the timeline, in pixels. */
     var length by mutableIntStateOf(0)
+    var width = 0
 
     /** Where the finger is down the line, in pixels; kept after it lifts, while the wave flattens. */
     var finger by mutableFloatStateOf(0f)
     var down by mutableStateOf(false)
+
+    /** Where the finger first touched, and whether it has slid since: a touch without sliding opens the day. */
+    var start = 0f
+    var slid = false
+
+    /** The finger went away to the left, past the bubble: lifting it opens nothing. */
+    var cancelled by mutableStateOf(false)
+
+    /** Where the left edge of the bubble last stood, in pixels from the left of the timeline. */
+    var bubbleLeft = Float.NEGATIVE_INFINITY
 
     /** The appointment the finger is closest to, or nothing while the line is not touched. */
     var reached by mutableStateOf<Int?>(null)
 
     /** The last appointment reached: what the bubble still says while it fades. */
     var last by mutableIntStateOf(-1)
+
+    /** The line answers to the finger: it bends, and the bubble shows. */
+    val engaged: Boolean get() = down && !cancelled
+
+    fun release() {
+        down = false
+        cancelled = false
+        reached = null
+    }
 }
 
 /**
@@ -205,17 +232,26 @@ private fun BoxScope.FingerZone(
     marks: List<BcTimelineMark>,
     headroom: Dp,
     touch: TimelineTouch,
-    onOpen: (BcTimelineMark?) -> Unit
+    onOpenDay: (BcTimelineMark?) -> Unit,
+    onOpenMark: (BcTimelineMark) -> Unit
 ) {
     val current by rememberUpdatedState(marks)
-    val open by rememberUpdatedState(onOpen)
+    val openDay by rememberUpdatedState(onOpenDay)
+    val openMark by rememberUpdatedState(onOpenMark)
     val haptics by rememberUpdatedState(LocalHapticFeedback.current)
-    val top by rememberUpdatedState(with(LocalDensity.current) { headroom.toPx() })
+    val density = LocalDensity.current
+    val top by rememberUpdatedState(with(density) { headroom.toPx() })
+    val zone = with(density) { FINGER_ZONE.toPx() }
+    val slop = LocalViewConfiguration.current.touchSlop
     Box(
         Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE).followFinger(
-            onMove = { y ->
-                touch.finger = y.coerceIn(0f, touch.length.toFloat())
+            onMove = { position ->
+                if (!touch.down) touch.start = position.y
                 touch.down = true
+                touch.slid = touch.slid || abs(position.y - touch.start) > slop
+                touch.cancelled = touch.width - zone + position.x < touch.bubbleLeft
+                if (touch.cancelled) return@followFinger
+                touch.finger = position.y.coerceIn(0f, touch.length.toFloat())
                 val day = DayScale(top, touch.length.toFloat())
                 val closest = current.indices.minByOrNull { abs(day.yOf(current[it].position) - touch.finger) }
                 if (closest != touch.reached) {
@@ -228,14 +264,15 @@ private fun BoxScope.FingerZone(
             },
             onLift = {
                 val chosen = touch.reached?.let(current::getOrNull)
-                touch.down = false
-                touch.reached = null
-                open(chosen)
+                val (cancelled, slid) = touch.cancelled to touch.slid
+                touch.release()
+                when {
+                    cancelled -> Unit
+                    slid && chosen != null -> openMark(chosen)
+                    else -> openDay(chosen)
+                }
             },
-            onCancel = {
-                touch.down = false
-                touch.reached = null
-            }
+            onCancel = touch::release
         )
     )
 }
@@ -254,6 +291,8 @@ private fun BoxScope.Bubble(text: String, swell: State<Float>, touch: TimelineTo
                 layout(constraints.maxWidth, constraints.maxHeight) {
                     val away = (WAVE_BULGE.toPx() * swell.value).roundToInt()
                     val x = constraints.maxWidth - (LINE_INSET + BUBBLE_BESIDE).roundToPx() - away - bubble.width
+                    // Past this edge, to the left, the finger cancels. It is noted while the bubble stands in full.
+                    if (touch.engaged && swell.value == 1f) touch.bubbleLeft = x.toFloat()
                     val y = (touch.finger - bubble.height / 2f).roundToInt()
                     bubble.place(x, y.coerceIn(0, (constraints.maxHeight - bubble.height).coerceAtLeast(0)))
                 }

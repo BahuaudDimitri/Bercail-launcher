@@ -119,7 +119,7 @@ class BcNavigationScreenshotTest {
                     now = 0.1f,
                     marks = day,
                     modifier = Modifier.fillMaxHeight().width(78.dp).testTag("line"),
-                    onOpen = {}
+                    onOpenDay = {}
                 )
             }
         }
