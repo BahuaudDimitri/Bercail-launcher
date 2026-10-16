@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -247,6 +249,24 @@ class SearchListUiTest {
         show()
 
         assertThat(foundLetters("Chrome")).isEqualTo("")
+    }
+
+    @Test
+    fun `la première app trouvée, celle qu'ouvre Entrée, l'annonce sur sa ligne, et elle seule`() {
+        show(typed = "s")
+
+        compose.onNode(hasText("Spotify") and hasText("Entrée")).assertExists()
+        compose.onAllNodesWithText("Entrée").assertCountEquals(1)
+    }
+
+    @Test
+    fun `sans app trouvée, ni avant de taper, rien n'annonce Entrée`() {
+        show()
+        compose.onAllNodesWithText("Entrée").assertCountEquals(0)
+
+        search.onQueryChange("léa")
+        compose.waitForIdle()
+        compose.onAllNodesWithText("Entrée").assertCountEquals(0)
     }
 
     @Test
