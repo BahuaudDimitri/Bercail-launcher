@@ -53,7 +53,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 /**
  * A sheet of glass opened over the screen, for a conversation, the day or the media apps. It takes 62 % of
  * the screen at most, and more while the keyboard is out, which hides the bottom of it.
- * Sliding it down, touching the veil behind it or the system back gesture closes it.
+ * No veil darkens the screen behind it. Sliding it down, touching the screen above it or the system back gesture
+ * closes it.
  */
 @Composable
 fun BcSheet(
@@ -74,15 +75,11 @@ fun BcSheet(
             animationSpec = tween(motion.sheetMillis, easing = motion.easing),
             label = "sheet room"
         )
-        AnimatedVisibility(
-            visible,
-            enter = fadeIn(tween(motion.fadeMillis)),
-            exit = fadeOut(tween(motion.fadeMillis))
-        ) {
+        // No veil: the screen stays as it is above the sheet, but touching it closes the sheet.
+        if (visible) {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(BcColors.scrim)
                     .clickable(
                         interactionSource = remember {
                             MutableInteractionSource()
