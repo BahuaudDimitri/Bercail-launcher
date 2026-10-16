@@ -27,6 +27,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.component.rememberBcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
@@ -61,6 +62,9 @@ interface HomeActions :
     /** Shows the alarms in the phone's clock app. */
     fun onOpenAlarms()
     fun onToggleControl(id: String)
+
+    /** The icon of an app of the dock in one colour, drawn when the dock first shows it; nothing for its initial. */
+    suspend fun glyphOf(appId: String): Picture?
 }
 
 /** What the home screen asks others to open or to do. The one of the house arrives with its wave. */

@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -46,6 +50,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.Picture
+import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.media.asTrackTime
@@ -102,7 +108,7 @@ internal fun HomeDrawer(
                     label = "band content"
                 ) { shown ->
                     when (shown) {
-                        BandContent.Summary -> Summary(state, links, onOpen = { actions.onDrawerExpandedChange(true) })
+                        BandContent.Summary -> Summary(state, actions, links)
                         BandContent.Remote -> Remote(state.media, position, actions)
                         BandContent.Search -> search?.list?.invoke()
                     }
@@ -131,12 +137,32 @@ private fun ClosesSearch(search: HomeSearch?) {
 }
 
 /**
- * The summary line of the band: who wrote, then what is on in the house. Touching it opens the sheet; sliding it to
- * the right shows the messaging app at once.
+ * The folded band above the search bar: the summary line (who wrote, then what is on in the house; touching it
+ * opens the sheet, sliding it to the right shows the messaging app at once), then the dock.
  */
 @Composable
-private fun Summary(state: HomeUiState, links: HomeLinks, onOpen: () -> Unit) {
-    SummaryLine(state, onClick = onOpen, onClickLabel = OPEN_SHEET, onOpenApp = links::onOpenMessagesApp)
+private fun Summary(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
+        SummaryLine(
+            state = state,
+            onClick = { actions.onDrawerExpandedChange(true) },
+            onClickLabel = OPEN_SHEET,
+            onOpenApp = links::onOpenMessagesApp
+        )
+        if (state.dock.isNotEmpty()) Dock(state.dock, actions)
+    }
+}
+
+/** The apps of the dock, each drawn in one colour once it first shows; until then, and without one, its initial. */
+@Composable
+private fun Dock(apps: List<App>, actions: HomeActions) {
+    val dock = apps.map { app ->
+        key(app.id) {
+            val glyph by produceState<Picture?>(null, app.id) { value = actions.glyphOf(app.id) }
+            BcDockApp(app.name, glyph.asImage()) { actions.onOpenApp(app.id) }
+        }
+    }
+    BcDock(dock)
 }
 
 /** The sheet over the band: the favorite people and "Tous", the home controls and "Tout". */

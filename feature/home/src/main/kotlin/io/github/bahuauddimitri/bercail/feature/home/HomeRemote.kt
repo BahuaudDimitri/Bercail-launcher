@@ -36,7 +36,7 @@ interface ListenActions {
     /** Shows what is loaded in its own app. */
     fun onOpenMediaApp()
 
-    /** Opens a media app chosen in the « Écouter » sheet. */
+    /** Opens an app as it was left: a media app chosen in the « Écouter » sheet, an app of the dock. */
     fun onOpenApp(appId: String)
 
     /**

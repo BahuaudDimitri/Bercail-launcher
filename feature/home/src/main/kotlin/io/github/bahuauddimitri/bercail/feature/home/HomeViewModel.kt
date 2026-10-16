@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
@@ -14,6 +15,8 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.dayLineAt
 import io.github.bahuauddimitri.bercail.core.domain.agenda.dayRowsAt
 import io.github.bahuauddimitri.bercail.core.domain.agenda.glanceAt
 import io.github.bahuauddimitri.bercail.core.domain.agenda.inWords
+import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
 import io.github.bahuauddimitri.bercail.core.domain.home.homeSummary
@@ -79,6 +82,9 @@ data class HomeUiState(
     val favorites: List<Conversation> = emptyList(),
     val otherUnread: Int = 0,
     val controls: List<HomeControl> = emptyList(),
+
+    /** The apps of the dock, in the band above the search bar: five at most, in the order chosen. */
+    val dock: List<App> = emptyList(),
     val homeSummary: String = "",
     val media: MediaState = MediaState.None,
     /** False until the user lets Bercail see what the media apps play: the « Écouter » sheet offers to allow it. */
@@ -164,15 +170,18 @@ class HomeViewModel private constructor(
         Day(now, if (allowed) events else emptyList(), forecast, allowed, next)
     }.onEach { shown = it }
 
+    /** The band and its sheet: the conversations, the house, the settings, and the installed apps for the dock. */
     private val drawer: Flow<Drawer> = combine(
         messages.conversations,
         home.controls,
         settings.settings,
-        access.granted
-    ) { conversations, controls, current, granted ->
+        access.granted,
+        listen.apps.apps
+    ) { conversations, controls, current, granted, installed ->
         // Without the user's agreement, nothing of the conversations is shown, whatever the source says.
         val allowed = Access.Messages in granted
-        Drawer(if (allowed) conversations else emptyList(), controls, current, allowed)
+        val conversationsShown = if (allowed) conversations else emptyList()
+        Drawer(conversationsShown, controls, current, allowed, dockOf(installed, current.dockApps))
     }.onEach { talk.people.value = it.conversations }
 
     /**
@@ -236,6 +245,8 @@ class HomeViewModel private constructor(
 
     override fun onOpenAlarms() = alarm.openAlarms()
 
+    override suspend fun glyphOf(appId: String): Picture? = listen.apps.glyph(appId)
+
     override fun onToggleControl(id: String) {
         viewModelScope.launch { home.toggle(id) }
     }
@@ -269,6 +280,7 @@ class HomeViewModel private constructor(
             favorites = favorites,
             otherUnread = unreadOutsideFavorites(drawer.conversations, favorites.map { it.id }),
             controls = drawer.controls,
+            dock = drawer.dock,
             homeSummary = homeSummary(drawer.controls),
             media = media,
             mediaAllowed = listening.allowed,
@@ -294,7 +306,8 @@ class HomeViewModel private constructor(
         val conversations: List<Conversation>,
         val controls: List<HomeControl>,
         val settings: Settings,
-        val messagesAllowed: Boolean
+        val messagesAllowed: Boolean,
+        val dock: List<App>
     )
 
     /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment the search pointed at. */
