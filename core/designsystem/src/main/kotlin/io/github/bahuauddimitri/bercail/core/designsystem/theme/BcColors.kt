@@ -41,6 +41,10 @@ object BcColors {
     /** Sunken field: search bar, segmented control. */
     val inset = Color(0xFF0A0A10).copy(alpha = 0.42f)
 
+    /** Edge of the sunken pill fields ("Chercher"), brighter while they have the focus. */
+    val fieldEdge = text.copy(alpha = 0.18f)
+    val fieldEdgeFocused = text.copy(alpha = 0.3f)
+
     /** One pastel per person and per home control. */
     val pastelCoral = Color(0xFFF2A49A)
     val pastelBlue = Color(0xFF9CC4F0)

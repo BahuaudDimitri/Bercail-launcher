@@ -7,11 +7,13 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -35,6 +37,13 @@ class BcConversationUiTest {
         compose.setContent { BcTheme { BcSearchField(value = "", onValueChange = {}) } }
 
         compose.onNode(hasSetTextAction()).assert(hasContentDescription("Chercher"))
+    }
+
+    @Test
+    fun `la barre Chercher est une pilule de 48 dp de haut`() {
+        compose.setContent { BcTheme { BcSearchField(value = "", onValueChange = {}) } }
+
+        compose.onNodeWithTag(SEARCH_FIELD_TAG).assertHeightIsEqualTo(48.dp)
     }
 
     @Test

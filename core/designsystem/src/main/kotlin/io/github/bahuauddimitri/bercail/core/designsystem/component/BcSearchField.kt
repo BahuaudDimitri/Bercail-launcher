@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -27,10 +28,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcType
 
 /**
- * The "Chercher" bar, which is the field itself: sunken pill, magnifier, clear button once something is typed.
+ * The "Chercher" bar, which is the field itself: a sunken pill with a light edge, brighter while it has the focus,
+ * a magnifier, a caret in the accent of the moment, a clear button once something is typed.
  * Disabled, it keeps its place and its look but takes no focus and no text.
  */
 @Composable
@@ -51,8 +54,9 @@ fun BcSearchField(
         modifier = modifier
             .fillMaxWidth()
             .height(FIELD_HEIGHT)
+            .testTag(SEARCH_FIELD_TAG)
             .background(BcColors.inset, BcShapes.pill)
-            .border(1.dp, if (focused) BcColors.glassEdge else BcColors.tile, BcShapes.pill)
+            .border(1.dp, if (focused) BcColors.fieldEdgeFocused else BcColors.fieldEdge, BcShapes.pill)
             .padding(start = START_PADDING, end = END_PADDING),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(GAP)
@@ -75,7 +79,7 @@ fun BcSearchField(
                 textStyle = BcType.message.copy(color = BcColors.text),
                 enabled = enabled,
                 singleLine = true,
-                cursorBrush = SolidColor(BcColors.text),
+                cursorBrush = SolidColor(BcTheme.moment.accent),
                 interactionSource = interactions,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearch() })
@@ -89,7 +93,8 @@ fun BcSearchField(
     }
 }
 
-private val FIELD_HEIGHT = 46.dp
+internal const val SEARCH_FIELD_TAG = "search-field"
+private val FIELD_HEIGHT = 48.dp
 private val START_PADDING = 18.dp
 private val END_PADDING = 2.dp
 private val GAP = 10.dp
