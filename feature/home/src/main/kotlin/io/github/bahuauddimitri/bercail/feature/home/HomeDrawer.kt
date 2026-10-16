@@ -30,17 +30,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDrawer
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcHomeToggle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
@@ -133,19 +135,21 @@ private fun Summary(state: HomeUiState, links: HomeLinks, onExpand: () -> Unit) 
 @Composable
 private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(ROW_GAP)) {
+        BcSectionLabel("Gens")
         PeopleRow(state, actions, links)
+        BcSectionLabel("Maison")
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             state.controls.forEach { control ->
-                BcHomeToggle(
+                BcRing(
                     name = control.name,
                     state = control.state,
-                    icon = control.icon,
+                    mark = BcRingMark.Icon(control.icon),
                     pastel = control.pastel,
                     on = control.isOn,
                     onToggle = { actions.onToggleControl(control.id) }
                 )
             }
-            BcHomeToggle("Tout", "l'app", BcIcons.House, BcPastel.Apricot, on = false, onToggle = links::onOpenHomeApp)
+            BcRing("Tout", BcRingMark.Icon(BcIcons.House), onClick = links::onOpenHomeApp, tone = BcRingTone.Off)
         }
     }
 }

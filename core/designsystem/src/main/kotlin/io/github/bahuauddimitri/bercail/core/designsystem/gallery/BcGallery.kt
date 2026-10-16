@@ -40,7 +40,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDrawer
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcHomeToggle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -50,10 +49,12 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeader
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
@@ -186,31 +187,29 @@ private fun Buttons() {
 @Composable
 private fun PeopleAndHome() {
     var unread by remember { mutableIntStateOf(2) }
-    Row {
-        BcPersonTile("Léa", "L", BcPastel.Coral, unread = unread, onClick = { unread = 0 })
-        BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = { unread++ })
-        BcPersonTile("Équipe", "É", BcPastel.Mint, unread = 0, onClick = {})
-        BcPersonTile("Maman", "M", BcPastel.Lavender, unread = 140, onClick = {})
-        BcPersonTile("Tous", "", pastel = null, unread = 5, onClick = {}, icon = BcIcons.Chat)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        BcRing("Léa", BcRingMark.Initial("L"), {
+            unread = 0
+        }, tone = BcRingTone.Pastel(BcPastel.Coral), unread = unread)
+        BcRing("Tom", BcRingMark.Initial("T"), { unread++ }, tone = BcRingTone.Pastel(BcPastel.Blue))
+        BcRing("Équipe", BcRingMark.Initial("É"), {}, tone = BcRingTone.Pastel(BcPastel.Mint))
+        BcRing("Maman", BcRingMark.Initial("M"), {}, tone = BcRingTone.Pastel(BcPastel.Lavender), unread = 140)
+        BcRing("Tous", BcRingMark.Icon(BcIcons.Chat), {}, unread = 5)
     }
     val lit = remember { mutableStateListOf(true, false, true, false) }
-    Row {
-        BcHomeToggle("Salon", if (lit[0]) "60 %" else "éteint", BcIcons.Lamp, BcPastel.Apricot, lit[0], {
-            lit[0] =
-                !lit[0]
-        })
-        BcHomeToggle("Cinéma", if (lit[1]) "active" else "prête", BcIcons.Film, BcPastel.Lavender, lit[1], {
-            lit[1] =
-                !lit[1]
-        })
-        BcHomeToggle("Volets", if (lit[2]) "ouverts" else "fermés", BcIcons.Shutters, BcPastel.Blue, lit[2], {
-            lit[2] =
-                !lit[2]
-        })
-        BcHomeToggle("Chauffage", if (lit[3]) "21 °C" else "18 °C", BcIcons.Flame, BcPastel.Coral, lit[3], {
-            lit[3] =
-                !lit[3]
-        })
+    val controls = listOf(
+        Triple("Salon", BcIcons.Lamp, BcPastel.Apricot) to ("60 %" to "éteint"),
+        Triple("Cinéma", BcIcons.Film, BcPastel.Lavender) to ("active" to "prête"),
+        Triple("Volets", BcIcons.Shutters, BcPastel.Blue) to ("ouverts" to "fermés"),
+        Triple("Chauffage", BcIcons.Flame, BcPastel.Coral) to ("21 °C" to "18 °C")
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        controls.forEachIndexed { index, (control, states) ->
+            val (name, icon, pastel) = control
+            val state = if (lit[index]) states.first else states.second
+            BcRing(name, state, BcRingMark.Icon(icon), pastel, on = lit[index], onToggle = { lit[index] = !lit[index] })
+        }
+        BcRing("Tout", BcRingMark.Icon(BcIcons.House), {}, tone = BcRingTone.Off)
     }
 }
 

@@ -3,6 +3,7 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -26,23 +27,22 @@ class BcControlsScreenshotTest {
     val compose = createComposeRule()
 
     @Test
-    fun `les tuiles personnes correspondent à leur capture`() = compose.captureComponent("person_tiles") {
-        Row {
-            BcPersonTile("Léa", "L", BcPastel.Coral, unread = 2, onClick = {})
-            BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = {})
-            BcPersonTile("Équipe", "É", BcPastel.Mint, unread = 0, onClick = {})
-            BcPersonTile("Maman", "M", BcPastel.Lavender, unread = 140, onClick = {})
-            BcPersonTile("Tous", "", pastel = null, unread = 5, onClick = {}, icon = BcIcons.Chat)
-        }
-    }
-
-    @Test
-    fun `les commandes maison correspondent à leur capture`() = compose.captureComponent("home_toggles") {
-        Row {
-            BcHomeToggle("Salon", "60 %", BcIcons.Lamp, BcPastel.Apricot, on = true, onToggle = {})
-            BcHomeToggle("Cinéma", "prête", BcIcons.Film, BcPastel.Lavender, on = false, onToggle = {})
-            BcHomeToggle("Volets", "ouverts", BcIcons.Shutters, BcPastel.Blue, on = true, onToggle = {})
-            BcHomeToggle("Chauffage", "18 °C", BcIcons.Flame, BcPastel.Coral, on = false, onToggle = {})
+    fun `les anneaux des gens et de la maison correspondent à leur capture`() = compose.captureComponent("rings") {
+        Column(Modifier.width(363.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.l)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                BcRing("Léa", BcRingMark.Initial("L"), {}, tone = BcRingTone.Pastel(BcPastel.Coral), unread = 2)
+                BcRing("Tom", BcRingMark.Initial("T"), {}, tone = BcRingTone.Pastel(BcPastel.Blue))
+                BcRing("Équipe", BcRingMark.Initial("É"), {}, tone = BcRingTone.Pastel(BcPastel.Mint))
+                BcRing("Maman", BcRingMark.Initial("M"), {}, tone = BcRingTone.Pastel(BcPastel.Lavender), unread = 140)
+                BcRing("Tous", BcRingMark.Icon(BcIcons.Chat), {}, unread = 5)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                BcRing("Salon", "60 %", BcRingMark.Icon(BcIcons.Lamp), BcPastel.Apricot, on = true, onToggle = {})
+                BcRing("Cinéma", "prête", BcRingMark.Icon(BcIcons.Film), BcPastel.Lavender, on = false, onToggle = {})
+                BcRing("Volets", "ouverts", BcRingMark.Icon(BcIcons.Shutters), BcPastel.Blue, on = true, onToggle = {})
+                BcRing("Chauffage", "18 °C", BcRingMark.Icon(BcIcons.Flame), BcPastel.Coral, on = false, onToggle = {})
+                BcRing("Tout", BcRingMark.Icon(BcIcons.House), {}, tone = BcRingTone.Off)
+            }
         }
     }
 

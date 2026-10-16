@@ -8,7 +8,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPersonTile
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
@@ -55,23 +57,21 @@ internal fun PeopleRow(state: HomeUiState, actions: HomeActions, links: HomeLink
     val favoriteIds = state.favorites.map { it.id }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         state.favorites.forEach { person ->
-            BcPersonTile(
-                name = person.name,
-                initials = person.initials,
-                pastel = pastelOf(person.id, favoriteIds),
-                unread = person.unread,
+            BcRing(
+                label = person.name,
+                mark = BcRingMark.Initial(person.initials),
                 onClick = { actions.onOpenConversation(person.id) },
+                tone = BcRingTone.Pastel(pastelOf(person.id, favoriteIds)),
+                unread = person.unread,
                 description = person.description
             )
         }
-        BcPersonTile(
-            name = "Tous",
-            initials = "",
-            pastel = null,
-            unread = state.otherUnread,
+        BcRing(
+            label = "Tous",
+            mark = BcRingMark.Icon(BcIcons.Chat),
             onClick = links::onOpenMessagesApp,
-            description = allMessagesDescription(state.otherUnread),
-            icon = BcIcons.Chat
+            unread = state.otherUnread,
+            description = allMessagesDescription(state.otherUnread)
         )
     }
 }

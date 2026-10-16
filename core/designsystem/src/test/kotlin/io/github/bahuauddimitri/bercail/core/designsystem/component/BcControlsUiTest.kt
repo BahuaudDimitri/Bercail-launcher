@@ -39,57 +39,6 @@ class BcControlsUiTest {
     val compose = createComposeRule()
 
     @Test
-    fun `toucher une personne ouvre sa conversation`() {
-        var opened = 0
-        compose.setContent {
-            BcTheme {
-                BcPersonTile("Léa", "L", BcPastel.Coral, unread = 2, onClick = {
-                    opened++
-                }, description = "Léa, 2 non lus")
-            }
-        }
-
-        compose.onNodeWithContentDescription("Léa, 2 non lus").assertHeightIsAtLeast(40.dp).performClick()
-
-        assertThat(opened).isEqualTo(1)
-    }
-
-    @Test
-    fun `la pastille de non-lus n'apparaît que s'il y en a`() {
-        compose.setContent {
-            BcTheme {
-                BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = {})
-                BcPersonTile("Léa", "L", BcPastel.Coral, unread = 3, onClick = {})
-            }
-        }
-
-        compose.onNodeWithTag(UNREAD_BADGE + "Tom", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag(UNREAD_BADGE + "Léa", useUnmergedTree = true).assertExists()
-    }
-
-    @Test
-    fun `au-delà de 99 non-lus la pastille affiche 99+`() {
-        compose.setContent { BcTheme { BcPersonTile("Tous", "", pastel = null, unread = 140, onClick = {}) } }
-
-        compose.onNodeWithText("99+", useUnmergedTree = true).assertExists()
-    }
-
-    @Test
-    fun `toucher une commande maison la bascule`() {
-        var on by mutableStateOf(false)
-        compose.setContent {
-            BcTheme {
-                BcHomeToggle("Salon", "éteint", BcIcons.Lamp, BcPastel.Apricot, on = on, onToggle = { on = !on })
-            }
-        }
-
-        compose.onNodeWithContentDescription("Salon").assertIsOff().performClick()
-
-        assertThat(on).isEqualTo(true)
-        compose.onNodeWithContentDescription("Salon").assertIsOn()
-    }
-
-    @Test
     fun `toucher une ligne de liste l'ouvre`() {
         var opened = 0
         compose.setContent {

@@ -38,11 +38,15 @@ class BcDrawerScreenshotTest {
     fun `le tiroir ouvert correspond à sa capture`() = compose.captureComponent("drawer_expanded") {
         BcDrawer(expanded = true, onExpandedChange = {}, modifier = Modifier.width(380.dp)) {
             Row(Modifier.width(348.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                BcPersonTile("Léa", "L", BcPastel.Coral, unread = 2, onClick = {})
-                BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = {})
-                BcPersonTile("Équipe", "É", BcPastel.Mint, unread = 0, onClick = {})
-                BcPersonTile("Maman", "M", BcPastel.Lavender, unread = 0, onClick = {})
-                BcPersonTile("Tous", "", pastel = null, unread = 3, onClick = {}, icon = BcIcons.Chat)
+                BcRing("Léa", BcRingMark.Initial("L"), onClick = {
+                }, tone = BcRingTone.Pastel(BcPastel.Coral), unread = 2)
+                BcRing("Tom", BcRingMark.Initial("T"), onClick = {
+                }, tone = BcRingTone.Pastel(BcPastel.Blue), unread = 0)
+                BcRing("Équipe", BcRingMark.Initial("É"), onClick = {
+                }, tone = BcRingTone.Pastel(BcPastel.Mint), unread = 0)
+                BcRing("Maman", BcRingMark.Initial("M"), onClick = {
+                }, tone = BcRingTone.Pastel(BcPastel.Lavender), unread = 0)
+                BcRing("Tous", BcRingMark.Icon(BcIcons.Chat), onClick = {}, unread = 3)
             }
             Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
                 BcSearchField(value = "", onValueChange = {})

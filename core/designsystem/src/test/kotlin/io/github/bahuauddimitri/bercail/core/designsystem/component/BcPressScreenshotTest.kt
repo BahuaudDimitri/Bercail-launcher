@@ -53,9 +53,18 @@ class BcPressScreenshotTest {
                     modifier = Modifier.testTag("line")
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.l)) {
-                    BcPersonTile("Léa", "L", BcPastel.Coral, unread = 1, onClick = {
-                    }, modifier = Modifier.testTag("tile"))
-                    BcPersonTile("Tom", "T", BcPastel.Blue, unread = 0, onClick = {})
+                    BcRing(
+                        "Léa",
+                        BcRingMark.Initial(
+                            "L"
+                        ),
+                        tone = BcRingTone.Pastel(BcPastel.Coral),
+                        unread = 1,
+                        onClick = {
+                        },
+                        modifier = Modifier.testTag("tile")
+                    )
+                    BcRing("Tom", BcRingMark.Initial("T"), tone = BcRingTone.Pastel(BcPastel.Blue), onClick = {})
                 }
                 BcMusicPill("Nekketsu", "Nekfeu", cover = null, playing = false, onClick = {}, Modifier.testTag("pill"))
                 BcButton("Reprendre", onClick = {}, Modifier.testTag("button"), variant = BcButtonVariant.Light)

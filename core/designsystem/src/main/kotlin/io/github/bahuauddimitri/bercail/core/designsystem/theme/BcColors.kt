@@ -67,7 +67,7 @@ object BcColors {
     val strokeButton = text.copy(alpha = 0.2f)
 
     /** A home control that is switched off. */
-    val off = Color(0xFF4A4A5C)
+    val off = Color(0xFF5C5B70)
 
     internal val backgrounds = listOf(base, nightTop, nightBottom)
 }

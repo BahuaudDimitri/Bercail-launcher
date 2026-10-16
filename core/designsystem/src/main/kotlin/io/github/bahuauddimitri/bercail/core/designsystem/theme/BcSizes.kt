@@ -20,16 +20,14 @@ object BcSpacing {
 object BcSizes {
     /** Smallest touch target allowed anywhere. */
     val minTouch = 40.dp
-    val personTile = 46.dp
-    val homeToggle = 48.dp
+    val ring = 52.dp
     val iconButton = 44.dp
     val listRow = 48.dp
     val icon = 22.dp
 
     val touchTargets: Map<String, Dp> = mapOf(
         "minTouch" to minTouch,
-        "personTile" to personTile,
-        "homeToggle" to homeToggle,
+        "ring" to ring,
         "iconButton" to iconButton,
         "listRow" to listRow
     )
