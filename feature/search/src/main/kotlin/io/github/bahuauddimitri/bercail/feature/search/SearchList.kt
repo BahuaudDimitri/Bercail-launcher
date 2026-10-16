@@ -139,6 +139,10 @@ private fun Results(
     }
 }
 
+/**
+ * The results read from the search bar up, the closest to the thumb first: apps, people, messages, agenda, home,
+ * then Bercail's settings at the far end. Within a family, the title then its members in their own order, top down.
+ */
 private fun LazyListScope.found(
     results: SearchResults,
     state: SearchUiState,
@@ -146,22 +150,9 @@ private fun LazyListScope.found(
     actions: SearchActions,
     links: SearchLinks
 ) {
-    family("Apps", results.apps, key = { "app ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
-    family("Gens", results.people, key = { "person ${it.id}" }) { person ->
-        BcListRow(
-            title = person.name,
-            onClick = { links.onOpenConversation(person.id) },
-            subtitle = person.network,
-            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople))
-        )
-    }
-    family("Messages", results.messages, key = { "message ${it.person.id} ${it.text}" }) { line ->
-        BcListRow(
-            title = line.person.name,
-            onClick = { links.onOpenConversation(line.person.id) },
-            subtitle = line.text,
-            leading = BcLeading.Initials(line.person.initials, BcPastel.forKey(line.person.id, state.favoritePeople))
-        )
+    if (results.settings) {
+        item(key = "settings title") { BcSectionLabel("Réglages") }
+        item(key = "settings") { SettingsRow(state.settingsNote, links::onOpenSettings) }
     }
     family("Maison", results.controls, key = { "control ${it.id}" }) { control ->
         BcListRow(
@@ -178,10 +169,23 @@ private fun LazyListScope.found(
             leading = BcLeading.Time(event.start.toLocalTime().asClockTime())
         )
     }
-    if (results.settings) {
-        item(key = "settings title") { BcSectionLabel("Réglages") }
-        item(key = "settings") { SettingsRow(state.settingsNote, links::onOpenSettings) }
+    family("Messages", results.messages, key = { "message ${it.person.id} ${it.text}" }) { line ->
+        BcListRow(
+            title = line.person.name,
+            onClick = { links.onOpenConversation(line.person.id) },
+            subtitle = line.text,
+            leading = BcLeading.Initials(line.person.initials, BcPastel.forKey(line.person.id, state.favoritePeople))
+        )
     }
+    family("Gens", results.people, key = { "person ${it.id}" }) { person ->
+        BcListRow(
+            title = person.name,
+            onClick = { links.onOpenConversation(person.id) },
+            subtitle = person.network,
+            leading = BcLeading.Initials(person.initials, BcPastel.forKey(person.id, state.favoritePeople))
+        )
+    }
+    family("Apps", results.apps, key = { "app ${it.id}" }) { AppRow(it, icons, actions::onOpenApp) }
 }
 
 private fun <T> LazyListScope.family(title: String, members: List<T>, key: (T) -> Any, row: @Composable (T) -> Unit) {

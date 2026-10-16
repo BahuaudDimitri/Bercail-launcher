@@ -6,7 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -18,14 +21,20 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.search.MessageLine
+import io.github.bahuauddimitri.bercail.core.domain.search.SearchResults
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
+import io.github.bahuauddimitri.bercail.core.testing.Samples
 import java.time.Duration
 import org.junit.Rule
 import org.junit.Test
@@ -56,6 +65,29 @@ class SearchListUiTest {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.base)) { SearchRoute(search, links = links) } }
         }
     }
+
+    /** Shows these results as they are, whatever was typed. */
+    private fun showResults(results: SearchResults) {
+        val state = SearchUiState(open = true, query = "x", results = results)
+        compose.setContent {
+            BcTheme {
+                Box(Modifier.fillMaxSize().background(BcColors.base)) {
+                    SearchList(state, search, search.icons, links = links)
+                }
+            }
+        }
+    }
+
+    /** How far from the top of the screen this text starts. */
+    private fun topOf(text: String) = compose.onNodeWithText(text).getBoundsInRoot().top
+
+    /** The texts of the lowest line of the results: the closest to the search bar, which sits under the list. */
+    private fun lowestResult(): List<String> = compose
+        .onAllNodes(hasAnyAncestor(hasTestTag(RESULTS_TAG)) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+        .fetchSemanticsNodes()
+        .maxBy { it.boundsInRoot.top }
+        .config[SemanticsProperties.Text]
+        .map { it.text }
 
     private fun railLetter(letter: String) = compose.onNode(hasText(letter) and hasAnyAncestor(hasTestTag(RAIL_TAG)))
 
@@ -136,6 +168,46 @@ class SearchListUiTest {
             compose.onNodeWithTag(RESULTS_TAG).performScrollToNode(hasText(it))
             compose.onNodeWithText(it).assertIsDisplayed()
         }
+    }
+
+    @Test
+    fun `en partant de la barre, les familles se suivent ainsi, Apps, Gens, Messages, Agenda, Maison, puis Réglages`() {
+        val tom = Samples.people.first { it.id == "tom" }
+        showResults(
+            SearchResults(
+                apps = Samples.apps.filter { it.id == "spotify" },
+                people = listOf(tom),
+                messages = listOf(MessageLine(tom, "Tu as vu le match hier ?")),
+                controls = Samples.home.filter { it.id == "volets" },
+                events = Samples.eventsOn(Samples.day).filter { it.title == "Courses" },
+                settings = true
+            )
+        )
+
+        val fromTheBarUp = listOf("Apps", "Gens", "Messages", "Agenda", "Maison", "Réglages").map { topOf(it) }
+
+        assertThat(fromTheBarUp).isEqualTo(fromTheBarUp.sortedDescending())
+        assertThat(lowestResult()).contains("Spotify")
+    }
+
+    @Test
+    fun `dans chaque famille, le titre puis le premier trouvé, de haut en bas`() {
+        showResults(SearchResults(people = Samples.people.filter { it.id == "lea" || it.id == "tom" }))
+
+        assertThat(topOf("Gens")).isLessThan(topOf("Léa"))
+        assertThat(topOf("Léa")).isLessThan(topOf("Tom"))
+        assertThat(lowestResult()).contains("Tom")
+    }
+
+    @Test
+    fun `la touche Entrée ouvre la première app trouvée, en haut du groupe Apps sous son titre`() {
+        show(typed = "s")
+
+        assertThat(topOf("Apps")).isLessThan(topOf("Spotify"))
+        assertThat(topOf("Spotify")).isLessThan(topOf("Strava"))
+
+        search.onSubmit()
+        assertThat(world.apps.opened).containsExactly("spotify")
     }
 
     @Test

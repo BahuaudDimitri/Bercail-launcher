@@ -77,10 +77,13 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 
 - **Raison (14 octobre) :** la phrase n'existe pas dans Bercail ; Dimitri la voit dans une autre app. Rien à faire ici.
 
-### 1.4 Recherche : toujours les apps avant les gens — `Précisé`
+### 1.4 Recherche : toujours les apps avant les gens — `Livré`
+
+**Livré le 16 octobre 2026** : en partant de la barre, les familles montent dans l'ordre Apps, Gens, Messages, Agenda, Maison, puis Réglages ; dans chaque famille, le titre puis les résultats dans leur ordre, de haut en bas (apps de A à Z, agenda dans l'ordre des heures). Figé par des tests de position ; Entrée ouvre toujours la première app trouvée. Poussé sans essai sur le Pixel.
 
 - **Constat :** les résultats partent de la barre de recherche et montent. Aujourd'hui, en partant de la barre : Réglages, Agenda, Maison, Messages, Gens, et les apps tout en haut, le plus loin du pouce.
 - **Décision (14 octobre) :** en partant de la barre : Apps, Gens, Messages, Agenda, Maison, puis Réglages au bout. Figé par un test. La touche Entrée ouvre toujours la première app.
+- **Décision (16 octobre) :** dans chaque famille, le titre puis les résultats dans leur ordre, de haut en bas — choix de Dimitri le 16 octobre. La meilleure app est donc en haut du groupe « Apps », sous son titre.
 
 ### 1.5 Agenda : ouvrir directement quand il n'y a rien — `Précisé`
 
