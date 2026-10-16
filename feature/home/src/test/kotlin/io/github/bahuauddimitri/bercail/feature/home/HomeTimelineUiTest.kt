@@ -83,7 +83,7 @@ class HomeTimelineUiTest {
     }
 
     @Test
-    fun `l'anneau du réveil tombe à la hauteur de la pastille musique, tiroir replié comme ouvert`() {
+    fun `l'anneau du réveil tombe à la hauteur de la pastille musique, feuille fermée comme ouverte`() {
         show()
         fun DpRect.middle() = (top + bottom) / 2
         fun ringToPill() =

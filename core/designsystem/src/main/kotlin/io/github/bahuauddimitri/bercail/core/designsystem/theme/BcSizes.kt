@@ -36,7 +36,7 @@ object BcSizes {
 /** Corner shapes. */
 object BcShapes {
     val tile = RoundedCornerShape(16.dp)
-    val drawer = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+    val sheet = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
     val card = RoundedCornerShape(22.dp)
     val pill = CircleShape
     val bubbleTheirs = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 6.dp)

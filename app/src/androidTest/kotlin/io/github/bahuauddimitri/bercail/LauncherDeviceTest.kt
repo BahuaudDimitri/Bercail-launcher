@@ -50,12 +50,12 @@ class LauncherDeviceTest {
     }
 
     @Test
-    fun `toucher la poignée déplie le tiroir puis le replie`() {
-        awaitDescription("Déplier le tiroir")
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+    fun `toucher la ligne résumé ouvre la feuille et sa poignée la ferme`() {
+        compose.awaitBand(TIMEOUT)
+        compose.openSheet()
         compose.onNodeWithContentDescription("Salon").assertExists()
 
-        compose.onNodeWithContentDescription("Replier le tiroir").performClick()
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
         compose.onNodeWithText("Salon 60 %, Volets ouverts").assertExists()
     }
 
@@ -76,7 +76,7 @@ class LauncherDeviceTest {
 
         compose.onNodeWithText("Réglages de Bercail").performClick()
 
-        awaitText("État de départ")
+        awaitText("État de départ de la feuille")
     }
 
     @Test

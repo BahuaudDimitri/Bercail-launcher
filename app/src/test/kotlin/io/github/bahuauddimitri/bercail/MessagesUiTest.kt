@@ -76,7 +76,7 @@ class MessagesUiTest {
     }
 
     @Test
-    fun `une fois Beeper relié, le tiroir résume qui a écrit et montre les dernières conversations`() {
+    fun `une fois Beeper relié, le bandeau résume qui a écrit et la feuille montre les dernières conversations`() {
         beeper.chat("lea", "Léa", unread = 1, at = 3)
         beeper.chat("tom", "Tom", unread = 2, at = 2)
         beeper.chat("mum", "Maman", at = 1)
@@ -85,14 +85,14 @@ class MessagesUiTest {
         showHome()
 
         awaitText("3 non lus · Léa, Tom")
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         awaitDescription("Léa, 1 non lu")
         compose.onNodeWithContentDescription("Tom, 2 non lus").assertExists()
         compose.onNodeWithContentDescription("Maman").assertExists()
     }
 
     @Test
-    fun `un message qui arrive dans Beeper met le tiroir à jour sans rien toucher`() {
+    fun `un message qui arrive dans Beeper met le bandeau à jour sans rien toucher`() {
         beeper.chat("lea", "Léa")
         linkBeeper()
         showHome()
@@ -115,7 +115,7 @@ class MessagesUiTest {
         linkBeeper()
         showHome()
         awaitText("Aucun message")
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Tous les messages dans Beeper").performClick()
 
@@ -128,7 +128,7 @@ class MessagesUiTest {
         linkBeeper()
         val home = showHome()
         awaitText("1 non lu · Léa")
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         awaitDescription("Léa, 1 non lu")
         compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
         awaitDescription("Léa : Merci pour le déj !")

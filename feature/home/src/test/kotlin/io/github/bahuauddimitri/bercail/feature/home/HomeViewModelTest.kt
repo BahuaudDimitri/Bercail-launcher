@@ -150,7 +150,7 @@ class HomeViewModelTest {
     // ---------- drawer ----------
 
     @Test
-    fun `le tiroir replié résume les messages et la maison`() = runTest(dispatcher) {
+    fun `le bandeau résume les messages et la maison`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Matin))
         show(home)
 
@@ -174,7 +174,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `le tiroir ouvert montre les 4 favoris, et « Tous » compte les non-lus des autres`() = runTest(dispatcher) {
+    fun `la feuille ouverte montre les 4 favoris, et « Tous » compte les non-lus des autres`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Soir))
         show(home)
 
@@ -226,7 +226,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `le tiroir démarre replié, et retient ce qu'on en fait`() = runTest(dispatcher) {
+    fun `la feuille démarre fermée, et retient ce qu'on en fait`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Matin))
         show(home)
         assertThat(home.state.value.drawerExpanded).isFalse()
@@ -237,7 +237,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `le tiroir démarre ouvert si le réglage le demande`() = runTest(dispatcher) {
+    fun `la feuille démarre ouverte si le réglage le demande`() = runTest(dispatcher) {
         val world = FakeWorld(Moment.Matin)
         world.settings.change { it.copy(drawerExpandedAtStart = true) }
         val home = homeOf(world)
@@ -247,7 +247,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `l'état du tiroir est conservé quand on revient de l'écran Écoute`() = runTest(dispatcher) {
+    fun `l'état de la feuille est conservé quand on revient de l'écran Écoute`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Matin))
         show(home)
         home.onDrawerExpandedChange(true)

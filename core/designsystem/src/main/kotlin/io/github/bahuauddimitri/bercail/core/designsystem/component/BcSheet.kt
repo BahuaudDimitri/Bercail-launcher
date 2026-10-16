@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -40,7 +43,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 
 /**
- * The same glass drawer, opened over the screen for a conversation, the day or the media apps. It takes 62 % of
+ * A sheet of glass opened over the screen, for a conversation, the day or the media apps. It takes 62 % of
  * the screen at most, and more while the keyboard is out, which hides the bottom of it.
  * Sliding it down, touching the veil behind it or the system back gesture closes it.
  */
@@ -100,8 +103,10 @@ internal fun SheetSurface(onClose: () -> Unit, modifier: Modifier, content: @Com
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(BcShapes.drawer)
+            .clip(BcShapes.sheet)
             .background(BcColors.glassSheet)
+            .background(SHEEN)
+            .border(1.dp, BcColors.sheetEdge, BcShapes.sheet)
             .verticalSlide { up -> if (!up) onClose() }
             .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),
         verticalArrangement = Arrangement.spacedBy(SHEET_GAP),
@@ -116,6 +121,16 @@ internal fun SheetSurface(onClose: () -> Unit, modifier: Modifier, content: @Com
     }
 }
 
-private const val SHEET_MAX_FRACTION = 0.62f
+internal const val SHEET_MAX_FRACTION = 0.62f
 private const val SHEET_MAX_WITH_KEYBOARD = 0.94f
 private val SHEET_GAP = 10.dp
+private const val SHEEN_STEP = 0.22f
+private const val SHEEN_STEP_ALPHA = 0.035f
+private const val SHEEN_END = 0.6f
+
+/** The sheen at the top of the glass: white 11 %, fading out over the first 60 % of the sheet. */
+private val SHEEN = Brush.verticalGradient(
+    0f to BcColors.sheetSheen,
+    SHEEN_STEP to BcColors.sheetSheen.copy(alpha = SHEEN_STEP_ALPHA),
+    SHEEN_END to Color.Transparent
+)

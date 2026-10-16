@@ -212,7 +212,7 @@ class HomeScreenUiTest {
     // ---------- drawer ----------
 
     @Test
-    fun `le tiroir replié résume les messages et la maison`() {
+    fun `le bandeau résume les messages et la maison sur une seule ligne`() {
         show()
 
         compose.onNodeWithText("2 non lus · Léa, Tom").assertExists()
@@ -231,10 +231,10 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `toucher la poignée déplie le tiroir, les favoris et la maison apparaissent`() {
+    fun `toucher la ligne résumé ouvre la feuille, les favoris et la maison apparaissent`() {
         show()
 
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
         compose.onNodeWithContentDescription("Tom, 1 non lu").assertExists()
@@ -246,40 +246,59 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `toucher une ligne du résumé déplie le tiroir`() {
+    fun `toucher la maison au bout de la ligne résumé ouvre aussi la feuille`() {
         show()
 
         compose.onNodeWithText("Salon 60 %, Volets ouverts").performClick()
 
-        compose.onNodeWithContentDescription("Replier le tiroir").assertExists()
+        compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
         compose.onNodeWithContentDescription("Volets").assertExists()
     }
 
     @Test
-    fun `glisser de plus de 24 dp vers le haut sur le tiroir le déplie, vers le bas le replie`() {
+    fun `glisser de plus de 24 dp vers le haut sur le bandeau ouvre la feuille, vers le bas la ferme`() {
         show()
 
         compose.onNodeWithTag(DRAWER_TAG).performTouchInput {
             swipe(start = Offset(centerX, bottom - 8f), end = Offset(centerX, bottom - 8f - 40.dp.toPx()), 300)
         }
-        compose.onNodeWithContentDescription("Replier le tiroir").assertExists()
+        compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
 
         compose.onNodeWithTag(DRAWER_TAG).performTouchInput {
             swipe(start = Offset(centerX, top + 8f), end = Offset(centerX, top + 8f + 40.dp.toPx()), 300)
         }
-        compose.onNodeWithContentDescription("Déplier le tiroir").assertExists()
+        compose.onNode(OPENS_THE_SHEET).assertExists()
     }
 
     @Test
-    fun `la barre Chercher ne change jamais de place`() {
+    fun `la feuille ouverte couvre la barre Chercher, qui n'a pas bougé quand elle revient`() {
         show()
         val folded = searchBarBottom()
 
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
+        compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
+        compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
+
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
         assertThat(searchBarBottom()).isEqualTo(folded)
 
         compose.onNodeWithText("Looped · Kiasmos").performClick()
         assertThat(searchBarBottom()).isEqualTo(folded)
+    }
+
+    @Test
+    fun `le geste retour ferme la feuille ouverte, toucher à côté ne la ferme pas`() {
+        show()
+        compose.openSheet()
+
+        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { click(Offset(centerX, top + 10f)) }
+        compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Fermer la feuille").assertDoesNotExist()
+        compose.onNode(OPENS_THE_SHEET).assertExists()
     }
 
     @Test
@@ -299,7 +318,7 @@ class HomeScreenUiTest {
 
     private fun openTalk(world: FakeWorld = FakeWorld(Moment.Trajet), person: String = "Léa, 1 non lu"): FakeWorld {
         show(world)
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         compose.onNodeWithContentDescription(person).performClick()
         return world
     }
@@ -439,7 +458,7 @@ class HomeScreenUiTest {
     @Test
     fun `« Tous » annonce les non-lus hors favoris et demande l'app de messages`() {
         show(FakeWorld(Moment.Soir))
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Tous les messages dans Beeper, 2 non lus").performClick()
 
@@ -447,12 +466,12 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `sans l'accès à Beeper, la ligne des messages le dit et le tiroir ouvert propose de le relier`() {
+    fun `sans l'accès à Beeper, la ligne résumé le dit et la feuille ouverte propose de le relier`() {
         show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) })
         compose.onNodeWithText("Beeper n'est pas relié").assertExists()
         compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
 
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertDoesNotExist()
         compose.onNodeWithText("Relier Beeper").performClick()
 
@@ -462,7 +481,7 @@ class HomeScreenUiTest {
     @Test
     fun `toucher une commande maison la bascule sur place`() {
         show()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Volets").performClick()
 
@@ -474,21 +493,21 @@ class HomeScreenUiTest {
     @Test
     fun `la scène Cinéma met le Salon à 10 pour cent et ferme les volets d'un seul toucher`() {
         show()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Cinéma").performClick()
 
         compose.onNodeWithContentDescription("Salon")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "10 %"))
         compose.onNodeWithContentDescription("Volets").assertIsOff()
-        compose.onNodeWithContentDescription("Replier le tiroir").performClick()
+        compose.onNodeWithContentDescription("Fermer la feuille").performClick()
         compose.onNodeWithText("Salon 10 %, Cinéma active").assertExists()
     }
 
     @Test
     fun `« Tout » demande l'app de la maison`() {
         show()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithContentDescription("Tout").performClick()
 
@@ -660,12 +679,12 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `sur l'écran Écoute, le tiroir devient la télécommande et la ligne du temps s'efface`() {
+    fun `sur l'écran Écoute, le bandeau devient la télécommande et la ligne du temps s'efface`() {
         show()
 
         compose.onNodeWithText("Looped · Kiasmos").performClick()
 
-        compose.onNodeWithContentDescription("Déplier le tiroir").assertDoesNotExist()
+        compose.onNode(OPENS_THE_SHEET).assertDoesNotExist()
         compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
         compose.onNodeWithTag(TIMELINE_TAG).assertDoesNotExist()
     }
@@ -760,14 +779,14 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `le tiroir retrouve son état en revenant de l'écran Écoute`() {
+    fun `la feuille retrouve son état en revenant de l'écran Écoute`() {
         show()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         compose.onNodeWithContentDescription("Écran Écoute").performClick()
 
         compose.onNodeWithContentDescription("Écran Accueil").performClick()
 
-        compose.onNodeWithContentDescription("Replier le tiroir").assertExists()
+        compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
     }
 

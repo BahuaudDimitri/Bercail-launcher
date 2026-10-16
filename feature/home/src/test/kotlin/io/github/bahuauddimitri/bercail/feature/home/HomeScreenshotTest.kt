@@ -57,16 +57,16 @@ class HomeScreenshotTest {
     }
 
     @Test
-    fun `le matin, tiroir replié, correspond à sa capture`() {
+    fun `le matin, bandeau replié, correspond à sa capture`() {
         show(FakeWorld(Moment.Matin))
 
         capture("home_morning_folded")
     }
 
     @Test
-    fun `le matin, tiroir ouvert, correspond à sa capture`() {
+    fun `le matin, feuille ouverte, correspond à sa capture`() {
         show(FakeWorld(Moment.Matin))
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         capture("home_morning_open")
     }
@@ -114,9 +114,9 @@ class HomeScreenshotTest {
     }
 
     @Test
-    fun `le tiroir ouvert, tant que Beeper n'est pas relié, correspond à sa capture`() {
+    fun `la feuille ouverte, tant que Beeper n'est pas relié, correspond à sa capture`() {
         show(FakeWorld(Moment.Matin).apply { access.refuse(Access.Messages) })
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         capture("home_drawer_unlinked")
     }
@@ -124,7 +124,7 @@ class HomeScreenshotTest {
     @Test
     fun `la feuille de conversation, pendant le trajet, correspond à sa capture`() {
         show(FakeWorld(Moment.Trajet, playing = false))
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
 
         capture("home_talk")
@@ -133,7 +133,7 @@ class HomeScreenshotTest {
     @Test
     fun `une réponse tout juste envoyée, avec « Annuler l'envoi », correspond à sa capture`() {
         show(FakeWorld(Moment.Trajet, playing = false))
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
         compose.onNodeWithContentDescription("Léa, 1 non lu").performClick()
         compose.onNodeWithContentDescription("Répondre").performTextInput("J'arrive")
         compose.onNodeWithContentDescription("Envoyer").performClick()

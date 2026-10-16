@@ -17,12 +17,17 @@ object BcColors {
     val text = Color(0xFFECEBF4)
     val textMuted = Color(0xFFB2B0C4)
 
-    /** Bluish black glass of the drawer and sheets, more opaque as it covers more. */
-    private val glassTint = Color(0xFF181924)
-    val glass = glassTint.copy(alpha = 0.34f)
-    val glassOpen = glassTint.copy(alpha = 0.5f)
+    /**
+     * Bluish black glass of the sheets: tinted at 62 % where nothing can be frosted behind it (the user's
+     * wallpaper), and 80 % for the search, which covers the whole screen.
+     */
+    private val glassTint = Color(0xFF161722)
     val glassSheet = glassTint.copy(alpha = 0.62f)
     val glassSearch = glassTint.copy(alpha = 0.8f)
+
+    /** The light edge of a sheet, and the sheen at its top that fades away downwards. */
+    val sheetEdge = Color.White.copy(alpha = 0.16f)
+    val sheetSheen = Color.White.copy(alpha = 0.11f)
 
     /** Veil behind an open sheet. */
     val scrim = Color(0xFF08080E).copy(alpha = 0.4f)

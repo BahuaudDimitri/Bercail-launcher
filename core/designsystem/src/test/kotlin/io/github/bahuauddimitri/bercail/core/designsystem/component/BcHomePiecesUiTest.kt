@@ -78,6 +78,28 @@ class BcHomePiecesUiTest {
     }
 
     @Test
+    fun `une ligne de résumé peut écrire la maison à la suite des messages, sur la même ligne`() {
+        compose.setContent {
+            BcTheme {
+                BcSummaryRow(
+                    text = "Léa, Tom",
+                    strong = "2 non lus",
+                    aside = "Salon 60 %, Volets ouverts",
+                    leading = BcSummaryLeading.Dots(listOf(BcPastel.Coral, BcPastel.Blue)),
+                    onClick = { clicks++ }
+                )
+            }
+        }
+
+        val messages = compose.onNodeWithText("2 non lus · Léa, Tom", useUnmergedTree = true)
+        val home = compose.onNodeWithText("Salon 60 %, Volets ouverts", useUnmergedTree = true)
+        assertThat(home.getUnclippedBoundsInRoot().left).isGreaterThan(messages.getUnclippedBoundsInRoot().right)
+        assertThat(home.getUnclippedBoundsInRoot().top).isEqualTo(messages.getUnclippedBoundsInRoot().top)
+        home.performClick()
+        assertThat(clicks).isEqualTo(1)
+    }
+
+    @Test
     fun `une ligne de résumé se touche sur au moins 40 dp de haut et dit ce qu'elle ouvre`() {
         compose.setContent {
             BcTheme {
@@ -85,14 +107,14 @@ class BcHomePiecesUiTest {
                     text = "Aucun message",
                     leading = BcSummaryLeading.Dots(emptyList()),
                     onClick = { clicks++ },
-                    onClickLabel = "Ouvrir le tiroir"
+                    onClickLabel = "Ouvrir la feuille"
                 )
             }
         }
 
         compose.onNodeWithText("Aucun message")
             .assertHeightIsAtLeast(40.dp)
-            .assert(SemanticsMatcher("dit « Ouvrir le tiroir »") { it.config[OnClick].label == "Ouvrir le tiroir" })
+            .assert(SemanticsMatcher("dit « Ouvrir la feuille »") { it.config[OnClick].label == "Ouvrir la feuille" })
             .performClick()
 
         assertThat(clicks).isEqualTo(1)
@@ -160,13 +182,12 @@ class BcHomePiecesUiTest {
     }
 
     @Test
-    fun `le tiroir laisse la barre de navigation du téléphone sous son contenu`() {
+    fun `le bandeau laisse la barre de navigation du téléphone sous son contenu`() {
         compose.setContent {
             BcTheme {
                 Box(Modifier.fillMaxSize()) {
-                    BcDrawer(
-                        expanded = false,
-                        onExpandedChange = {},
+                    BcBand(
+                        onOpen = {},
                         modifier = Modifier.align(Alignment.BottomCenter).testTag("drawer")
                     ) {
                         BcButton("Salon", onClick = {}, modifier = Modifier.testTag("content"))

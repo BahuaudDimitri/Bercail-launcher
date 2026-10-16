@@ -3,7 +3,6 @@ package io.github.bahuauddimitri.bercail.feature.home
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
@@ -14,7 +13,6 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
@@ -52,7 +50,7 @@ class HomeSwipeUiTest {
     }
 
     @Test
-    fun `glisser la ligne des messages vers la droite ouvre Beeper, sans déplier le tiroir`() {
+    fun `glisser la ligne résumé vers la droite ouvre Beeper, sans ouvrir la feuille`() {
         show()
 
         slideRight("non lus")
@@ -81,14 +79,13 @@ class HomeSwipeUiTest {
     }
 
     @Test
-    fun `la ligne de la maison ne glisse pas, tant que rien n'est derrière elle`() {
+    fun `la maison est au bout de la même ligne, la glisser ouvre aussi Beeper`() {
         show()
 
         slideRight("Salon")
 
-        assertThat(opened).isEmpty()
-        val house = compose.onNodeWithText("Salon", substring = true).fetchSemanticsNode()
-        assertThat(house.config.getOrNull(SemanticsActions.CustomActions)).isNull()
+        assertThat(opened).containsExactly("app de messages")
+        assertThat(home.state.value.drawerExpanded).isEqualTo(false)
     }
 
     @Test

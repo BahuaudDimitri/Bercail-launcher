@@ -40,7 +40,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The drawer grown to the whole screen for the search, and the panel of the settings. */
+/** The band grown to the whole screen for the search, and the panel of the settings. */
 @RunWith(AndroidJUnit4::class)
 class BcPanelUiTest {
     @get:Rule
@@ -53,9 +53,8 @@ class BcPanelUiTest {
     private fun showDrawer() = compose.setContent {
         BcTheme {
             Box(Modifier.fillMaxSize()) {
-                BcDrawer(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
+                BcBand(
+                    onOpen = { expanded = true },
                     searching = searching,
                     modifier = Modifier.align(Alignment.BottomCenter).testTag("drawer")
                 ) {
@@ -73,7 +72,7 @@ class BcPanelUiTest {
     }
 
     @Test
-    fun `en recherche, le tiroir monte jusqu'en haut de l'écran`() {
+    fun `en recherche, le bandeau monte jusqu'en haut de l'écran`() {
         showDrawer()
         val resting = compose.onNodeWithTag("drawer").getUnclippedBoundsInRoot().height
 
@@ -86,11 +85,10 @@ class BcPanelUiTest {
     }
 
     @Test
-    fun `en recherche, le tiroir n'a plus de poignée et ignore les glissements`() {
+    fun `en recherche, le bandeau ignore les glissements`() {
         searching = true
         showDrawer()
 
-        compose.onNodeWithContentDescription("Déplier le tiroir").assertDoesNotExist()
         compose.onNodeWithTag("drawer").performTouchInput {
             swipe(start = Offset(centerX, centerY), end = Offset(centerX, centerY - 80.dp.toPx()), 300)
         }
@@ -99,7 +97,7 @@ class BcPanelUiTest {
     }
 
     @Test
-    fun `la barre Chercher ne bouge pas quand le tiroir monte`() {
+    fun `la barre Chercher ne bouge pas quand le bandeau monte`() {
         showDrawer()
         val before = compose.onNodeWithTag("field").getUnclippedBoundsInRoot().bottom
 

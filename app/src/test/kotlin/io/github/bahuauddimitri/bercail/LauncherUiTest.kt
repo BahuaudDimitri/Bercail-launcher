@@ -68,9 +68,9 @@ class LauncherUiTest {
     }
 
     @Test
-    fun `l'accueil s'affiche au lancement, avec son tiroir et sa barre Chercher`() {
+    fun `l'accueil s'affiche au lancement, avec son bandeau et sa barre Chercher`() {
         compose.onNodeWithTag(HOME_TAG).assertExists()
-        awaitDescription("Déplier le tiroir")
+        compose.awaitBand(TIMEOUT)
         compose.onNodeWithContentDescription("Chercher").assertExists()
     }
 
@@ -80,10 +80,10 @@ class LauncherUiTest {
     }
 
     @Test
-    fun `le tiroir s'ouvre sur les messages, à relier d'abord, et la maison`() {
-        awaitDescription("Déplier le tiroir")
+    fun `la feuille s'ouvre sur les messages, à relier d'abord, et la maison`() {
+        compose.awaitBand(TIMEOUT)
         compose.onNodeWithText("Beeper n'est pas relié").assertExists()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
+        compose.openSheet()
 
         compose.onNodeWithText("Relier Beeper").assertExists()
         compose.onNodeWithContentDescription("Salon").assertExists()
@@ -110,7 +110,7 @@ class LauncherUiTest {
     @Test
     fun `les Réglages de Bercail s'ouvrent depuis la recherche, le retour ramène à la recherche`() {
         openSettings()
-        compose.onNodeWithText("État de départ").assertExists()
+        compose.onNodeWithText("État de départ de la feuille").assertExists()
         // What the settings cover is no longer read out.
         compose.onNodeWithText("Toutes les apps").assertDoesNotExist()
 
@@ -124,10 +124,10 @@ class LauncherUiTest {
     fun `un réglage est enregistré et change l'accueil tout de suite`() {
         openSettings()
 
-        compose.onNodeWithText("Ouvert").performScrollTo().performClick()
+        compose.onNodeWithText("Ouverte").performScrollTo().performClick()
         pressHome()
 
-        awaitDescription("Replier le tiroir")
+        awaitDescription("Fermer la feuille")
         compose.onNodeWithContentDescription("Salon").assertExists()
     }
 

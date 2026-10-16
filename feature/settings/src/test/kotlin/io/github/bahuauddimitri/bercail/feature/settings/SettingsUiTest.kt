@@ -356,11 +356,11 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `le tiroir démarre replié par défaut, on peut le faire démarrer ouvert`() {
+    fun `la feuille des gens et de la maison démarre fermée, on peut la faire démarrer ouverte`() {
         show()
         assertThat(stored.drawerExpandedAtStart).isFalse()
 
-        compose.onNodeWithText("Ouvert").performScrollTo().performClick()
+        compose.onNodeWithText("Ouverte").performScrollTo().performClick()
 
         assertThat(stored.drawerExpandedAtStart).isTrue()
     }

@@ -35,11 +35,12 @@ import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcAlphabetRail
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDrawer
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -94,7 +95,7 @@ internal val GALLERY_SECTIONS = listOf(
     "Conversation",
     "Musique",
     "Navigation",
-    "Tiroir et feuille",
+    "Bandeau et feuilles",
     "Brume"
 )
 
@@ -128,7 +129,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Conversation") { Conversation() }
             Section("Musique") { Music() }
             Section("Navigation") { Navigation() }
-            Section("Tiroir et feuille") {
+            Section("Bandeau et feuilles") {
                 DrawerAndSheet(onOpenSheet = { sheetOpen = true }, onOpenPanel = { panelOpen = true })
             }
             Section("Brume") { Brume() }
@@ -345,14 +346,22 @@ private fun Navigation() {
 
 @Composable
 private fun DrawerAndSheet(onOpenSheet: () -> Unit, onOpenPanel: () -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    BcDrawer(expanded = expanded, onExpandedChange = { expanded = it }) {
-        if (expanded) {
-            BcText("Favoris et maison", style = BcTextStyle.BodySmall)
-        } else {
-            BcText("2 non lus · Léa, Tom", style = BcTextStyle.BodySmall, color = BcTextColor.Muted)
+    var open by remember { mutableStateOf(false) }
+    Box(Modifier.fillMaxWidth()) {
+        BcBand(onOpen = { open = true }) {
+            BcSummaryRow(
+                text = "Léa, Tom",
+                strong = "2 non lus",
+                aside = "Salon 60 %, Volets ouverts",
+                leading = BcSummaryLeading.Dots(listOf(BcPastel.Coral, BcPastel.Blue)),
+                onClick = { open = true }
+            )
+            BcSearchField(value = "", onValueChange = {})
         }
-        BcSearchField(value = "", onValueChange = {})
+        BcBandSheet(visible = open, onClose = { open = false }, modifier = Modifier.align(Alignment.BottomCenter)) {
+            BcSectionLabel("Gens")
+            BcText("Favoris et maison", style = BcTextStyle.BodySmall)
+        }
     }
     BcButton("Ouvrir une feuille", onClick = onOpenSheet)
     BcButton("Ouvrir un panneau", onClick = onOpenPanel)

@@ -29,6 +29,9 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import kotlin.math.abs
 
+/** Distance a finger must travel up or down for the band to open the sheet, or for a sheet to close. */
+val SLIDE_THRESHOLD = 24.dp
+
 /**
  * The glass goes down to the edge of the screen; its content stays above the phone's navigation bar, and above
  * the keyboard when it is out.
@@ -60,11 +63,11 @@ internal fun Handle(description: String, onClick: () -> Unit) {
 }
 
 /**
- * Reports one vertical slide per gesture once the finger has travelled [DRAWER_DRAG_THRESHOLD], even outside the
+ * Reports one vertical slide per gesture once the finger has travelled [SLIDE_THRESHOLD], even outside the
  * element. The slide consumes the touch, so a button under the finger is not pressed.
  */
 internal fun Modifier.verticalSlide(onSlide: (up: Boolean) -> Unit): Modifier = pointerInput(Unit) {
-    val threshold = DRAWER_DRAG_THRESHOLD.toPx()
+    val threshold = SLIDE_THRESHOLD.toPx()
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
         var reported = false
@@ -86,7 +89,7 @@ internal fun Modifier.verticalSlide(onSlide: (up: Boolean) -> Unit): Modifier = 
     }
 }
 
-private const val HANDLE_ALPHA = 0.4f
+private const val HANDLE_ALPHA = 0.38f
 private val HANDLE_TOUCH_WIDTH = 120.dp
 private val HANDLE_WIDTH = 36.dp
 private val HANDLE_HEIGHT = 4.dp

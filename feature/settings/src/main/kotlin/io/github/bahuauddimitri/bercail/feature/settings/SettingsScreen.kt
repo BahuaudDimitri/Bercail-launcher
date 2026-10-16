@@ -117,10 +117,10 @@ fun SettingsScreen(
             subtitle = state.weather.detail,
             onClick = onPickPlace
         )
-        BcSectionLabel("Tiroir")
-        BcSettingRow("Tiroir", subtitle = "État de départ") {
+        BcSectionLabel("Feuille")
+        BcSettingRow("Gens et maison", subtitle = "État de départ de la feuille") {
             BcSegmented(
-                options = listOf("Replié", "Ouvert"),
+                options = listOf("Fermée", "Ouverte"),
                 selected = if (settings.drawerExpandedAtStart) 1 else 0,
                 onSelect = { actions.onDrawerExpandedAtStart(it == 1) }
             )

@@ -39,7 +39,8 @@ sealed interface BcSummaryLeading {
 }
 
 /**
- * One line of the folded drawer: "2 non lus · Léa, Tom", "Salon 60 %, Volets ouverts".
+ * The summary line of the band: "2 non lus · Léa, Tom", then [aside] on the same line after a small dot
+ * ("Salon 60 %, Volets ouverts"), which gives way first when the room runs out.
  * [strong] is written first, brighter; the whole line is one touch target, at least 40 dp high.
  * [onClickLabel] tells a screen reader what touching the line does.
  *
@@ -54,6 +55,7 @@ fun BcSummaryRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     strong: String? = null,
+    aside: String? = null,
     onClickLabel: String? = null,
     swipe: BcRowSwipe? = null
 ) {
@@ -83,6 +85,7 @@ fun BcSummaryRow(
                 }
             }
             SummaryText(text, strong)
+            if (aside != null) Aside(aside, Modifier.weight(1f, fill = false))
         }
     }
 }
@@ -120,3 +123,19 @@ private val LEADING_WIDTH = 28.dp
 private val ICON = 16.dp
 private val DOT = 9.dp
 private val DOT_GAP = 4.dp
+
+/** What follows the messages on the line, after a small dot. */
+@Composable
+private fun Aside(text: String, modifier: Modifier) {
+    Box(Modifier.size(SEPARATOR).background(BcColors.textMuted.copy(alpha = SEPARATOR_ALPHA), BcShapes.pill))
+    BasicText(
+        text = text,
+        modifier = modifier,
+        style = BcType.bodySmall.copy(color = BcColors.textMuted),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+private const val SEPARATOR_ALPHA = 0.5f
+private val SEPARATOR = 3.dp

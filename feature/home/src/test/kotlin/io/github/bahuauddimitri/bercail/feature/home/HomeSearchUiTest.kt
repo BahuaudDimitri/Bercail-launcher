@@ -80,7 +80,7 @@ class HomeSearchUiTest {
     }
 
     @Test
-    fun `en recherche, le tiroir monte jusqu'en haut, ses lignes se replient et la liste apparaît`() {
+    fun `en recherche, le bandeau monte jusqu'en haut, sa ligne s'efface et la liste apparaît`() {
         show()
 
         compose.onNodeWithContentDescription("Chercher").performClick()
@@ -88,7 +88,7 @@ class HomeSearchUiTest {
         assertThat(drawerHeight()).isEqualTo(screenHeight())
         compose.onNodeWithText("Toutes les apps").assertExists()
         compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Déplier le tiroir").assertDoesNotExist()
+        compose.onNode(OPENS_THE_SHEET).assertDoesNotExist()
     }
 
     @Test
@@ -123,7 +123,7 @@ class HomeSearchUiTest {
     }
 
     @Test
-    fun `le retour système ferme la recherche, vide le champ et rend au tiroir sa hauteur`() {
+    fun `le retour système ferme la recherche, vide le champ et rend au bandeau sa hauteur`() {
         show()
         val folded = drawerHeight()
         compose.onNodeWithContentDescription("Chercher").performClick()
@@ -140,21 +140,7 @@ class HomeSearchUiTest {
     }
 
     @Test
-    fun `fermer la recherche rend le tiroir ouvert comme il était`() {
-        show()
-        compose.onNodeWithContentDescription("Déplier le tiroir").performClick()
-        val expanded = drawerHeight()
-        compose.onNodeWithContentDescription("Chercher").performClick()
-
-        open = false
-        compose.waitForIdle()
-
-        assertThat(drawerHeight()).isEqualTo(expanded)
-        compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()
-    }
-
-    @Test
-    fun `pendant la recherche, le haut de l'accueil s'efface sous le tiroir`() {
+    fun `pendant la recherche, le haut de l'accueil s'efface sous le bandeau`() {
         show()
 
         compose.onNodeWithContentDescription("Chercher").performClick()

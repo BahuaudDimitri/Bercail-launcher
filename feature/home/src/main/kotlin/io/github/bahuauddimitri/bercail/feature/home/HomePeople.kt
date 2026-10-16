@@ -20,19 +20,26 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.MESSAGES_NOT_LINKED
 import io.github.bahuauddimitri.bercail.core.domain.messages.allMessagesDescription
 
 /**
- * The messages line of the folded drawer: who wrote, or that Beeper is not linked yet. Once it is, sliding the line
- * to the right shows the messaging app ([onOpenApp]).
+ * The summary line of the band: who wrote, or that Beeper is not linked yet, then what is on in the house. Once
+ * Beeper is linked, sliding the line to the right shows the messaging app ([onOpenApp]).
  */
 @Composable
-internal fun MessagesLine(state: HomeUiState, onClick: () -> Unit, onClickLabel: String, onOpenApp: () -> Unit) {
+internal fun SummaryLine(state: HomeUiState, onClick: () -> Unit, onClickLabel: String, onOpenApp: () -> Unit) {
     if (!state.messagesAllowed) {
-        BcSummaryRow(MESSAGES_NOT_LINKED, BcSummaryLeading.Icon(BcIcons.Chat), onClick, onClickLabel = onClickLabel)
+        BcSummaryRow(
+            text = MESSAGES_NOT_LINKED,
+            leading = BcSummaryLeading.Icon(BcIcons.Chat),
+            onClick = onClick,
+            aside = state.homeSummary,
+            onClickLabel = onClickLabel
+        )
         return
     }
     val favoriteIds = state.favorites.map { it.id }
     BcSummaryRow(
         text = state.messages.detail,
         strong = state.messages.headline,
+        aside = state.homeSummary,
         leading = BcSummaryLeading.Dots(state.messages.senders.map { pastelOf(it.id, favoriteIds) }),
         onClick = onClick,
         onClickLabel = onClickLabel,
