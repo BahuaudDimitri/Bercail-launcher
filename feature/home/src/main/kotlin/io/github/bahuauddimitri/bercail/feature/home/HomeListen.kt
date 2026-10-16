@@ -19,6 +19,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
@@ -41,7 +42,7 @@ internal fun ListenSheet(state: HomeUiState, actions: HomeActions, links: HomeLi
         modifier = Modifier.testTag(LISTEN_TAG),
         frost = frost
     ) {
-        BcText("Écouter", style = BcTextStyle.Headline, maxLines = 1)
+        BcSheetHeader("Écouter")
         when {
             !state.mediaAllowed -> AskToSeeWhatPlays(
                 onAsk = { links.onAskAccess(Access.Notifications) },

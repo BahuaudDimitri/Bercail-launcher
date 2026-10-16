@@ -16,6 +16,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
@@ -35,13 +36,7 @@ internal fun DaySheet(state: HomeUiState, actions: HomeActions, links: HomeLinks
         modifier = Modifier.testTag(DAY_TAG),
         frost = frost
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                BcText("Aujourd'hui", style = BcTextStyle.Headline, maxLines = 1)
-                BcText(state.dayDate, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 1)
-            }
-            BcButton("Agenda", onClick = actions::onOpenCalendar)
-        }
+        BcSheetHeader("Aujourd'hui", subtitle = state.dayDate, action = "Agenda", onAction = actions::onOpenCalendar)
         when {
             !state.agendaAllowed -> AskForAgenda(onAsk = { links.onAskAccess(Access.Calendar) })
 

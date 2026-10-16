@@ -19,6 +19,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -113,7 +114,7 @@ class HomeScreenUiTest {
 
         compose.onHeaderTitle("Stand-up").performClick()
 
-        compose.onNodeWithText("Aujourd'hui").assertExists()
+        compose.onNode(hasText("Aujourd'hui") and isHeading()).assertExists()
         compose.onNodeWithText("vendredi 2 octobre").assertExists()
         listOf("Stand-up", "Déjeuner avec Léa", "Point design", "Courses", "Ciné à la maison").forEach {
             compose.onNode(hasText(it) and inTheDaySheet).assertExists()
@@ -327,6 +328,7 @@ class HomeScreenUiTest {
         openTalk()
 
         compose.onNodeWithTag(TALK_TAG).assertExists()
+        compose.onNode(hasText("Léa") and isHeading() and inTheTalkSheet).assertExists()
         compose.onNode(hasText("WhatsApp via Beeper") and inTheTalkSheet).assertExists()
         compose.onNodeWithContentDescription("Léa : Je suis en terrasse").assertExists()
         compose.onNodeWithContentDescription("Léa : Merci pour le déj !").assertIsDisplayed()

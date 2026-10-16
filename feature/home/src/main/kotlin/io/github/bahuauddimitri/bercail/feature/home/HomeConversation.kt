@@ -18,6 +18,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
@@ -42,13 +43,12 @@ internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLink
         frost = frost
     ) {
         val talk = state.talk ?: kept[0] ?: return@BcSheet
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                BcText(talk.person.name, style = BcTextStyle.Headline, maxLines = 1)
-                BcText(talk.person.via, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 1)
-            }
-            BcButton(MESSAGING_APP, onClick = links::onOpenMessagesApp)
-        }
+        BcSheetHeader(
+            title = talk.person.name,
+            subtitle = talk.person.via,
+            action = MESSAGING_APP,
+            onAction = links::onOpenMessagesApp
+        )
         Messages(talk, pastelOf(talk.person.id, state.favorites.map { it.id }), actions::onUndoSend)
         if (talk.notSent) BcText(NOT_SENT, style = BcTextStyle.Label, color = BcTextColor.Muted)
         BcReplyField(

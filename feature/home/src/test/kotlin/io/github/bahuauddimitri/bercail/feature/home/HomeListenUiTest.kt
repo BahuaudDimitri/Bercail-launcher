@@ -9,6 +9,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -62,7 +63,7 @@ class HomeListenUiTest {
 
         compose.onNodeWithText("Écouter…").performClick()
 
-        compose.onNode(hasText("Écouter") and inTheListenSheet).assertExists()
+        compose.onNode(hasText("Écouter") and isHeading() and inTheListenSheet).assertExists()
         listOf("Spotify", "Netflix", "Pocket Casts", "YouTube").forEach {
             compose.onNode(hasText(it) and inTheListenSheet).assertExists()
         }
