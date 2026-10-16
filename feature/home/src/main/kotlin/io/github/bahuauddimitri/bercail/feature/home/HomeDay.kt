@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
@@ -28,11 +29,12 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.DayRowState
  * the past ones dimmed, the next one brought forward. Until Bercail may read the calendar, it offers to allow it.
  */
 @Composable
-internal fun DaySheet(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
+internal fun DaySheet(state: HomeUiState, actions: HomeActions, links: HomeLinks, frost: BcFrost?) {
     BcSheet(
         visible = state.dayOpen,
         onDismiss = { actions.onDayOpenChange(false) },
-        modifier = Modifier.testTag(DAY_TAG)
+        modifier = Modifier.testTag(DAY_TAG),
+        frost = frost
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {

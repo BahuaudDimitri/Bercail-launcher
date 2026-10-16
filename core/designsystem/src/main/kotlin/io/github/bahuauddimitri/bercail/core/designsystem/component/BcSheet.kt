@@ -24,19 +24,27 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.rememberPowerSaveMode
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
@@ -52,6 +60,7 @@ fun BcSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    frost: BcFrost? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val motion = BcTheme.motion
@@ -89,7 +98,7 @@ fun BcSheet(
             enter = slideInVertically(tween(motion.sheetMillis, easing = motion.easing)) { it },
             exit = slideOutVertically(tween(motion.sheetMillis, easing = motion.easing)) { it }
         ) {
-            SheetSurface(onClose = { dismiss() }, modifier = modifier.heightIn(max = maxSheet), content = content)
+            SheetSurface({ dismiss() }, modifier.heightIn(max = maxSheet), frost, content)
         }
     }
 }
@@ -99,13 +108,31 @@ fun BcSheet(
  * down. Its content stays above the phone's navigation bar and above the keyboard.
  */
 @Composable
-internal fun SheetSurface(onClose: () -> Unit, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+internal fun SheetSurface(
+    onClose: () -> Unit,
+    modifier: Modifier,
+    frost: BcFrost?,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val reduced = BcTheme.motion.reduced
+    val powerSave by rememberPowerSaveMode()
+    // Frosted only over a still Brume, and never in battery saver or without animations: tinted glass otherwise.
+    val frosting = frost?.takeIf { !reduced && !powerSave }
+    DisposableEffect(frosting) {
+        frosting?.let { it.wanting++ }
+        onDispose { frosting?.let { it.wanting-- } }
+    }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    val blurred = rememberGraphicsLayer()
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .onGloballyPositioned { origin = it.positionInRoot() }
             .clip(BcShapes.sheet)
-            .background(BcColors.glassSheet)
+            .then(if (frosting != null) Modifier.frostedBehind(frosting, blurred) { origin } else Modifier)
+            .background(if (frosting != null) BcColors.glassFrosted else BcColors.glassSheet)
             .background(SHEEN)
+            .semantics { this[SheetGlassKey] = if (frosting != null) SheetGlass.Frosted else SheetGlass.Tinted }
             .border(1.dp, BcColors.sheetEdge, BcShapes.sheet)
             .verticalSlide { up -> if (!up) onClose() }
             .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),

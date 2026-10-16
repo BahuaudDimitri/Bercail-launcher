@@ -19,10 +19,12 @@ object BcColors {
 
     /**
      * Bluish black glass of the sheets: tinted at 62 % where nothing can be frosted behind it (the user's
-     * wallpaper), and 80 % for the search, which covers the whole screen.
+     * wallpaper, Brume on the move), 46 % once frosted over a still Brume, and 80 % for the search, which covers the
+     * whole screen.
      */
     private val glassTint = Color(0xFF161722)
     val glassSheet = glassTint.copy(alpha = 0.62f)
+    val glassFrosted = glassTint.copy(alpha = 0.46f)
     val glassSearch = glassTint.copy(alpha = 0.8f)
 
     /** The light edge of a sheet, and the sheen at its top that fades away downwards. */

@@ -3,12 +3,18 @@ package io.github.bahuauddimitri.bercail.feature.home
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
+import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.testing.Samples
+import kotlin.time.Duration.Companion.minutes
 import org.junit.Test
 
 /** How the things of the domain look on the home screen. */
@@ -50,5 +56,27 @@ class HomeLooksTest {
         assertThat(DayPart.Afternoon.moment).isEqualTo(BcMoment.Day)
         assertThat(DayPart.Evening.moment).isEqualTo(BcMoment.Evening)
         assertThat(DayPart.Night.moment).isEqualTo(BcMoment.Evening)
+    }
+
+    private val playing = HomeUiState(
+        media = MediaState.Loaded(MediaContent("Looped", "Kiasmos", app = "Spotify", duration = 4.minutes), true)
+    )
+
+    @Test
+    fun `Brume bouge pendant la lecture tant qu'aucune feuille ne la couvre`() {
+        assertThat(playing.brumeMoves).isTrue()
+        assertThat(playing.copy(media = MediaState.None).brumeMoves).isFalse()
+    }
+
+    @Test
+    fun `une feuille ouverte fige Brume, pour que son verre soit givré tout de suite`() {
+        assertThat(playing.copy(drawerExpanded = true).brumeMoves).isFalse()
+        assertThat(playing.copy(dayOpen = true).brumeMoves).isFalse()
+        assertThat(playing.copy(listenOpen = true).brumeMoves).isFalse()
+    }
+
+    @Test
+    fun `sur l'écran Écoute, la feuille des gens n'est pas ouverte et ne fige pas Brume`() {
+        assertThat(playing.copy(drawerExpanded = true, page = HomePage.Listen).brumeMoves).isTrue()
     }
 }

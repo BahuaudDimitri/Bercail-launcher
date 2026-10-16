@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
@@ -68,6 +69,7 @@ internal fun HomeDrawer(
     actions: HomeActions,
     links: HomeLinks,
     search: HomeSearch?,
+    frost: BcFrost?,
     modifier: Modifier = Modifier
 ) {
     val listening = state.page == HomePage.Listen
@@ -111,7 +113,8 @@ internal fun HomeDrawer(
         BcBandSheet(
             visible = sheetOpen,
             onClose = { actions.onDrawerExpandedChange(false) },
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
+            frost = frost
         ) {
             Essentials(state, actions, links)
         }

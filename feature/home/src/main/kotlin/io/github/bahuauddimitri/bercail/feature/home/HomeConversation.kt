@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
@@ -30,14 +31,15 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.via
  * latest always in view), and the field to answer, by hand or by voice. Nothing is written for the user.
  */
 @Composable
-internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
+internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks, frost: BcFrost?) {
     // While the sheet slides away, it keeps showing the conversation it was closed on.
     val kept = remember { arrayOfNulls<TalkUiState>(1) }
     state.talk?.let { kept[0] = it }
     BcSheet(
         visible = state.talk != null,
         onDismiss = actions::onCloseConversation,
-        modifier = Modifier.testTag(TALK_TAG)
+        modifier = Modifier.testTag(TALK_TAG),
+        frost = frost
     ) {
         val talk = state.talk ?: kept[0] ?: return@BcSheet
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

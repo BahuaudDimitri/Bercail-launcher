@@ -98,6 +98,7 @@ fun BcBandSheet(
     visible: Boolean,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    frost: BcFrost? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val motion = BcTheme.motion
@@ -110,7 +111,7 @@ fun BcBandSheet(
             enter = expandVertically(tween(motion.sheetMillis, easing = motion.easing), expandFrom = Alignment.Top),
             exit = shrinkVertically(tween(motion.sheetMillis, easing = motion.easing), shrinkTowards = Alignment.Top)
         ) {
-            SheetSurface(onClose = { close() }, modifier = Modifier.heightIn(max = room), content = content)
+            SheetSurface({ close() }, Modifier.heightIn(max = room), frost, content)
         }
     }
 }

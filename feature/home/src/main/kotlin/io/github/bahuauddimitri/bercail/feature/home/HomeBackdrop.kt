@@ -18,6 +18,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWallpaperVeil
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
+import io.github.bahuauddimitri.bercail.core.designsystem.component.frostSource
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
@@ -27,7 +29,7 @@ import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
  * over the user's wallpaper. While Brume covers the screen, the system no longer draws the wallpaper under it.
  */
 @Composable
-internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState) {
+internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState, frost: BcFrost) {
     val fade = tween<Float>(BcTheme.motion.fadeMillis)
     val wanted = remember(state.background, state.dayPart) {
         (state.background as? HomeBackground.Brume)?.let { it.cover?.brume ?: state.dayPart.brume }
@@ -46,8 +48,8 @@ internal fun HomeBackdrop(state: HomeUiState, brume: BcBrumeState) {
         val second by animateColorAsState(shown.second, tween(BcTheme.motion.fadeMillis), label = "brume second")
         BcBrume(
             colors = remember(first, second) { BcBrumeColors.of(first, second) },
-            playing = state.media.isPlaying,
-            modifier = Modifier.fillMaxSize().testTag(BRUME_TAG).graphicsLayer { alpha = opacity },
+            playing = state.brumeMoves,
+            modifier = Modifier.fillMaxSize().testTag(BRUME_TAG).graphicsLayer { alpha = opacity }.frostSource(frost),
             state = brume,
             weather = state.weather.look,
             night = state.dayPart.isDark,

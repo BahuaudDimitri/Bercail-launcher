@@ -24,9 +24,11 @@ import androidx.compose.ui.unit.Constraints
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
+import io.github.bahuauddimitri.bercail.core.designsystem.component.rememberBcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.StateFlow
@@ -115,6 +117,9 @@ fun HomeScreen(
     search: HomeSearch? = null
 ) {
     val brume = rememberBcBrumeState()
+    val frost = rememberBcFrost()
+    // The sheets frost Brume only: the user's wallpaper is drawn by the system, out of reach. A sheet freezes Brume.
+    val sheetFrost = frost.takeIf { state.background is HomeBackground.Brume && !brume.isAnimating }
     var headerHeight by remember { mutableIntStateOf(0) }
     // A sheet is tinted glass: what it covers fades away, so that nothing shows through it.
     val covered = state.dayOpen || state.listenOpen || state.talk != null
@@ -127,7 +132,7 @@ fun HomeScreen(
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
             BcMomentScope(state.dayPart.moment) {
-                HomeBackdrop(state, brume)
+                HomeBackdrop(state, brume, frost)
                 // Under a sheet, a screen reader must not read the screen either.
                 Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
                     DrawerOverScreen(
@@ -153,12 +158,12 @@ fun HomeScreen(
                                 )
                             }
                         },
-                        drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search) } }
+                        drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search, sheetFrost) } }
                     )
                 }
-                DaySheet(state, actions, links)
-                ListenSheet(state, actions, links)
-                TalkSheet(state, actions, links)
+                DaySheet(state, actions, links, sheetFrost)
+                ListenSheet(state, actions, links, sheetFrost)
+                TalkSheet(state, actions, links, sheetFrost)
             }
         }
     }

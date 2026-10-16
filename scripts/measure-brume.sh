@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 # Measures the energy of Brume on the plugged Pixel 9 with its power rails (Perfetto, android.power).
-# Compares Brume still and Brume moving, full screen, from the gallery of the debug build.
+# Compares Brume still and Brume moving, full screen, from the gallery of the debug build; and, for the glass of
+# the sheets (roadmap 6.2), a sheet over a still Brume: tinted, frosted, frosted with a caret that blinks, or
+# frosted and opening and closing every two seconds.
 #
 # Before: install the debug build (./gradlew :app:installDebug), unlock the phone, turn adaptive brightness off,
 # set the brightness to the middle, then leave the phone alone: any touch skews the measure.
 # Usage: bash scripts/measure-brume.sh [runs] [seconds]
+# Modes: still and playing by default; choose others with BRUME_MODES, a mode being the state of Brume, then
+# "+" and the sheet over it (tinted, frosted, blinking or toggling), for example:
+#   BRUME_MODES="still still+tinted still+frosted still+blinking still+toggling" bash scripts/measure-brume.sh
 # Needs trace_processor_shell (Perfetto): set TRACE_PROCESSOR to its path.
 set -euo pipefail
 export MSYS_NO_PATHCONV=1
 
 RUNS="${1:-2}"
 SECONDS_PER_MODE="${2:-60}"
-MODES=(still playing)
+read -r -a MODES <<< "${BRUME_MODES:-still playing}"
 PKG="io.github.bahuauddimitri.bercail.debug"
 ACTIVITY="io.github.bahuauddimitri.bercail.GalleryActivity"
 ADB="${ADB:-adb}"
@@ -31,7 +36,9 @@ echo "mode,run,rail,mw" > "$OUT/rails.csv"
 for run in $(seq 1 "$RUNS"); do
   for mode in "${MODES[@]}"; do
     echo "Run $run - Brume $mode"
-    "$ADB" shell am start -S -n "$PKG/$ACTIVITY" --es brume "$mode" > /dev/null
+    SHEET=()
+    if [[ "$mode" == *+* ]]; then SHEET=(--es sheet "${mode#*+}"); fi
+    "$ADB" shell am start -S -n "$PKG/$ACTIVITY" --es brume "${mode%%+*}" "${SHEET[@]}" > /dev/null
     sleep 10
     "$ADB" shell dumpsys gfxinfo "$PKG" reset > /dev/null
     printf 'buffers { size_kb: 16384 fill_policy: RING_BUFFER }\ndata_sources { config { name: "android.power" android_power_config { battery_poll_ms: 1000 collect_power_rails: true } } }\nduration_ms: %d\n' \
@@ -52,7 +59,7 @@ echo "Average power of the whole phone per mode (mW):"
 awk -F, 'NR > 1 { total[$1 "," $2] += $4 }
   END {
     for (k in total) { split(k, p, ","); sum[p[1]] += total[k]; n[p[1]]++ }
-    for (m in sum) printf "  Brume %-8s %7.1f mW\n", m, sum[m] / n[m]
+    for (m in sum) printf "  Brume %-16s %7.1f mW\n", m, sum[m] / n[m]
   }' "$OUT/rails.csv" | sort
 echo "Screen refresh rate and janky frames:"
 for f in "$OUT"/*-display.txt; do echo "  $(basename "$f" -display.txt): $(cat "$f" | tr -s ' ')"; done

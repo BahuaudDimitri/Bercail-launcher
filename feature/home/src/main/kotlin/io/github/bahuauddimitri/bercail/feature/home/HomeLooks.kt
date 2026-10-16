@@ -14,6 +14,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.media.CoverColors
+import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
 
@@ -74,3 +75,14 @@ internal val DayPart.moment: BcMoment
         DayPart.Afternoon -> BcMoment.Day
         DayPart.Evening, DayPart.Night -> BcMoment.Evening
     }
+
+/** A sheet covers the home: the people and the house over the band, the day, the media apps or a conversation. */
+internal val HomeUiState.underSheet: Boolean
+    get() = (drawerExpanded && page == HomePage.Home) || dayOpen || listenOpen || talk != null
+
+/**
+ * Brume moves only while music plays and no sheet covers the home: an open sheet freezes it, so that its glass is
+ * frosted at once and nothing is redrawn behind it.
+ */
+internal val HomeUiState.brumeMoves: Boolean
+    get() = media.isPlaying && !underSheet

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
@@ -32,11 +33,12 @@ import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppRow
  * media apps play, the sheet says why it asks and offers to allow it: Bercail never asks by itself.
  */
 @Composable
-internal fun ListenSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks) {
+internal fun ListenSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks, frost: BcFrost?) {
     BcSheet(
         visible = state.listenOpen,
         onDismiss = { actions.onListenOpenChange(false) },
-        modifier = Modifier.testTag(LISTEN_TAG)
+        modifier = Modifier.testTag(LISTEN_TAG),
+        frost = frost
     ) {
         BcText("Écouter", style = BcTextStyle.Headline, maxLines = 1)
         when {
