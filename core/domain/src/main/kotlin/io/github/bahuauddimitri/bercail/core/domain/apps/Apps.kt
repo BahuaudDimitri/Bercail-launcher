@@ -14,7 +14,7 @@ interface AppsSource {
     suspend fun icon(appId: String): Picture?
 
     /**
-     * The icon of an app as a white glyph whose shape is in the alpha ([monochromeGlyph], [silhouetteGlyph]), or
+     * The icon of an app as a white glyph whose shape is in the alpha ([monochromeGlyph], [iconGlyph]), or
      * nothing when it has none that reads, or is gone: its initial then stands in for it.
      */
     suspend fun glyph(appId: String): Picture?

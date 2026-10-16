@@ -16,8 +16,8 @@ import android.os.UserHandle
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
+import io.github.bahuauddimitri.bercail.core.domain.apps.iconGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.monochromeGlyph
-import io.github.bahuauddimitri.bercail.core.domain.apps.silhouetteGlyph
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineDispatcher
@@ -69,8 +69,8 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
     }
 
     /**
-     * The monochrome layer Android 13 asks apps for, framed as the icon is; without it, the silhouette of the
-     * foreground when it reads. Drawn once per version of the app: an update may bring a new icon.
+     * The monochrome layer Android 13 asks apps for, framed as the icon is; without it, the real icon in one
+     * colour. Drawn once per version of the app: an update may bring a new icon.
      */
     override suspend fun glyph(appId: String): Picture? = withContext(background) {
         val component = ComponentName.unflattenFromString(appId) ?: return@withContext null
@@ -85,16 +85,20 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         } catch (_: PackageManager.NameNotFoundException) {
             return@withContext null
         }
-        val size = (GLYPH_DP * this@DeviceApps.context.resources.displayMetrics.density).roundToInt()
-        val monochrome = (drawable as? AdaptiveIconDrawable)?.monochrome
-        val foreground = (drawable as? AdaptiveIconDrawable)?.foreground
-        val glyph = when {
-            monochrome != null -> monochromeGlyph(monochrome.drawn(size, asLayer = true))
-            foreground != null -> silhouetteGlyph(foreground.drawn(size, asLayer = true))
-            else -> silhouetteGlyph(drawable.drawn(size, asLayer = false))
-        }
+        val glyph = drawable.glyph()
         glyphs[appId] = Drawn(updated, glyph)
         glyph
+    }
+
+    /** The monochrome layer of an adaptive icon, framed as the icon is; without it, the whole icon in one colour. */
+    private fun Drawable.glyph(): Picture? {
+        val size = (GLYPH_DP * context.resources.displayMetrics.density).roundToInt()
+        val monochrome = (this as? AdaptiveIconDrawable)?.monochrome
+        return if (monochrome != null) {
+            monochromeGlyph(monochrome.drawn(size, asLayer = true))
+        } else {
+            iconGlyph(drawn(size, asLayer = false))
+        }
     }
 
     /** A glyph drawn for one version of an app; nothing when it has none that reads. */

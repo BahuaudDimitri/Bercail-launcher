@@ -9,6 +9,7 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
+import android.graphics.drawable.LayerDrawable
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -25,7 +26,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.GraphicsMode
 
-/** The icons of the apps as one-colour glyphs, for the dock: the monochrome layer, the silhouette, or nothing. */
+/** The icons of the apps as one-colour glyphs, for the dock: the monochrome layer, or the real icon in one colour. */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class AppGlyphsUiTest {
@@ -76,24 +77,41 @@ class AppGlyphsUiTest {
     }
 
     @Test
-    fun `une icône sans calque monochrome donne la silhouette de son premier plan quand elle se lit`() = runBlocking {
+    fun `une icône sans calque monochrome est sa vraie icône en une seule couleur, son fond effacé`() = runBlocking {
         iconOfChrome(AdaptiveIconDrawable(ColorDrawable(Color.BLUE), middle(Color.YELLOW, 0.35f)))
 
         val glyph = apps.glyph(id)
 
         assertThat(glyph).isNotNull()
         assertThat(glyph!!.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+        assertThat(glyph.at(0.15f, 0.5f) ushr ALPHA_SHIFT).isEqualTo(0)
     }
 
     @Test
-    fun `une icône dont le premier plan remplit tout ne donne pas de dessin`() = runBlocking {
-        iconOfChrome(AdaptiveIconDrawable(ColorDrawable(Color.BLUE), ColorDrawable(Color.YELLOW)))
+    fun `une icône dont le premier plan couvre tout se lit encore par ce qui se détache de lui`() = runBlocking {
+        val foreground = LayerDrawable(arrayOf(ColorDrawable(Color.YELLOW), middle(Color.BLACK, 0.35f)))
+        iconOfChrome(AdaptiveIconDrawable(ColorDrawable(Color.BLUE), foreground))
 
-        assertThat(apps.glyph(id)).isNull()
+        val glyph = apps.glyph(id)
+
+        assertThat(glyph).isNotNull()
+        assertThat(glyph!!.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+        assertThat(glyph.at(0.15f, 0.5f) ushr ALPHA_SHIFT).isEqualTo(0)
     }
 
     @Test
-    fun `une icône d'ancien format, sans couches, pleine, ne donne pas de dessin`() = runBlocking {
+    fun `une icône d'ancien format dessinée sur un fond transparent garde sa forme`() = runBlocking {
+        iconOfChrome(middle(Color.RED, 0.3f))
+
+        val glyph = apps.glyph(id)
+
+        assertThat(glyph).isNotNull()
+        assertThat(glyph!!.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+        assertThat(glyph.at(0.1f, 0.5f) ushr ALPHA_SHIFT).isEqualTo(0)
+    }
+
+    @Test
+    fun `une icône unie, où rien ne se détache, ne donne pas de dessin`() = runBlocking {
         iconOfChrome(ColorDrawable(Color.GREEN))
 
         assertThat(apps.glyph(id)).isNull()
