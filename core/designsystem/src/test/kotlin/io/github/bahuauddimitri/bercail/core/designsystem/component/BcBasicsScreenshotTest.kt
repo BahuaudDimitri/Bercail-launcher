@@ -44,12 +44,13 @@ class BcBasicsScreenshotTest {
     fun `les boutons correspondent à leur capture`() = compose.captureComponent("buttons") {
         Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
             BcButton("Ouvrir dans Spotify", onClick = {})
-            BcButton("Reprendre", onClick = {}, variant = BcButtonVariant.Light, icon = BcIcons.Play)
-            BcButton("Envoyer", onClick = {}, variant = BcButtonVariant.Light, enabled = false)
+            BcButton("Relier Beeper", onClick = {}, icon = BcIcons.Chat)
+            BcButton("Installer", onClick = {}, variant = BcButtonVariant.Accent)
+            BcButton("Envoyer", onClick = {}, variant = BcButtonVariant.Accent, enabled = false)
             Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
                 BcIconButton(BcIcons.Mic, contentDescription = "Dicter", onClick = {})
-                BcIconButton(BcIcons.Send, "Envoyer", onClick = {}, variant = BcButtonVariant.Light)
-                BcIconButton(BcIcons.Back, "Retour", onClick = {}, variant = BcButtonVariant.Ghost)
+                BcIconButton(BcIcons.Send, "Envoyer", onClick = {}, variant = BcIconButtonVariant.Accent)
+                BcIconButton(BcIcons.Back, "Retour", onClick = {}, variant = BcIconButtonVariant.Ghost)
             }
         }
     }

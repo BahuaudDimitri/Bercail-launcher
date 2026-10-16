@@ -11,9 +11,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
@@ -66,7 +66,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenAction
                         icon = BcIcons.Play,
                         contentDescription = "Reprendre dans ${row.app.name}",
                         onClick = { actions.onResume(row.app.id) },
-                        variant = BcButtonVariant.Light
+                        variant = BcIconButtonVariant.Light
                     )
                 }
             }
@@ -87,7 +87,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenAction
 private fun AskToSeeWhatPlays(onAsk: () -> Unit, onOpenAppSettings: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
         BcText(WHY_THE_ACCESS, style = BcTextStyle.Message, color = BcTextColor.Muted)
-        BcButton("Autoriser dans Android", onClick = onAsk, variant = BcButtonVariant.Light)
+        BcButton("Autoriser dans Android", onClick = onAsk)
         BcText(WHEN_ANDROID_REFUSES, style = BcTextStyle.Label, color = BcTextColor.Muted)
         BcButton("Page de Bercail dans les Paramètres", onClick = onOpenAppSettings)
     }

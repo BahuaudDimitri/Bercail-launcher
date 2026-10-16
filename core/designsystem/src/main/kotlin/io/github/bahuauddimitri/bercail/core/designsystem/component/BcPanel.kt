@@ -39,7 +39,7 @@ fun BcPanelHeader(title: String, onBack: () -> Unit, backDescription: String, mo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(BcSpacing.s)
     ) {
-        BcIconButton(BcIcons.Back, backDescription, onBack, variant = BcButtonVariant.Ghost)
+        BcIconButton(BcIcons.Back, backDescription, onBack, variant = BcIconButtonVariant.Ghost)
         BcText(title, style = BcTextStyle.Caption, color = BcTextColor.Muted, maxLines = 1)
     }
 }

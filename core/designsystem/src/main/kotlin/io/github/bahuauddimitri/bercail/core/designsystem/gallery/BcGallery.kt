@@ -46,6 +46,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockMenu
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
@@ -179,12 +180,13 @@ private fun Icons() {
 private fun Buttons() {
     var clicks by remember { mutableIntStateOf(0) }
     BcButton("Ouvrir dans Spotify ($clicks)", onClick = { clicks++ })
-    BcButton("Reprendre", onClick = { clicks++ }, variant = BcButtonVariant.Light, icon = BcIcons.Play)
-    BcButton("Envoyer", onClick = {}, variant = BcButtonVariant.Light, enabled = false)
+    BcButton("Relier Beeper", onClick = { clicks++ }, icon = BcIcons.Chat)
+    BcButton("Installer", onClick = { clicks++ }, variant = BcButtonVariant.Accent)
+    BcButton("Envoyer", onClick = {}, variant = BcButtonVariant.Accent, enabled = false)
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
         BcIconButton(BcIcons.Mic, "Dicter", onClick = { clicks++ })
-        BcIconButton(BcIcons.Send, "Envoyer", onClick = { clicks++ }, variant = BcButtonVariant.Light)
-        BcIconButton(BcIcons.Back, "Retour", onClick = { clicks++ }, variant = BcButtonVariant.Ghost)
+        BcIconButton(BcIcons.Send, "Envoyer", onClick = { clicks++ }, variant = BcIconButtonVariant.Accent)
+        BcIconButton(BcIcons.Back, "Retour", onClick = { clicks++ }, variant = BcIconButtonVariant.Ghost)
     }
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xs)) {
         BcPill("J'arrive", onClick = { clicks++ })
@@ -324,15 +326,16 @@ private fun Music() {
             horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, variant = BcButtonVariant.Ghost, size = REMOTE)
+            BcIconButton(BcIcons.Previous, "Précédent", onClick = {
+            }, variant = BcIconButtonVariant.Ghost, size = REMOTE)
             BcIconButton(
                 icon = if (playing) BcIcons.Pause else BcIcons.Play,
                 contentDescription = if (playing) "Pause" else "Lecture",
                 onClick = { playing = !playing },
-                variant = BcButtonVariant.Light,
+                variant = BcIconButtonVariant.Light,
                 size = REMOTE_MAIN
             )
-            BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = BcButtonVariant.Ghost, size = REMOTE)
+            BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = BcIconButtonVariant.Ghost, size = REMOTE)
         }
     }
 }

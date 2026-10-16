@@ -67,7 +67,7 @@ class BcPressScreenshotTest {
                     BcRing("Tom", BcRingMark.Initial("T"), tone = BcRingTone.Pastel(BcPastel.Blue), onClick = {})
                 }
                 BcMusicPill("Nekketsu", "Nekfeu", cover = null, playing = false, onClick = {}, Modifier.testTag("pill"))
-                BcButton("Reprendre", onClick = {}, Modifier.testTag("button"), variant = BcButtonVariant.Light)
+                BcButton("Installer", onClick = {}, Modifier.testTag("button"), variant = BcButtonVariant.Accent)
                 BcListRow("Spotify", onClick = {}, Modifier.testTag("row"), leading = BcLeading.Initials("S"))
             }
         }

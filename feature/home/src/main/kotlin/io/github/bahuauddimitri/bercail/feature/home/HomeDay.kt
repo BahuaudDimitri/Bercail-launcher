@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
@@ -67,7 +66,7 @@ internal fun DaySheet(state: HomeUiState, actions: HomeActions, links: HomeLinks
 private fun AskForAgenda(onAsk: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
         BcText(WHY_THE_AGENDA, style = BcTextStyle.Message, color = BcTextColor.Muted)
-        BcButton("Autoriser la lecture de l'agenda", onClick = onAsk, variant = BcButtonVariant.Light)
+        BcButton("Autoriser la lecture de l'agenda", onClick = onAsk)
     }
 }
 

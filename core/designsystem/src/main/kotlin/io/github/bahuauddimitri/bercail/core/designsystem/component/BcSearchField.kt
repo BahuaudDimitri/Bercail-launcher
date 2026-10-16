@@ -88,7 +88,7 @@ fun BcSearchField(
         if (value.isNotEmpty()) {
             BcIconButton(BcIcons.Close, contentDescription = "Effacer", onClick = {
                 onValueChange("")
-            }, variant = BcButtonVariant.Ghost)
+            }, variant = BcIconButtonVariant.Ghost)
         }
     }
 }

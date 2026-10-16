@@ -46,6 +46,9 @@ object BcType {
 
     val bodySmall = style(size = 13.5.sp, weight = FontWeight.Normal)
     val caption = style(size = 13.sp, weight = FontWeight.Normal)
+
+    /** The label of a button. */
+    val button = style(size = 13.5.sp, weight = FontWeight.Medium)
     val label = style(size = 12.5.sp, weight = FontWeight.Medium)
     val labelStrong = style(size = 12.sp, weight = FontWeight.SemiBold)
     val labelSmall = style(size = 11.sp, weight = FontWeight.Medium)
@@ -70,6 +73,7 @@ object BcType {
         "message" to message,
         "bodySmall" to bodySmall,
         "caption" to caption,
+        "button" to button,
         "label" to label,
         "labelStrong" to labelStrong,
         "labelSmall" to labelSmall,

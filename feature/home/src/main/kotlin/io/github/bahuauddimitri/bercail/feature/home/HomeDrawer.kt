@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
@@ -185,7 +185,7 @@ private fun Remote(media: MediaState, position: StateFlow<Duration>, actions: Ho
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val quiet = BcButtonVariant.Ghost
+            val quiet = BcIconButtonVariant.Ghost
             // A missing button leaves its room empty: play and pause stay in the middle.
             Box(Modifier.size(SIDE_BUTTON)) {
                 if (MediaAction.Previous in loaded.actions) {
@@ -202,7 +202,7 @@ private fun Remote(media: MediaState, position: StateFlow<Duration>, actions: Ho
                 icon = if (loaded.playing) BcIcons.Pause else BcIcons.Play,
                 contentDescription = if (loaded.playing) "Pause" else "Lecture",
                 onClick = actions::onPlayPause,
-                variant = BcButtonVariant.Light,
+                variant = BcIconButtonVariant.Light,
                 size = MAIN_BUTTON
             )
             Box(Modifier.size(SIDE_BUTTON)) {

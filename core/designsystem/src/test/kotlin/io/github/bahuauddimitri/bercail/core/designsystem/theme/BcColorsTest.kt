@@ -81,6 +81,18 @@ class BcColorsTest {
     }
 
     @Test
+    fun `le fond d'un bouton bordé est blanc à 6 %`() {
+        assertThat(BcColors.buttonFill).isEqualTo(BcColors.text.copy(alpha = 0.06f))
+    }
+
+    @Test
+    fun `le texte d'un bouton plein d'accent est lisible sur l'accent de chaque moment`() {
+        BcMoment.entries.forEach { moment ->
+            assertThat(contrastRatio(BcColors.onAccent, moment.accent)).isGreaterThanOrEqualTo(WCAG_TEXT)
+        }
+    }
+
+    @Test
     fun `le contraste est calculé selon la formule WCAG`() {
         assertThat(contrastRatio(Color.White, Color.Black)).isCloseTo(21f, 0.01f)
         assertThat(contrastRatio(Color.Black, Color.Black)).isCloseTo(1f, 0.01f)

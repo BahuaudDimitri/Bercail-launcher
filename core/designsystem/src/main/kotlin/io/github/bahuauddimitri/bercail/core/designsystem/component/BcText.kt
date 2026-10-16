@@ -23,6 +23,7 @@ enum class BcTextStyle(internal val style: TextStyle) {
     Message(BcType.message),
     BodySmall(BcType.bodySmall),
     Caption(BcType.caption),
+    Button(BcType.button),
     Label(BcType.label),
     LabelStrong(BcType.labelStrong),
     LabelSmall(BcType.labelSmall),

@@ -1,5 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -8,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
@@ -20,7 +24,9 @@ fun BcPill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, ico
     Row(
         modifier = modifier
             .defaultMinSize(minHeight = BcSizes.minTouch)
-            .surface(BcButtonVariant.Glass, BcShapes.pill)
+            .clip(BcShapes.pill)
+            .background(BcColors.tile)
+            .border(1.dp, BcColors.tileEdge, BcShapes.pill)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = PILL_PADDING),
         verticalAlignment = Alignment.CenterVertically,

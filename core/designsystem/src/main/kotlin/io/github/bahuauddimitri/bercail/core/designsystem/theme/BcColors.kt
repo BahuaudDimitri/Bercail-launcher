@@ -63,8 +63,11 @@ object BcColors {
     /** Text and icons drawn on a pastel. */
     val onPastel = Color(0xFF2A2530)
 
-    /** Text and icons drawn on the light primary surface (my bubbles, the send button). */
+    /** Text and icons drawn on the light surface: my bubbles, play and pause on Écoute. */
     val onLight = Color(0xFF1B1B24)
+
+    /** Text and icons drawn on a button filled with the accent of the moment. */
+    val onAccent = Color(0xFF1B1B24)
 
     /** Placeholder tile behind an app or result without its own icon. */
     val appTile = Color(0xFFD9D4E6)
@@ -76,6 +79,9 @@ object BcColors {
     val stroke = text.copy(alpha = 0.22f)
     val strokeRing = text.copy(alpha = 0.35f)
     val strokeButton = text.copy(alpha = 0.2f)
+
+    /** The faint fill of a bordered button. */
+    val buttonFill = text.copy(alpha = 0.06f)
 
     /** A home control that is switched off. */
     val off = Color(0xFF5C5B70)

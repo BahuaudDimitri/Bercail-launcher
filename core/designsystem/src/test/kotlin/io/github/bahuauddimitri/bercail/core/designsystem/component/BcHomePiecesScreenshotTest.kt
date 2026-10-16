@@ -67,9 +67,10 @@ class BcHomePiecesScreenshotTest {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val ghost = BcButtonVariant.Ghost
+                    val ghost = BcIconButtonVariant.Ghost
                     BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, variant = ghost, size = 52.dp)
-                    BcIconButton(BcIcons.Pause, "Pause", onClick = {}, variant = BcButtonVariant.Light, size = 66.dp)
+                    BcIconButton(BcIcons.Pause, "Pause", onClick = {
+                    }, variant = BcIconButtonVariant.Light, size = 66.dp)
                     BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = ghost, size = 52.dp)
                 }
                 BcMusicPill(

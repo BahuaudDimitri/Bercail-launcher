@@ -80,7 +80,7 @@ fun BcReplyField(
             BcIcons.Send,
             contentDescription = "Envoyer",
             onClick = onSend,
-            variant = BcButtonVariant.Light,
+            variant = BcIconButtonVariant.Light,
             enabled = canSend
         )
     }
