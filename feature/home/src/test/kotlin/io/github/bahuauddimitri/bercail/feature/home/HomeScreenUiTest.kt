@@ -4,6 +4,8 @@ import android.os.Looper
 import android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -12,6 +14,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
@@ -38,6 +41,7 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
+import assertk.assertions.isLessThan
 import assertk.assertions.isNotEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -48,6 +52,7 @@ import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import io.github.bahuauddimitri.bercail.core.testing.Samples
+import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Rule
@@ -55,6 +60,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** The home screen on a simulated phone, fed by fake sources: what is shown, and what each gesture does. */
 @RunWith(AndroidJUnit4::class)
@@ -561,6 +567,22 @@ class HomeScreenUiTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `le bouton lecture de l'app principale est plein de l'accent du moment, pêche le matin`() {
+        val world = show()
+        world.media.stop()
+        world.media.lastPlayed = Samples.spotify
+        compose.onNodeWithText("Écouter…").performClick()
+
+        val play = compose.onNodeWithContentDescription("Reprendre dans Spotify").captureToImage().toPixelMap()
+        val inside = with(compose.density) { 8.dp.roundToPx() }
+
+        val fill = play[inside, play.height / 2]
+        assertThat(maxOf(abs(fill.red - PEACH.red), abs(fill.green - PEACH.green), abs(fill.blue - PEACH.blue)))
+            .isLessThan(0.03f)
+    }
+
+    @Test
     fun `sans app de musique installée, la feuille Écouter le dit`() {
         show(silent().apply { mediaApps.apps.value = emptyList() })
 
@@ -851,3 +873,6 @@ class HomeScreenUiTest {
         assertThat(world.weather.forecast.subscriptionCount.value).isEqualTo(0)
     }
 }
+
+/** The accent of the morning. */
+private val PEACH = Color(0xFFF6C28B)

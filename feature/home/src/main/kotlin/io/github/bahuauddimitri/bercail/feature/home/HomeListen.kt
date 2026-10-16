@@ -66,7 +66,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenAction
                         icon = BcIcons.Play,
                         contentDescription = "Reprendre dans ${row.app.name}",
                         onClick = { actions.onResume(row.app.id) },
-                        variant = BcIconButtonVariant.Light
+                        variant = BcIconButtonVariant.Accent
                     )
                 }
             }
