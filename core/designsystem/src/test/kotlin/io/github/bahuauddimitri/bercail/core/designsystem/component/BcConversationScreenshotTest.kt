@@ -34,6 +34,15 @@ class BcConversationScreenshotTest {
     }
 
     @Test
+    fun `l'en-tête d'une feuille correspond à sa capture`() = compose.captureComponent("sheet_header") {
+        Column(Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
+            BcSheetHeader("Léa", subtitle = "WhatsApp via Beeper", action = "Beeper")
+            BcSheetHeader("Aujourd'hui", subtitle = "vendredi 2 octobre", action = "Agenda")
+            BcSheetHeader("Écouter")
+        }
+    }
+
+    @Test
     fun `une conversation correspond à sa capture`() = compose.captureComponent("conversation") {
         Column(Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
             BcBubble(

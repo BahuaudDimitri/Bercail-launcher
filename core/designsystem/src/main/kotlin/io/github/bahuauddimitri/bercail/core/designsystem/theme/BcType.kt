@@ -34,6 +34,9 @@ object BcType {
     /** Sheet header: the person, the day. */
     val headline = style(size = 20.sp, weight = FontWeight.Medium)
 
+    /** The title of a sheet in its header: the person, « Aujourd'hui », « Écouter ». */
+    val sheetTitle = style(size = 24.sp, weight = FontWeight.Light, lineHeight = 26.sp, letterSpacing = (-0.01).em)
+
     /** Weather line and other light headers. */
     val titleLight = style(size = 19.sp, weight = FontWeight.Light)
 
@@ -78,6 +81,7 @@ object BcType {
         "agendaTitle" to agendaTitle,
         "display" to display,
         "headline" to headline,
+        "sheetTitle" to sheetTitle,
         "titleLight" to titleLight,
         "listTitle" to listTitle,
         "title" to title,

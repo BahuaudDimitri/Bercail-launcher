@@ -16,6 +16,7 @@ enum class BcTextStyle(internal val style: TextStyle) {
     AgendaTitle(BcType.agendaTitle),
     Display(BcType.display),
     Headline(BcType.headline),
+    SheetTitle(BcType.sheetTitle),
     TitleLight(BcType.titleLight),
     ListTitle(BcType.listTitle),
     Title(BcType.title),

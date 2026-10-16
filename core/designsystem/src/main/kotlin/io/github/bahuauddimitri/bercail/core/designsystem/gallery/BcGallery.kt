@@ -67,6 +67,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLab
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcShortcut
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcShortcutMenu
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
@@ -143,8 +144,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Brume") { Brume() }
         }
         BcSheet(visible = sheetOpen, onDismiss = { sheetOpen = false }) {
-            BcText("Léa", style = BcTextStyle.Headline)
-            BcText("WhatsApp via Beeper", style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
+            BcSheetHeader("Léa", subtitle = "WhatsApp via Beeper", action = "Beeper")
             BcBubble("On se retrouve à 20 h ?", author = "Léa", mine = false, pastel = BcPastel.Coral)
         }
         if (panelOpen) SamplePanel(onBack = { panelOpen = false })

@@ -29,6 +29,15 @@ class BcTypeTest {
     }
 
     @Test
+    fun `le titre d'une feuille est en 24 sp graisse 300, lettres un peu resserrées`() {
+        assertThat(BcType.sheetTitle).all {
+            prop("taille") { it.fontSize }.isEqualTo(24.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Light)
+            prop("espacement") { it.letterSpacing }.isEqualTo((-0.01).em)
+        }
+    }
+
+    @Test
     fun `le titre d'une ligne de liste est en 17 sp graisse 400, son sous-titre en 12 sp`() {
         assertThat(BcType.listTitle).all {
             prop("taille") { it.fontSize }.isEqualTo(17.sp)
