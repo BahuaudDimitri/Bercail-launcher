@@ -64,13 +64,17 @@ class MainActivity : ComponentActivity() {
         sources.access.refresh()
     }
 
-    /** Nobody looks at the home screen anymore: a new version of Bercail may replace this one. */
+    /** Nobody looks at the home screen anymore: a new version of Bercail may replace this one; no menu stays open. */
     override fun onStop() {
         super.onStop()
         if (!isChangingConfigurations) sources.onHomeHidden()
+        home.onCloseDockMenu()
     }
 
-    /** The Home button always comes back to the plain home screen: no settings, search or sheet, the Accueil page. */
+    /**
+     * The Home button always comes back to the plain home screen: no settings, search, sheet or menu of the dock,
+     * the Accueil page.
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
@@ -79,6 +83,7 @@ class MainActivity : ComponentActivity() {
             home.onDayOpenChange(false)
             home.onListenOpenChange(false)
             home.onCloseConversation()
+            home.onCloseDockMenu()
             home.onPageWanted(HomePage.Home)
         }
     }

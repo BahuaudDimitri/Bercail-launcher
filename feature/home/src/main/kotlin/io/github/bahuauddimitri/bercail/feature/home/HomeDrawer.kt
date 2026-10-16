@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,8 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -50,8 +46,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
-import io.github.bahuauddimitri.bercail.core.domain.Picture
-import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.media.asTrackTime
@@ -149,20 +143,8 @@ private fun Summary(state: HomeUiState, actions: HomeActions, links: HomeLinks) 
             onClickLabel = OPEN_SHEET,
             onOpenApp = links::onOpenMessagesApp
         )
-        if (state.dock.isNotEmpty()) Dock(state.dock, actions)
+        if (state.dock.isNotEmpty()) Dock(state.dock, state.dockMenu, actions, onOpenApp = actions::onOpenApp)
     }
-}
-
-/** The apps of the dock, each drawn in one colour once it first shows; until then, and without one, its initial. */
-@Composable
-private fun Dock(apps: List<App>, actions: HomeActions) {
-    val dock = apps.map { app ->
-        key(app.id) {
-            val glyph by produceState<Picture?>(null, app.id) { value = actions.glyphOf(app.id) }
-            BcDockApp(app.name, glyph.asImage()) { actions.onOpenApp(app.id) }
-        }
-    }
-    BcDock(dock)
 }
 
 /** The sheet over the band: the favorite people and "Tous", the home controls and "Tout". */

@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.AccessSource
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
@@ -85,6 +84,9 @@ data class HomeUiState(
 
     /** The apps of the dock, in the band above the search bar: five at most, in the order chosen. */
     val dock: List<App> = emptyList(),
+
+    /** The shortcuts of an app of the dock, open above its icon after a long press. */
+    val dockMenu: DockMenu? = null,
     val homeSummary: String = "",
     val media: MediaState = MediaState.None,
     /** False until the user lets Bercail see what the media apps play: the « Écouter » sheet offers to allow it. */
@@ -119,11 +121,13 @@ class HomeViewModel private constructor(
     access: AccessSource,
     private val listen: ListenSources,
     private val remote: HomeRemote,
-    private val talk: HomeTalk
+    private val talk: HomeTalk,
+    private val dock: HomeDock
 ) : ViewModel(),
     HomeActions,
     ListenActions by remote,
-    TalkActions by talk {
+    TalkActions by talk,
+    DockActions by dock {
     constructor(
         clock: Clock,
         alarm: AlarmSource,
@@ -139,12 +143,14 @@ class HomeViewModel private constructor(
         HomeRemote(
             listen
         ),
-        HomeTalk(messages, clock)
+        HomeTalk(messages, clock),
+        HomeDock(listen.apps)
     )
 
     init {
         addCloseable(remote)
         addCloseable(talk)
+        addCloseable(dock)
     }
 
     private val wantedPage = MutableStateFlow(HomePage.Home)
@@ -214,7 +220,7 @@ class HomeViewModel private constructor(
     private val choices: Flow<Choices> = combine(wantedPage, drawerChoice, daySheet, remote.sheetOpen, ::Choices)
 
     /** What the sheets over the home screen show: the media apps, a conversation. */
-    private val sheets: Flow<Sheets> = combine(mediaApps, talk.state, ::Sheets)
+    private val sheets: Flow<Sheets> = combine(mediaApps, talk.state, dock.menu, ::Sheets)
 
     val state: StateFlow<HomeUiState> = combine(day, drawer, listening, choices, sheets, ::stateOf)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), HomeUiState())
@@ -244,8 +250,6 @@ class HomeViewModel private constructor(
     }
 
     override fun onOpenAlarms() = alarm.openAlarms()
-
-    override suspend fun glyphOf(appId: String): Picture? = listen.apps.glyph(appId)
 
     override fun onToggleControl(id: String) {
         viewModelScope.launch { home.toggle(id) }
@@ -287,6 +291,7 @@ class HomeViewModel private constructor(
             listenOpen = choices.listen,
             mediaApps = sheets.mediaApps,
             talk = sheets.talk,
+            dockMenu = sheets.dockMenu,
             page = choices.page.allowedWith(media),
             drawerExpanded = choices.drawerExpanded ?: drawer.settings.drawerExpandedAtStart,
             background = backgroundFor(media, drawer.settings.idleBackground),
@@ -313,7 +318,7 @@ class HomeViewModel private constructor(
     /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment the search pointed at. */
     private data class DaySheet(val open: Boolean = false, val focus: String? = null)
 
-    private data class Sheets(val mediaApps: List<MediaAppRow>, val talk: TalkUiState?)
+    private data class Sheets(val mediaApps: List<MediaAppRow>, val talk: TalkUiState?, val dockMenu: DockMenu?)
 
     /** What plays, and whether the user lets Bercail see it. */
     private data class Listening(val media: MediaState, val allowed: Boolean)
