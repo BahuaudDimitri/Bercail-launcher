@@ -170,7 +170,7 @@ fun MediaAppScreen(
                 title = app.name,
                 onClick = { onChoose(app.id) },
                 leading = BcLeading.Initials(app.name.take(1).uppercase()),
-                emphasis = if (app == state.mainMediaApp) BcRowEmphasis.Highlighted else BcRowEmphasis.Normal
+                emphasis = if (app == state.mainMediaApp) BcRowEmphasis.Accent else BcRowEmphasis.Normal
             )
         }
     }

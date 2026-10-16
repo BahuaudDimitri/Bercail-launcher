@@ -26,10 +26,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
+import java.util.Locale
 
 /** The top of a full-screen list: a back arrow, announced by [backDescription], and a quiet title. */
 @Composable
@@ -83,17 +87,25 @@ fun BcPanel(
     }
 }
 
-/** The small title above a group of rows: "Apps favorites", "A", "Agenda". */
+/**
+ * The small title above a group of rows: "Dock", "A", "Agenda". Drawn in spaced capitals; a screen reader reads it
+ * as it is written, not letter by letter.
+ */
 @Composable
 fun BcSectionLabel(text: String, modifier: Modifier = Modifier) {
     BcText(
-        text,
-        modifier = modifier.padding(top = LABEL_TOP, bottom = BcSpacing.xxs),
-        style = BcTextStyle.LabelStrong,
+        text.inCapitals(),
+        modifier = modifier
+            .padding(top = LABEL_TOP, bottom = BcSpacing.xxs)
+            .clearAndSetSemantics { this.text = AnnotatedString(text) },
+        style = BcTextStyle.SectionLabel,
         color = BcTextColor.Muted,
-        maxLines = 1
+        maxLines = LABEL_LINES
     )
 }
+
+/** A section title as it is drawn: in capitals, accents kept. */
+internal fun String.inCapitals(): String = uppercase(Locale.FRENCH)
 
 /**
  * One setting on its tile: title, explanation, and its [control] underneath (a segmented choice, a button).
@@ -129,6 +141,9 @@ fun BcSettingRow(
 
 private val PANEL_SIDE = 20.dp
 private val LABEL_TOP = 14.dp
+
+// A long hint (the settings explain their lists this way) goes on to a second line rather than being cut.
+private const val LABEL_LINES = 2
 private val ROW_SHAPE = RoundedCornerShape(18.dp)
 private val ROW_SIDE = 14.dp
 private val ROW_VERTICAL = 13.dp

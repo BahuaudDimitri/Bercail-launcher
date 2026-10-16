@@ -76,7 +76,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: ListenAction
                 subtitle = row.resume,
                 leading =
                     icon.asImage()?.let(BcLeading::Picture) ?: BcLeading.Initials(row.app.name.take(1).uppercase()),
-                emphasis = if (row.main) BcRowEmphasis.Highlighted else BcRowEmphasis.Normal,
+                emphasis = if (row.main) BcRowEmphasis.Accent else BcRowEmphasis.Normal,
                 trailing = resume
             )
         }

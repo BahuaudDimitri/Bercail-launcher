@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.theme
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import assertk.all
 import assertk.assertThat
@@ -24,6 +25,35 @@ class BcTypeTest {
         assertThat(BcType.agendaTitle).all {
             prop("taille") { it.fontSize }.isEqualTo(34.sp)
             prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.ExtraLight)
+        }
+    }
+
+    @Test
+    fun `le titre d'une ligne de liste est en 17 sp graisse 400, son sous-titre en 12 sp`() {
+        assertThat(BcType.listTitle).all {
+            prop("taille") { it.fontSize }.isEqualTo(17.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Normal)
+        }
+        assertThat(BcType.listSubtitle).all {
+            prop("taille") { it.fontSize }.isEqualTo(12.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Normal)
+        }
+    }
+
+    @Test
+    fun `l'initiale dans l'anneau d'une ligne est en 13,5 sp graisse 600`() {
+        assertThat(BcType.listInitial).all {
+            prop("taille") { it.fontSize }.isEqualTo(13.5.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.SemiBold)
+        }
+    }
+
+    @Test
+    fun `un titre de section est en 11 sp graisse 600, lettres espacées d'un dixième`() {
+        assertThat(BcType.sectionLabel).all {
+            prop("taille") { it.fontSize }.isEqualTo(11.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.SemiBold)
+            prop("espacement") { it.letterSpacing }.isEqualTo(0.1.em)
         }
     }
 

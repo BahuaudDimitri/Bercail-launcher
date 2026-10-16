@@ -6,6 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -49,17 +54,40 @@ class BcControlsScreenshotTest {
     @Test
     fun `les lignes de liste correspondent à leur capture`() = compose.captureComponent("list_rows") {
         Column(Modifier.width(360.dp)) {
+            BcSectionLabel("Apps")
             BcListRow("Réglages de Bercail", onClick = {}, leading = BcLeading.Icon(BcIcons.Settings))
+            BcListRow("Gmail", onClick = {}, leading = BcLeading.Glyph(squareGlyph), found = 1..2)
+            BcListRow(
+                "Maps",
+                onClick = {},
+                leading = BcLeading.Initials("M"),
+                emphasis = BcRowEmphasis.Accent,
+                found = 0..1,
+                trailing = { BcText("Entrée", style = BcTextStyle.ListSubtitle, color = BcTextColor.Muted) }
+            )
             BcListRow("Spotify", onClick = {}, subtitle = "Reprendre « Nekketsu »", leading = BcLeading.Initials("S"))
             BcListRow("Léa", onClick = {}, subtitle = "WhatsApp", leading = BcLeading.Initials("L", BcPastel.Coral))
             BcListRow(
                 "Café avec Tom",
                 onClick = {},
                 leading = BcLeading.Time("09:30"),
-                emphasis = BcRowEmphasis.Highlighted
+                emphasis = BcRowEmphasis.Accent
             )
             BcListRow("Stand-up", onClick = {}, leading = BcLeading.Time("08:00"), emphasis = BcRowEmphasis.Dimmed)
         }
+    }
+
+    /** A glyph as an app gives it: white, framed as the icon is, a square in its middle half. */
+    private val squareGlyph by lazy {
+        val image = ImageBitmap(GLYPH_PX, GLYPH_PX)
+        val edge = GLYPH_PX / EDGE_PART
+        Canvas(image).drawRect(
+            Rect(edge, edge, GLYPH_PX - edge, GLYPH_PX - edge),
+            Paint().apply {
+                color = Color.White
+            }
+        )
+        image
     }
 
     @Test
@@ -72,5 +100,10 @@ class BcControlsScreenshotTest {
                 BcSwitch(checked = false, onCheckedChange = {}, contentDescription = "Désactivé")
             }
         }
+    }
+
+    private companion object {
+        const val GLYPH_PX = 96
+        const val EDGE_PART = 3f
     }
 }

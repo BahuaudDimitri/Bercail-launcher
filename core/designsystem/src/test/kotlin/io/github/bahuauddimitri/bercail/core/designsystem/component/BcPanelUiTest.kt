@@ -207,6 +207,15 @@ class BcPanelUiTest {
     }
 
     @Test
+    fun `un titre de section s'écrit en capitales, accents compris, mais se lit tel qu'il est écrit`() {
+        compose.setContent { BcTheme { BcSectionLabel("Réglages") } }
+
+        assertThat("Réglages".inCapitals()).isEqualTo("RÉGLAGES")
+        compose.onNodeWithText("Réglages").assertExists()
+        compose.onNodeWithText("RÉGLAGES").assertDoesNotExist()
+    }
+
+    @Test
     fun `une ligne de réglage montre son titre, son explication et sa commande`() {
         var choice by mutableStateOf(0)
         compose.setContent {

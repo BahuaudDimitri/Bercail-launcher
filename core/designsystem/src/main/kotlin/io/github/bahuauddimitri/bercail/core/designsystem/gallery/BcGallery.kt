@@ -247,10 +247,18 @@ private fun Dock() {
 @Composable
 private fun Lists() {
     BcListRow("Réglages de Bercail", onClick = {}, leading = BcLeading.Icon(BcIcons.Settings))
+    BcListRow(
+        "Maps",
+        onClick = {},
+        leading = BcLeading.Initials("M"),
+        emphasis = BcRowEmphasis.Accent,
+        found = 0..1,
+        trailing = { BcText("Entrée", style = BcTextStyle.ListSubtitle, color = BcTextColor.Muted) }
+    )
     BcListRow("Spotify", onClick = {}, subtitle = "Reprendre « Nekketsu »", leading = BcLeading.Initials("S"))
     BcListRow("Léa", onClick = {}, subtitle = "WhatsApp", leading = BcLeading.Initials("L", BcPastel.Coral))
     BcListRow("Stand-up", onClick = {}, leading = BcLeading.Time("08:00"), emphasis = BcRowEmphasis.Dimmed)
-    BcListRow("Café avec Tom", onClick = {}, leading = BcLeading.Time("09:30"), emphasis = BcRowEmphasis.Highlighted)
+    BcListRow("Café avec Tom", onClick = {}, leading = BcLeading.Time("09:30"), emphasis = BcRowEmphasis.Accent)
 }
 
 @Composable

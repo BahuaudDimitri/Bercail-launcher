@@ -17,6 +17,7 @@ enum class BcTextStyle(internal val style: TextStyle) {
     Display(BcType.display),
     Headline(BcType.headline),
     TitleLight(BcType.titleLight),
+    ListTitle(BcType.listTitle),
     Title(BcType.title),
     Body(BcType.body),
     BodyStrong(BcType.bodyStrong),
@@ -27,7 +28,10 @@ enum class BcTextStyle(internal val style: TextStyle) {
     Label(BcType.label),
     LabelStrong(BcType.labelStrong),
     LabelSmall(BcType.labelSmall),
+    ListSubtitle(BcType.listSubtitle),
+    SectionLabel(BcType.sectionLabel),
     Initials(BcType.initials),
+    ListInitial(BcType.listInitial),
     Badge(BcType.badge),
     Micro(BcType.micro)
 }

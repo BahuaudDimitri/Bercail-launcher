@@ -1,51 +1,60 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.LocalBcContentColor
 
-/** What sits at the start of a list row. */
+/** What sits at the start of a list row: a 36 dp ring holding an initial, an icon or an app, or a time. */
 sealed interface BcLeading {
-    /** Initials on a pastel, or on the neutral app tile without [pastel]. */
+    /** An initial in a white ring, or a person's initial in a ring of their [pastel]. */
     data class Initials(val text: String, val pastel: BcPastel? = null) : BcLeading
 
     data class Icon(val icon: BcIcons) : BcLeading
 
-    /** An app icon or a photo. */
+    /** The icon of an app in one colour ([BcRingMark.Glyph]), in the colour of the ring. */
+    data class Glyph(val glyph: ImageBitmap) : BcLeading
+
+    /** An app icon or a photo, in its own colours. */
     data class Picture(val bitmap: ImageBitmap) : BcLeading
 
     /** A time of day, for agenda rows. */
     data class Time(val text: String) : BcLeading
 }
 
-/** Dimmed: in the past. Highlighted: the next one. */
-enum class BcRowEmphasis { Normal, Dimmed, Highlighted }
+/** Dimmed: in the past. Accent: what stands out (the first app found, the main media app), its ring in the accent. */
+enum class BcRowEmphasis { Normal, Dimmed, Accent }
 
-/** One row of a list: apps, search results, events of the day. At least 48 dp high. */
+/**
+ * One row of a list: apps, search results, events of the day. 50 dp high, with no background, even when it stands
+ * out. The letters of the title in [found] (what was typed in the search) are drawn in the accent of the moment.
+ */
 @Composable
 fun BcListRow(
     title: String,
@@ -54,67 +63,88 @@ fun BcListRow(
     subtitle: String? = null,
     leading: BcLeading? = null,
     emphasis: BcRowEmphasis = BcRowEmphasis.Normal,
-    titleStyle: BcTextStyle = BcTextStyle.TitleLight,
+    titleStyle: BcTextStyle = BcTextStyle.ListTitle,
+    found: IntRange? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = BcSizes.listRow)
+            .heightIn(min = ROW_HEIGHT)
             .clip(ROW_SHAPE)
-            .background(if (emphasis == BcRowEmphasis.Highlighted) BcColors.tile else BcColors.tile.copy(alpha = 0f))
             .clickable(role = Role.Button, onClick = onClick)
-            .alpha(if (emphasis == BcRowEmphasis.Dimmed) DIMMED_ALPHA else 1f)
-            .padding(horizontal = BcSpacing.m, vertical = ROW_VERTICAL_PADDING),
+            .alpha(if (emphasis == BcRowEmphasis.Dimmed) DIMMED_ALPHA else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ROW_GAP)
     ) {
-        if (leading != null) Leading(leading)
+        if (leading != null) Leading(title, leading, accent = emphasis == BcRowEmphasis.Accent)
         Column(Modifier.weight(1f)) {
-            BcText(title, style = titleStyle, maxLines = 1)
-            if (subtitle != null) BcText(subtitle, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 1)
+            Title(title, titleStyle, found)
+            if (subtitle != null) {
+                BcText(subtitle, style = BcTextStyle.ListSubtitle, color = BcTextColor.Muted, maxLines = 1)
+            }
         }
         trailing?.invoke()
     }
 }
 
+/** The title, the letters [found] in the accent of the moment. */
 @Composable
-private fun Leading(leading: BcLeading) {
-    when (leading) {
-        is BcLeading.Initials -> Box(
-            Modifier.size(LEADING_SIZE).background(leading.pastel?.color ?: BcColors.appTile, LEADING_SHAPE),
-            contentAlignment = Alignment.Center
-        ) { BcText(leading.text, style = BcTextStyle.LabelStrong, color = BcTextColor.OnPastel, maxLines = 1) }
+private fun Title(title: String, style: BcTextStyle, found: IntRange?) {
+    val color = LocalBcContentColor.current
+    val shown = found?.takeIf { it.first >= 0 && it.last < title.length && !it.isEmpty() }
+    BasicText(
+        text = if (shown == null) AnnotatedString(title) else title.withAccent(shown, BcTheme.moment.accent),
+        style = style.style.copy(color = color),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
 
-        is BcLeading.Icon -> Box(
-            Modifier.size(LEADING_SIZE).border(1.dp, BcColors.tileEdge, LEADING_SHAPE),
-            contentAlignment = Alignment.Center
-        ) { BcIcon(leading.icon, contentDescription = null, size = LEADING_ICON) }
+private fun String.withAccent(range: IntRange, accent: Color): AnnotatedString = buildAnnotatedString {
+    append(substring(0, range.first))
+    withStyle(SpanStyle(color = accent)) { append(substring(range)) }
+    append(substring(range.last + 1))
+}
+
+@Composable
+private fun Leading(key: String, leading: BcLeading, accent: Boolean) {
+    val neutral = if (accent) BcRingTone.Accent else BcRingTone.Neutral
+    when (leading) {
+        is BcLeading.Initials -> RowRing(
+            key,
+            BcRingMark.Initial(leading.text),
+            leading.pastel?.takeUnless { accent }?.let(BcRingTone::Pastel) ?: neutral
+        )
+
+        is BcLeading.Icon -> RowRing(key, BcRingMark.Icon(leading.icon), neutral)
+
+        is BcLeading.Glyph -> RowRing(key, BcRingMark.Glyph(leading.glyph), neutral)
 
         is BcLeading.Picture -> Image(
             leading.bitmap,
             contentDescription = null,
-            modifier = Modifier.size(LEADING_SIZE).clip(LEADING_SHAPE),
+            modifier = Modifier.size(RING_SIZE).clip(BcShapes.pill),
             contentScale = ContentScale.Crop
         )
 
-        is BcLeading.Time -> BcText(
-            leading.text,
-            modifier = Modifier.width(TIME_WIDTH),
-            style = BcTextStyle.Caption,
-            color = BcTextColor.Muted,
-            maxLines = 1
-        )
+        is BcLeading.Time -> CompositionLocalProvider(
+            LocalBcContentColor provides if (accent) BcTheme.moment.accent else BcTextColor.Muted.color
+        ) {
+            BcText(leading.text, modifier = Modifier.width(TIME_WIDTH), style = BcTextStyle.Caption, maxLines = 1)
+        }
     }
 }
 
-private const val DIMMED_ALPHA = 0.45f
-private val ROW_SHAPE = RoundedCornerShape(16.dp)
-private val ROW_VERTICAL_PADDING = 7.dp
-private val ROW_GAP = 14.dp
-private val LEADING_SIZE = 34.dp
-private val LEADING_SHAPE = RoundedCornerShape(12.dp)
-private val LEADING_ICON = 18.dp
+@Composable
+private fun RowRing(key: String, mark: BcRingMark, tone: BcRingTone) {
+    Ring(key, mark, tone, size = RING_SIZE, initialStyle = BcTextStyle.ListInitial, iconSize = RING_ICON)
+}
 
-// Wide enough for "Journée", the mark of an event that lasts the whole day.
-private val TIME_WIDTH = 54.dp
+private const val DIMMED_ALPHA = 0.45f
+private val ROW_HEIGHT = 50.dp
+private val ROW_SHAPE = BcShapes.tile
+private val ROW_GAP = 14.dp
+private val RING_SIZE = 36.dp
+private val RING_ICON = 17.dp
+private val TIME_WIDTH = 48.dp

@@ -37,6 +37,9 @@ object BcType {
     /** Weather line and other light headers. */
     val titleLight = style(size = 19.sp, weight = FontWeight.Light)
 
+    /** The title of a list row: an app, a person, an appointment. */
+    val listTitle = style(size = 17.sp, weight = FontWeight.Normal)
+
     val title = style(size = 16.sp, weight = FontWeight.Medium)
     val body = style(size = 15.sp, weight = FontWeight.Normal)
     val bodyStrong = style(size = 15.sp, weight = FontWeight.SemiBold)
@@ -53,8 +56,17 @@ object BcType {
     val labelStrong = style(size = 12.sp, weight = FontWeight.SemiBold)
     val labelSmall = style(size = 11.sp, weight = FontWeight.Medium)
 
+    /** Under the title of a list row. */
+    val listSubtitle = style(size = 12.sp, weight = FontWeight.Normal)
+
+    /** The small title above a group of rows, written in capitals. */
+    val sectionLabel = style(size = 11.sp, weight = FontWeight.SemiBold, letterSpacing = 0.1.em)
+
     /** Initials on a person tile. */
     val initials = style(size = 17.sp, weight = FontWeight.SemiBold)
+
+    /** The initial in the ring of a list row. */
+    val listInitial = style(size = 13.5.sp, weight = FontWeight.SemiBold)
 
     /** Unread count. The smallest text allowed. */
     val badge = style(size = 10.5.sp, weight = FontWeight.Bold)
@@ -67,6 +79,7 @@ object BcType {
         "display" to display,
         "headline" to headline,
         "titleLight" to titleLight,
+        "listTitle" to listTitle,
         "title" to title,
         "body" to body,
         "bodyStrong" to bodyStrong,
@@ -77,7 +90,10 @@ object BcType {
         "label" to label,
         "labelStrong" to labelStrong,
         "labelSmall" to labelSmall,
+        "listSubtitle" to listSubtitle,
+        "sectionLabel" to sectionLabel,
         "initials" to initials,
+        "listInitial" to listInitial,
         "badge" to badge,
         "micro" to micro
     )

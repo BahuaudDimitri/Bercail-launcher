@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +66,9 @@ sealed interface BcRingTone {
 
     /** A home control that is off, or a link that leaves Bercail ("Tout"). */
     data object Off : BcRingTone
+
+    /** What stands out in a list: the first app found, the main media app. In the accent of the moment. */
+    data object Accent : BcRingTone
 }
 
 /**
@@ -144,7 +148,14 @@ private fun RingColumn(label: String, modifier: Modifier, ring: @Composable () -
 }
 
 @Composable
-internal fun Ring(key: String, mark: BcRingMark, tone: BcRingTone, size: Dp = BcSizes.ring) {
+internal fun Ring(
+    key: String,
+    mark: BcRingMark,
+    tone: BcRingTone,
+    size: Dp = BcSizes.ring,
+    initialStyle: BcTextStyle = BcTextStyle.Initials,
+    iconSize: Dp = ICON
+) {
     val ink = tone.ink()
     val edge = if (tone == BcRingTone.Neutral) BcColors.strokeRing else ink
     Box(
@@ -156,9 +167,9 @@ internal fun Ring(key: String, mark: BcRingMark, tone: BcRingTone, size: Dp = Bc
     ) {
         CompositionLocalProvider(LocalBcContentColor provides ink) {
             when (mark) {
-                is BcRingMark.Initial -> BcText(mark.letter, style = BcTextStyle.Initials, maxLines = 1)
+                is BcRingMark.Initial -> BcText(mark.letter, style = initialStyle, maxLines = 1)
 
-                is BcRingMark.Icon -> BcIcon(mark.icon, contentDescription = null, size = ICON)
+                is BcRingMark.Icon -> BcIcon(mark.icon, contentDescription = null, size = iconSize)
 
                 is BcRingMark.Glyph -> Image(
                     bitmap = mark.glyph,
@@ -171,10 +182,13 @@ internal fun Ring(key: String, mark: BcRingMark, tone: BcRingTone, size: Dp = Bc
     }
 }
 
+@Composable
+@ReadOnlyComposable
 private fun BcRingTone.ink(): Color = when (this) {
     is BcRingTone.Pastel -> pastel.color
     BcRingTone.Neutral -> BcColors.text
     BcRingTone.Off -> BcColors.off
+    BcRingTone.Accent -> BcTheme.moment.accent
 }
 
 /** The unread count, in the accent of the moment. */

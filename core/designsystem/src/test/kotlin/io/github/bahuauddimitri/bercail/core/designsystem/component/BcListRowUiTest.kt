@@ -1,0 +1,193 @@
+package io.github.bahuauddimitri.bercail.core.designsystem.component
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import assertk.assertThat
+import assertk.assertions.isFalse
+import assertk.assertions.isGreaterThan
+import assertk.assertions.isLessThan
+import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import kotlin.math.abs
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = PIXEL_9)
+class BcListRowUiTest {
+    @get:Rule
+    val compose = createComposeRule()
+
+    private val moment = mutableStateOf(BcMoment.Day)
+    private val content = mutableStateOf<@Composable () -> Unit>({})
+
+    @Test
+    fun `une ligne de liste fait 50 dp de haut et son anneau 36 dp`() {
+        show { BcListRow("Spotify", onClick = {}, modifier = Modifier.testTag(ROW), leading = BcLeading.Initials("S")) }
+
+        compose.onNodeWithTag(ROW).assertHeightIsEqualTo(50.dp)
+        compose.onNodeWithTag(RING_TAG + "Spotify", useUnmergedTree = true)
+            .assertWidthIsEqualTo(36.dp)
+            .assertHeightIsEqualTo(36.dp)
+    }
+
+    @Test
+    fun `l'anneau d'une ligne est un trait blanc à 35 %, sans fond`() {
+        show { BcListRow("Spotify", onClick = {}, modifier = Modifier.testTag(ROW), leading = BcLeading.Initials("S")) }
+
+        val pixels = rowPixels()
+        assertThat(pixels.at(RING_STROKE, MIDDLE).distanceTo(BcColors.strokeRing.compositeOver(BcColors.base)))
+            .isLessThan(TOLERANCE)
+        assertThat(pixels.at(INSIDE_RING, MIDDLE).distanceTo(BcColors.base)).isLessThan(TOLERANCE)
+    }
+
+    @Test
+    fun `l'anneau d'une personne est dans son pastel`() {
+        show {
+            BcListRow(
+                "Léa",
+                onClick = {},
+                modifier = Modifier.testTag(ROW),
+                leading = BcLeading.Initials("L", BcPastel.Coral)
+            )
+        }
+
+        assertThat(rowPixels().at(RING_STROKE, MIDDLE).distanceTo(BcColors.pastelCoral)).isLessThan(TOLERANCE)
+    }
+
+    @Test
+    fun `une ligne mise en avant n'a pas de fond, seulement son anneau dans l'accent du moment`() {
+        show {
+            BcListRow(
+                "Maps",
+                onClick = {},
+                modifier = Modifier.testTag(ROW),
+                leading = BcLeading.Initials("M"),
+                emphasis = BcRowEmphasis.Accent
+            )
+        }
+
+        BcMoment.entries.forEach { each ->
+            moment.value = each
+            compose.waitForIdle()
+
+            val pixels = rowPixels()
+            assertThat(pixels.at(RING_STROKE, MIDDLE).distanceTo(each.accent)).isLessThan(TOLERANCE)
+            assertThat(pixels[pixels.width - 2, pixels.height / 2].distanceTo(BcColors.base)).isLessThan(TOLERANCE)
+        }
+    }
+
+    @Test
+    fun `les lettres trouvées du titre sont dans l'accent du moment, les autres non`() {
+        show {
+            Column {
+                BcListRow("Maps", onClick = {}, leading = BcLeading.Initials("M"), found = 0..1)
+                BcListRow("Mail", onClick = {}, leading = BcLeading.Initials("M"))
+            }
+        }
+
+        assertThat(closestTo(BcMoment.Day.accent, "Maps")).isLessThan(TOLERANCE)
+        assertThat(closestTo(BcMoment.Day.accent, "Mail")).isGreaterThan(FAR)
+    }
+
+    @Test
+    fun `l'heure d'une ligne tient dans sa colonne de 48 dp, « Journée » compris`() {
+        show { BcListRow("Ciné", onClick = {}, leading = BcLeading.Time("Journée")) }
+
+        val time = compose.onNodeWithText("Journée", useUnmergedTree = true).assertWidthIsEqualTo(48.dp)
+        val layouts = mutableListOf<TextLayoutResult>()
+        time.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        assertThat(layouts.single().isLineEllipsized(0)).isFalse()
+    }
+
+    @Test
+    fun `un long titre de section passe sur une deuxième ligne au lieu d'être coupé`() {
+        show {
+            Column(Modifier.width(NARROW)) {
+                BcSectionLabel("Dock", Modifier.testTag("short"))
+                BcSectionLabel("Cinq au plus : retire une app pour en ajouter une autre", Modifier.testTag("long"))
+            }
+        }
+
+        val short = compose.onNodeWithTag("short").getUnclippedBoundsInRoot().height
+        assertThat(compose.onNodeWithTag("long").getUnclippedBoundsInRoot().height).isGreaterThan(short)
+    }
+
+    /** Shows [shown] 360 dp wide on the night background, in the accent of [moment]. */
+    private fun show(shown: @Composable () -> Unit) {
+        content.value = shown
+        compose.setContent {
+            BcTheme {
+                BcMomentScope(moment.value) {
+                    Box(Modifier.width(ROW_WIDTH).background(BcColors.base)) { content.value() }
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    private fun rowPixels(): PixelMap = compose.onNodeWithTag(ROW).captureToImage().toPixelMap()
+
+    private fun PixelMap.at(x: Dp, y: Dp): Color = with(compose.density) { this@at[x.roundToPx(), y.roundToPx()] }
+
+    /** How close the drawn [text] comes to [color], over all its pixels. */
+    private fun closestTo(color: Color, text: String): Float {
+        val pixels = compose.onNodeWithText(text, useUnmergedTree = true).captureToImage().toPixelMap()
+        var closest = 1f
+        for (x in 0 until pixels.width) {
+            for (y in 0 until pixels.height) closest = minOf(closest, pixels[x, y].distanceTo(color))
+        }
+        return closest
+    }
+
+    private fun Color.distanceTo(other: Color) =
+        maxOf(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
+
+    private companion object {
+        const val ROW = "row"
+        val ROW_WIDTH = 360.dp
+        val NARROW = 200.dp
+
+        /** The middle of the 1.5 dp stroke of the ring, at its left, halfway down the 50 dp row. */
+        val RING_STROKE = 0.75.dp
+        val MIDDLE = 25.dp
+
+        /** Inside the ring, beside its initial. */
+        val INSIDE_RING = 5.dp
+        const val TOLERANCE = 0.04f
+
+        /** Far from the accent: white text never comes close to it. */
+        const val FAR = 0.08f
+    }
+}
