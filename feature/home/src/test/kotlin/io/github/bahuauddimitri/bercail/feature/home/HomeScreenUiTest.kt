@@ -42,6 +42,7 @@ import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
@@ -164,6 +165,24 @@ class HomeScreenUiTest {
         compose.onNode(hasText("Point design") and inTheDaySheet).performClick()
 
         assertThat(world.agenda.opened).containsExactly("event: Point design")
+    }
+
+    @Test
+    fun `ouverte sur un rendez-vous, la feuille de la journée défile jusqu'à lui`() {
+        val world = FakeWorld(Moment.Matin)
+        val first = Samples.day.atTime(7, 0)
+        world.agenda.set(
+            (0 until MANY_EVENTS).map {
+                val start = first.plusMinutes(EVENT_STEP * it)
+                AgendaEvent("Rendez-vous $it", "Rendez-vous $it", start, start.plusMinutes(EVENT_STEP / 2))
+            }
+        )
+        val home = world.homeViewModel(world.media)
+        compose.setContent { BcTheme { HomeRoute(home, links = links) } }
+
+        compose.runOnUiThread { home.onDayOpenChange(true, focus = "Rendez-vous 18") }
+
+        compose.onNode(hasText("Rendez-vous 18") and inTheDaySheet).assertIsDisplayed()
     }
 
     @Test
@@ -753,5 +772,10 @@ class HomeScreenUiTest {
         assertThat(world.messages.conversations.subscriptionCount.value).isEqualTo(0)
         assertThat(world.home.controls.subscriptionCount.value).isEqualTo(0)
         assertThat(world.weather.forecast.subscriptionCount.value).isEqualTo(0)
+    }
+
+    private companion object {
+        const val MANY_EVENTS = 20
+        const val EVENT_STEP = 40L
     }
 }
