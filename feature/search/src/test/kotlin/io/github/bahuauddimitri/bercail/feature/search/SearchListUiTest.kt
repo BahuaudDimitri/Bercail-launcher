@@ -303,7 +303,7 @@ class SearchListUiTest {
     }
 
     @Test
-    fun `toucher un rendez-vous demande la journée, ce rendez-vous mis en avant`() {
+    fun `toucher un rendez-vous demande la journée, ouverte sur ce rendez-vous`() {
         show(typed = "déjeuner")
 
         compose.onNodeWithText("Déjeuner avec Léa").performClick()

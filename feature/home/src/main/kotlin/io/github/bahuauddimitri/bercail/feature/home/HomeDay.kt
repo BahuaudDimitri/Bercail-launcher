@@ -69,7 +69,7 @@ private val DayRowState.emphasis: BcRowEmphasis
     get() = when (this) {
         DayRowState.Past -> BcRowEmphasis.Dimmed
         DayRowState.Coming -> BcRowEmphasis.Normal
-        DayRowState.Highlighted -> BcRowEmphasis.Accent
+        DayRowState.Next -> BcRowEmphasis.Accent
     }
 
 private const val NOTHING_TODAY = "Rien de prévu aujourd'hui"

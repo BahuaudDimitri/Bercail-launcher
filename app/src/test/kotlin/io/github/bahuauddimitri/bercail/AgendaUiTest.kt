@@ -144,7 +144,7 @@ class AgendaUiTest {
     }
 
     @Test
-    fun `toucher un rendez-vous trouvé par la recherche ouvre la journée, ce rendez-vous mis en avant`() {
+    fun `toucher un rendez-vous trouvé par la recherche ouvre la journée sur ce rendez-vous`() {
         allowTheAgenda()
         showHome().use {
             awaitText("Stand-up")

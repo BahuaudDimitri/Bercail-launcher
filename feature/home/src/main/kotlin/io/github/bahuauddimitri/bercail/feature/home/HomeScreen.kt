@@ -50,7 +50,7 @@ interface HomeActions :
     fun onDrawerExpandedChange(expanded: Boolean)
     fun onPageWanted(page: HomePage)
 
-    /** Opens or closes the « Aujourd'hui » sheet. [focus] names the appointment to bring forward, if any. */
+    /** Opens or closes the « Aujourd'hui » sheet. [focus] names the appointment it opens on, if any. */
     fun onDayOpenChange(open: Boolean, focus: String? = null)
 
     /** Shows an appointment of the day in the phone's calendar app. */

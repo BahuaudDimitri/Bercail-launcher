@@ -70,10 +70,14 @@ data class HomeUiState(
     val wakeUp: WakeUp? = null,
     /** False until the user lets Bercail read the calendar: the screen then offers to link it. */
     val agendaAllowed: Boolean = true,
-    /** The « Aujourd'hui » sheet: whether it is open, the date under its title, the appointments of the day. */
+    /**
+     * The « Aujourd'hui » sheet: whether it is open, the date under its title, the appointments of the day, and the
+     * one it opens on (the one the search or the line pointed at), which it only scrolls to.
+     */
     val dayOpen: Boolean = false,
     val dayDate: String = "",
     val dayRows: List<DayRow> = emptyList(),
+    val dayFocus: String? = null,
     val messages: MessagesSummary = MessagesSummary(unread = 0, senders = emptyList()),
 
     /** False until the user lets Bercail read Beeper: the drawer then offers to link it. */
@@ -278,7 +282,8 @@ class HomeViewModel private constructor(
             agendaAllowed = day.agendaAllowed,
             dayOpen = choices.day.open,
             dayDate = day.now.toLocalDate().inWords(),
-            dayRows = dayRowsAt(day.now, day.events, choices.day.focus),
+            dayRows = dayRowsAt(day.now, day.events),
+            dayFocus = choices.day.focus,
             messages = messagesSummary(drawer.conversations),
             messagesAllowed = drawer.messagesAllowed,
             favorites = favorites,
@@ -315,7 +320,7 @@ class HomeViewModel private constructor(
         val dock: List<App>
     )
 
-    /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment the search pointed at. */
+    /** The « Aujourd'hui » sheet as the user left it. [focus] is the appointment it opens on. */
     private data class DaySheet(val open: Boolean = false, val focus: String? = null)
 
     private data class Sheets(val mediaApps: List<MediaAppRow>, val talk: TalkUiState?, val dockMenu: DockMenu?)

@@ -43,22 +43,7 @@ class DayListTest {
         val rows = dayRowsAt(at(10, 30), events)
 
         assertThat(rows.map { it.state })
-            .containsExactly(DayRowState.Past, DayRowState.Highlighted, DayRowState.Coming)
-    }
-
-    @Test
-    fun `venu de la recherche, c'est le rendez-vous choisi qui est mis en avant`() {
-        val rows = dayRowsAt(at(8, 10), events, focus = "Point design")
-
-        assertThat(rows.map { it.state })
-            .containsExactly(DayRowState.Coming, DayRowState.Coming, DayRowState.Highlighted)
-    }
-
-    @Test
-    fun `un rendez-vous choisi dans la recherche est mis en avant même s'il est passé`() {
-        val rows = dayRowsAt(at(16, 0), events, focus = "Stand-up")
-
-        assertThat(rows.first().state).isEqualTo(DayRowState.Highlighted)
+            .containsExactly(DayRowState.Past, DayRowState.Next, DayRowState.Coming)
     }
 
     @Test
@@ -70,11 +55,18 @@ class DayListTest {
     }
 
     @Test
+    fun `une journée entière est marquée comme telle, les rendez-vous à l'heure non`() {
+        val rows = dayRowsAt(at(8, 10), events + wholeDay("Anniversaire de Léa"))
+
+        assertThat(rows.map { it.allDay }).containsExactly(true, false, false, false)
+    }
+
+    @Test
     fun `une journée entière n'est ni atténuée ni mise en avant à la place du prochain rendez-vous`() {
         val rows = dayRowsAt(at(10, 30), events + wholeDay("Anniversaire de Léa"))
 
         assertThat(rows.first().state).isEqualTo(DayRowState.Coming)
-        assertThat(rows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Déjeuner avec Léa")
+        assertThat(rows.single { it.state == DayRowState.Next }.title).isEqualTo("Déjeuner avec Léa")
     }
 
     @Test

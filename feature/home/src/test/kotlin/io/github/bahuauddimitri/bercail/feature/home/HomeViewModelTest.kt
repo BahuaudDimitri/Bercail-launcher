@@ -721,7 +721,7 @@ class HomeViewModelTest {
         assertThat(state.dayRows.map { it.state }).containsExactly(
             DayRowState.Past,
             DayRowState.Past,
-            DayRowState.Highlighted,
+            DayRowState.Next,
             DayRowState.Coming,
             DayRowState.Coming
         )
@@ -733,7 +733,7 @@ class HomeViewModelTest {
         val home = homeOf(world)
         show(home)
         home.onDayOpenChange(true)
-        assertThat(home.state.value.dayRows.first().state).isEqualTo(DayRowState.Highlighted)
+        assertThat(home.state.value.dayRows.first().state).isEqualTo(DayRowState.Next)
 
         world.clock.advanceMinutes(120)
 
@@ -741,17 +741,19 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `venue de la recherche, la feuille met en avant le rendez-vous choisi`() = runTest(dispatcher) {
-        val home = homeOf(FakeWorld(Moment.Matin))
-        show(home)
+    fun `venue de la recherche, la feuille s'ouvre sur le rendez-vous choisi, l'anneau reste sur le prochain`() =
+        runTest(dispatcher) {
+            val home = homeOf(FakeWorld(Moment.Matin))
+            show(home)
 
-        home.onDayOpenChange(true, focus = "Courses")
+            home.onDayOpenChange(true, focus = "Courses")
 
-        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Courses")
-    }
+            assertThat(home.state.value.dayFocus).isEqualTo("Courses")
+            assertThat(home.state.value.dayRows.single { it.state == DayRowState.Next }.title).isEqualTo("Stand-up")
+        }
 
     @Test
-    fun `fermer la feuille oublie le rendez-vous choisi, le prochain reprend sa place`() = runTest(dispatcher) {
+    fun `fermer la feuille oublie le rendez-vous choisi`() = runTest(dispatcher) {
         val home = homeOf(FakeWorld(Moment.Matin))
         show(home)
         home.onDayOpenChange(true, focus = "Courses")
@@ -759,7 +761,8 @@ class HomeViewModelTest {
         home.onDayOpenChange(false)
         home.onDayOpenChange(true)
 
-        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Highlighted }.title).isEqualTo("Stand-up")
+        assertThat(home.state.value.dayFocus).isNull()
+        assertThat(home.state.value.dayRows.single { it.state == DayRowState.Next }.title).isEqualTo("Stand-up")
     }
 
     @Test

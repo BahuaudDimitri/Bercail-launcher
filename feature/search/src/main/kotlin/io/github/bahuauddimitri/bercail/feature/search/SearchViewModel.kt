@@ -66,7 +66,7 @@ interface SearchLinks {
     fun onOpenSettings() = Unit
     fun onOpenConversation(id: String) = Unit
 
-    /** Shows the day with this appointment brought forward. */
+    /** Shows the day, opened on this appointment. */
     fun onOpenDay(eventId: String) = Unit
 
     object None : SearchLinks
