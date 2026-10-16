@@ -32,8 +32,11 @@ interface AgendaSource {
 /** The title of an appointment that has none. */
 const val UNTITLED_EVENT = "Sans titre"
 
-/** The three lines at the top of the home screen. [after] is absent when the day is over. */
-data class Glance(val countdown: String, val title: String, val after: String?)
+/**
+ * The three lines at the top of the home screen. [after] is absent when the day is over. With nothing left to come
+ * today ([leadsToCalendar]), touching them opens the phone's calendar app rather than the day, which has nothing ahead.
+ */
+data class Glance(val countdown: String, val title: String, val after: String?, val leadsToCalendar: Boolean = false)
 
 /** While Bercail may not read the calendar, the top of the home screen offers to link it: never a made-up free day. */
 val closedGlance = Glance("Agenda pas encore relié", "Relier l'agenda", after = "Toucher pour autoriser sa lecture")
@@ -41,7 +44,12 @@ val closedGlance = Glance("Agenda pas encore relié", "Relier l'agenda", after =
 /** What the top of the home screen says at [now]: the next appointment, how far it is, and the one after. */
 fun glanceAt(now: LocalDateTime, events: List<AgendaEvent>): Glance {
     val upcoming = events.filterNot { it.allDay }.sortedBy { it.start }.filter { it.start > now }
-    val next = upcoming.firstOrNull() ?: return Glance("Plus rien aujourd'hui", freeTitle(now), after = null)
+    val next = upcoming.firstOrNull() ?: return Glance(
+        "Plus rien aujourd'hui",
+        freeTitle(now),
+        after = null,
+        leadsToCalendar = true
+    )
     val after = upcoming.getOrNull(1)?.let { "Ensuite ${it.title} à ${it.start.toLocalTime().asClockTime()}" }
     return Glance(
         countdown = "${countdown(now, next.start)} · ${next.start.toLocalTime().asClockTime()}",

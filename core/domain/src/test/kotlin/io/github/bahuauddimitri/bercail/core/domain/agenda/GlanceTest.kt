@@ -2,7 +2,9 @@ package io.github.bahuauddimitri.bercail.core.domain.agenda
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import org.junit.Test
@@ -106,6 +108,29 @@ class GlanceTest {
         assertThat(closedGlance.countdown).isEqualTo("Agenda pas encore relié")
         assertThat(closedGlance.title).isEqualTo("Relier l'agenda")
         assertThat(closedGlance.after).isEqualTo("Toucher pour autoriser sa lecture")
+    }
+
+    @Test
+    fun `quand plus rien n'est à venir, l'en-tête mène à l'app agenda du téléphone`() {
+        assertThat(glanceAt(at(20, 40), events).leadsToCalendar).isTrue()
+        assertThat(glanceAt(at(9, 0), emptyList()).leadsToCalendar).isTrue()
+    }
+
+    @Test
+    fun `tant qu'un rendez-vous est à venir, l'en-tête mène à la journée`() {
+        assertThat(glanceAt(at(13, 40), events).leadsToCalendar).isFalse()
+    }
+
+    @Test
+    fun `une journée entière ne compte pas comme à venir`() {
+        val off = AgendaEvent("off", "Congé", day.atStartOfDay(), day.plusDays(1).atStartOfDay(), allDay = true)
+
+        assertThat(glanceAt(at(8, 10), listOf(off)).leadsToCalendar).isTrue()
+    }
+
+    @Test
+    fun `tant que Bercail n'a pas le droit de lire l'agenda, l'en-tête mène à la journée qui propose de le relier`() {
+        assertThat(closedGlance.leadsToCalendar).isFalse()
     }
 
     private fun at(hour: Int, minute: Int): LocalDateTime = day.atTime(hour, minute)

@@ -6,7 +6,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,8 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwipeBlock
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
@@ -32,20 +32,27 @@ import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 
 /**
  * The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day
- * ([onOpenDay] is given nothing: no appointment in particular).
+ * ([onOpenDay] is given nothing: no appointment in particular), or, with nothing left to come today, the phone's
+ * calendar app ([onOpenCalendar]). Sliding it to the right always opens the calendar app.
  */
 @Composable
-internal fun HomeHeader(state: HomeUiState, onOpenDay: (String?) -> Unit, modifier: Modifier = Modifier) {
+internal fun HomeHeader(
+    state: HomeUiState,
+    onOpenDay: (String?) -> Unit,
+    onOpenCalendar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val calendar = state.glance.leadsToCalendar
     Column(
         modifier
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(start = SIDE, top = TOP, end = TIMELINE_ROOM)
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clickable(onClickLabel = "Voir la journée", role = Role.Button) { onOpenDay(null) },
+        BcSwipeBlock(
+            swipe = BcRowSwipe(OPEN_CALENDAR, onOpenCalendar),
+            onClick = { if (calendar) onOpenCalendar() else onOpenDay(null) },
+            onClickLabel = if (calendar) OPEN_CALENDAR else "Voir la journée",
             verticalArrangement = Arrangement.spacedBy(LINE_GAP)
         ) {
             state.weatherLine?.let { BcWeatherLine(it, state.weather.look, Modifier.padding(bottom = WEATHER_GAP)) }
@@ -91,6 +98,7 @@ private val DayLine.timelineMarks
     get() = marks.map { BcTimelineMark(it.position, label = it.time, next = it.next, title = it.title, key = it.id) }
 
 private const val TIMELINE_DESCRIPTION = "Ligne du temps de la journée"
+private const val OPEN_CALENDAR = "Ouvrir l'agenda"
 internal val SIDE = 22.dp
 private val TOP = 18.dp
 private val TIMELINE_ROOM = 96.dp

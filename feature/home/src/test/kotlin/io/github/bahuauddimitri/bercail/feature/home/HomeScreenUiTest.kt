@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -176,10 +177,10 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `une journée sans rendez-vous le dit dans la feuille`() {
+    fun `une journée sans rendez-vous le dit dans la feuille, ouverte par la ligne du temps`() {
         show(FakeWorld(Moment.Matin).apply { agenda.set(emptyList()) })
 
-        compose.onNodeWithText("Journée libre").performClick()
+        compose.onNodeWithTag(TIMELINE_TAG).performTouchInput { click(Offset(width - 30f, height * 0.9f)) }
 
         compose.onNodeWithText("Rien de prévu aujourd'hui").assertExists()
     }

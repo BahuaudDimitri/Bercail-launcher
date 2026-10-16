@@ -55,6 +55,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
@@ -62,6 +63,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryRow
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwipeBlock
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
@@ -255,6 +257,10 @@ private fun Conversation() {
 @Composable
 private fun Home() {
     var page by remember { mutableIntStateOf(0) }
+    BcSwipeBlock(swipe = BcRowSwipe("Ouvrir l'agenda") {}, onClick = {}) {
+        BcText("Dans 1 h 20 · 09:30", style = BcTextStyle.LabelStrong, color = BcTextColor.Muted)
+        BcText("Stand-up", style = BcTextStyle.AgendaTitle)
+    }
     BcWeatherLine("11° · Ciel dégagé ce matin", BcWeather.Clear)
     BcWeatherLine("14° · Pluie cet après-midi", BcWeather.Rain)
     BcSummaryRow(

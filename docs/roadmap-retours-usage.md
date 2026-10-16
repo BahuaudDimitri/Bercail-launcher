@@ -85,13 +85,18 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 - **Décision (14 octobre) :** en partant de la barre : Apps, Gens, Messages, Agenda, Maison, puis Réglages au bout. Figé par un test. La touche Entrée ouvre toujours la première app.
 - **Décision (16 octobre) :** dans chaque famille, le titre puis les résultats dans leur ordre, de haut en bas — choix de Dimitri le 16 octobre. La meilleure app est donc en haut du groupe « Apps », sous son titre.
 
-### 1.5 Agenda : ouvrir directement quand il n'y a rien — `Précisé`
+### 1.5 Agenda : ouvrir directement quand il n'y a rien — `Livré`
+
+**Livré le 16 octobre 2026** : quand plus rien n'est à venir aujourd'hui (journée vide, rendez-vous tous passés ou déjà commencés, ou seulement des journées entières), toucher l'en-tête ouvre l'app agenda du téléphone, à la date du jour ; tant qu'un rendez-vous est à venir, la feuille s'ouvre comme avant. Glisser l'en-tête vers la droite ouvre toujours l'app agenda, avec « Ouvrir l'agenda » écrit à sa place pendant le geste et proposé aux lecteurs d'écran (nouveau composant `BcSwipeBlock`, sur le glissement de `BcRowSwipe`). L'agenda pas encore relié garde la feuille, qui propose de l'autoriser ; la feuille « Rien de prévu aujourd'hui » reste accessible par la ligne du temps. Pas encore essayé sur le Pixel.
 
 - **Retour :** « Si 0 events, au clic sur agenda, ouvrir directement l'agenda (et/ou au swipe) ».
 - **Décisions (14 octobre) :**
   - Journée vide : toucher l'en-tête ouvre l'app d'agenda du téléphone, au lieu de la feuille « Rien de prévu aujourd'hui ». Avec des rendez-vous, le toucher ouvre la feuille comme aujourd'hui.
   - Glisser l'en-tête vers la droite ouvre l'app d'agenda, toujours, avec ou sans rendez-vous. C'est le geste de la ligne des messages et de la pastille musique (`BcRowSwipe`, « Ouvrir l'agenda ») : glisser à droite = ouvrir l'app.
   - L'app d'agenda est celle du téléphone (intention `CalendarContract`), pas une app choisie dans Bercail.
+- **Décisions (16 octobre) :**
+  - Agenda autorisé et plus aucun rendez-vous à venir aujourd'hui : le toucher ouvre l'app d'agenda ; sinon, la feuille. Les journées entières du jour ne comptent pas comme à venir ; un rendez-vous déjà commencé non plus (comme pour « Plus rien aujourd'hui » dans l'en-tête).
+  - Agenda pas encore autorisé : le toucher ouvre la feuille, qui propose de l'autoriser.
 
 ### 1.6 Pouvoir changer le fond d'écran — `Déplacé au lot 6`
 

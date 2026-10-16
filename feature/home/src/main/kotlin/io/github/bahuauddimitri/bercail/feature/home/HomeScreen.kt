@@ -125,7 +125,11 @@ fun HomeScreen(
                     screen = {
                         Box(Modifier.fillMaxSize()) {
                             Column(Modifier.fillMaxSize()) {
-                                HomeHeader(state, onOpenDay = { actions.onDayOpenChange(true, focus = it) })
+                                HomeHeader(
+                                    state = state,
+                                    onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                                    onOpenCalendar = actions::onOpenCalendar
+                                )
                                 HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
                             }
                             VerticalTimeline(

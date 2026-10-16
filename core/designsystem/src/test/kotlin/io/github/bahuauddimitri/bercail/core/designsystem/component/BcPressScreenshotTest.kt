@@ -86,4 +86,29 @@ class BcPressScreenshotTest {
                 )
             }
         }
+
+    @Test
+    fun `un bloc comme l'en-tête de l'accueil, en train de glisser assez loin pour ouvrir, correspond à sa capture`() =
+        compose.captureComponent(
+            name = "swipe_block_sliding",
+            before = {
+                onNodeWithTag("block").performTouchInput {
+                    down(Offset(40f, centerY))
+                    moveBy(Offset(40.dp.toPx(), 0f))
+                    moveBy(Offset(70.dp.toPx(), 0f))
+                }
+            }
+        ) {
+            Column(Modifier.width(360.dp).padding(start = 120.dp)) {
+                BcSwipeBlock(
+                    swipe = BcRowSwipe("Ouvrir l'agenda") {},
+                    onClick = {},
+                    modifier = Modifier.testTag("block")
+                ) {
+                    BcText("Dans 1 h 20 · 09:30", style = BcTextStyle.LabelStrong, color = BcTextColor.Muted)
+                    BcText("Stand-up", style = BcTextStyle.AgendaTitle)
+                    BcText("Ensuite Déjeuner avec Léa à 12:30", style = BcTextStyle.Label, color = BcTextColor.Muted)
+                }
+            }
+        }
 }

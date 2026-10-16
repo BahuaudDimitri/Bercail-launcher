@@ -2,6 +2,7 @@ package io.github.bahuauddimitri.bercail
 
 import android.Manifest
 import android.content.Intent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -13,6 +14,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -24,6 +28,7 @@ import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeClock
 import io.github.bahuauddimitri.bercail.core.testing.Samples
+import java.time.ZoneId
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -170,6 +175,42 @@ class AgendaUiTest {
             }
 
             awaitNoText("Aujourd'hui")
+        }
+    }
+
+    /** The real calendar of the phone, allowed but empty: on this simulated phone, it holds nothing. */
+    private fun showAnEmptyDay(): ActivityScenario<MainActivity> {
+        allowTheAgenda()
+        app.sources = Sources(app, clock = clock)
+        return ActivityScenario.launch<MainActivity>(MainActivity::class.java).also { awaitText("Journée libre") }
+    }
+
+    /** What Bercail last asked Android to show: the phone's calendar app, on today, or nothing. */
+    private fun calendarShown(): String? = shadowOf(app).nextStartedActivity
+        ?.takeIf { it.action == Intent.ACTION_VIEW }
+        ?.dataString
+
+    private val today = "content://com.android.calendar/time/" +
+        Samples.day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    @Test
+    fun `une journée sans rendez-vous, toucher l'en-tête ouvre l'app agenda du téléphone à la date du jour`() {
+        showAnEmptyDay().use {
+            compose.onNodeWithText("Journée libre").performClick()
+
+            assertThat(calendarShown()).isEqualTo(today)
+            compose.onNodeWithText("Rien de prévu aujourd'hui").assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `glisser l'en-tête vers la droite ouvre l'app agenda du téléphone`() {
+        showAnEmptyDay().use {
+            compose.onNodeWithText("Journée libre").performTouchInput {
+                swipe(start = Offset(10f, centerY), end = Offset(10f + 140.dp.toPx(), centerY))
+            }
+
+            assertThat(calendarShown()).isEqualTo(today)
         }
     }
 
