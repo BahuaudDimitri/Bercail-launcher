@@ -225,6 +225,18 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   3. **Le dock** : `BcDock`, icônes monochromes depuis `:data:apps`, réglage « Dock » (1.7).
   4. **Les feuilles** : recherche, conversation, journée, apps média sur `BcSheet` ; lignes à anneau ; `BcButton` en pilule partout ; réglages à plat.
   5. **Écoute** : l'arche. `BcCover` devient l'arche (300 × 440 dp depuis le bord haut), l'arc de progression tiré en Canvas (rayon 164 dp, angle du doigt autour du centre), temps et textes sous l'arc, lecteur seul ; la transition tenue par le doigt dans le pager de l'accueil, dans les deux sens, sortie en glissant vers le haut ; la barre native cachée sur Écoute seulement (`WindowInsetsControllerCompat`, à vérifier sur le Pixel) ; la pastille gagne son chevron et perd ses points de pagination. Règle de 2.4 appliquée à cet écran.
+- **Vague 1 : décisions (16 octobre)**, prises avec Dimitri avant le code :
+  - Haut du fil : le trait part du bord haut de l'écran, et 7 h est placé juste sous la barre d'état : aucun rendez-vous, titre ni anneau de maintenant ne tombe dans la barre.
+  - L'échelle reste 7 h → minuit, minuit à une place fixe ; le réveil du lendemain est un anneau juste après minuit, sans segment de nuit (la prolongation de `docs/passation-meteo-sur-le-fil.md` est remplacée).
+  - Accent : celui du moment de Brume (pêche le matin, bleu-vert l'après-midi, lavande le soir et la nuit). L'anneau du réveil est dans l'accent du moment : pas de second accent.
+  - Un rendez-vous est passé dès qu'il commence.
+  - Titres du matin : à la hauteur du haut de l'accueil, un rendez-vous n'écrit que son heure.
+  - Toucher le fil sans glisser ouvre la journée sur le rendez-vous le plus proche ; glisser puis lâcher l'ouvre dans l'agenda du téléphone.
+  - Annuler : écarter le doigt vers la gauche, au-delà de la bulle, annule : la bulle s'efface et le fil se détend, et lâcher n'ouvre alors rien ; revenir sur le fil reprend le geste.
+  - Réveil : celui des prochaines 24 h, lu dans Android (`AlarmManager.getNextAlarmClock`), avec la température prévue à son heure ; il apparaît même sans agenda relié. Toucher son anneau, ou lâcher dessus après un glissement (bulle « 07:15 · Réveil »), ouvre les alarmes de l'horloge du téléphone (`AlarmClock.ACTION_SHOW_ALARMS`).
+  - Règle batterie : lire le prochain réveil est permis, programmer une alarme ou un travail reste interdit (`BatteryRulesTest`).
+  - Haut de l'accueil : un commit de plus dans la vague 1 : titre du rendez-vous en 34 sp graisse 200, glyphe météo dans l'accent du moment.
+  - Halo dessiné une fois, sans animation ; `DeviceAlarm` dans `:app`, comme `DeviceClock`.
 
 ### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 

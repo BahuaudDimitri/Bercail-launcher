@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isCloseTo
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
@@ -320,6 +321,27 @@ class BcNavigationUiTest {
 
         compose.onNodeWithText("09:00").assertExists()
         compose.onNodeWithText("11:30").assertExists()
+    }
+
+    @Test
+    fun `le trait monte jusqu'au bord haut, et 7 h est placé sous la place laissée en haut`() {
+        compose.setContent {
+            BcTheme {
+                BcTimeline(
+                    now = 0.3f,
+                    marks = listOf(BcTimelineMark(position = 0f, label = "07:00"), BcTimelineMark(0.5f, "15:30")),
+                    headroom = 40.dp,
+                    modifier = Modifier.height(440.dp).width(64.dp).testTag("line")
+                )
+            }
+        }
+
+        val line = compose.onNodeWithTag("line").getUnclippedBoundsInRoot()
+        val seven = compose.onNodeWithText("07:00").getUnclippedBoundsInRoot()
+        val halfway = compose.onNodeWithText("15:30").getUnclippedBoundsInRoot()
+        assertThat(((seven.top + seven.bottom) / 2 - line.top).value).isCloseTo(40f, 1f)
+        // Halfway between 7 am and midnight: halfway between the room left at the top and the bottom.
+        assertThat(((halfway.top + halfway.bottom) / 2 - line.top).value).isCloseTo(240f, 1f)
     }
 
     @Test

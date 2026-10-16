@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import assertk.assertThat
 import assertk.assertions.isCloseTo
+import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThan
 import org.junit.Test
@@ -47,6 +48,36 @@ class BcColorsTest {
         BcColors.pastels.forEach { pastel ->
             assertThat(BcColors.off.luminanceRatioTo(pastel)).isLessThan(1f)
         }
+    }
+
+    @Test
+    fun `chaque moment a son accent, pêche le matin, bleu-vert la journée, lavande le soir`() {
+        assertThat(BcMoment.Morning.accent).isEqualTo(Color(0xFFF6C28B))
+        assertThat(BcMoment.Day.accent).isEqualTo(Color(0xFF9FD8C4))
+        assertThat(BcMoment.Evening.accent).isEqualTo(Color(0xFFB4A7F0))
+    }
+
+    @Test
+    fun `l'accent de chaque moment se distingue du fond de nuit`() {
+        BcMoment.entries.forEach { moment ->
+            BcColors.backgrounds.forEach { background ->
+                assertThat(contrastRatio(moment.accent, background)).isGreaterThanOrEqualTo(WCAG_SHAPE)
+            }
+        }
+    }
+
+    @Test
+    fun `le halo est l'accent à 55 %`() {
+        BcMoment.entries.forEach { moment ->
+            assertThat(moment.halo).isEqualTo(moment.accent.copy(alpha = 0.55f))
+        }
+    }
+
+    @Test
+    fun `les traits sont blancs à 22 % pour le fil, 35 % pour les anneaux, 20 % pour les boutons`() {
+        assertThat(BcColors.stroke).isEqualTo(BcColors.text.copy(alpha = 0.22f))
+        assertThat(BcColors.strokeRing).isEqualTo(BcColors.text.copy(alpha = 0.35f))
+        assertThat(BcColors.strokeButton).isEqualTo(BcColors.text.copy(alpha = 0.2f))
     }
 
     @Test

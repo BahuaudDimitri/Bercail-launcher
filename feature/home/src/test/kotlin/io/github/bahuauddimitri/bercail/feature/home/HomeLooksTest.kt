@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
 import io.github.bahuauddimitri.bercail.core.testing.Samples
@@ -41,5 +42,13 @@ class HomeLooksTest {
         assertThat(DayPart.Afternoon.brume).isEqualTo(BcBrumeColors.Day)
         assertThat(DayPart.Evening.brume).isEqualTo(BcBrumeColors.Evening)
         assertThat(DayPart.Night.brume).isEqualTo(BcBrumeColors.Evening)
+    }
+
+    @Test
+    fun `le matin prend l'accent pêche, l'après-midi le bleu-vert, le soir et la nuit la lavande`() {
+        assertThat(DayPart.Morning.moment).isEqualTo(BcMoment.Morning)
+        assertThat(DayPart.Afternoon.moment).isEqualTo(BcMoment.Day)
+        assertThat(DayPart.Evening.moment).isEqualTo(BcMoment.Evening)
+        assertThat(DayPart.Night.moment).isEqualTo(BcMoment.Evening)
     }
 }

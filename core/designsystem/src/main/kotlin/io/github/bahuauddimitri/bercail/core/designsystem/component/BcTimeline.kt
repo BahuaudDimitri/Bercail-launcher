@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import android.graphics.BlurMaskFilter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -23,15 +24,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -39,12 +43,14 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_BULGE
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.WAVE_SPREAD
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.bell
 import io.github.bahuauddimitri.bercail.core.designsystem.motion.followFinger
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import kotlin.math.abs
@@ -65,9 +71,10 @@ data class BcTimelineMark(
 )
 
 /**
- * The day from 7 am (top) to midnight (bottom), along the right edge: past as a solid line, future dotted, a
- * glowing dot for now, the time of each appointment beside it and the next one circled. Marks outside the day are
- * not drawn.
+ * The day from 7 am to midnight, along the right edge, in the accent of the moment: the past as a thick line with
+ * a glow, rising to the top edge, the future as a hairline, a ring for now, the time of each appointment beside it,
+ * the past ones in the accent and the next one circled. [headroom] is left free above 7 am (for the status bar):
+ * the line still rises through it to the edge. Marks outside the day are not drawn.
  *
  * With [onOpen], the line answers to the finger like the alphabet of the search: while it is touched, it bends
  * around the finger, a bubble names the appointment the finger is closest to (with a tick at each new one), and
@@ -78,15 +85,17 @@ fun BcTimeline(
     now: Float,
     marks: List<BcTimelineMark>,
     modifier: Modifier = Modifier,
+    headroom: Dp = 0.dp,
     description: String? = null,
     onOpen: ((BcTimelineMark?) -> Unit)? = null
 ) {
     val visible = marks.filter { it.position in 0f..1f }
+    val moment = BcTheme.moment
     val touch = remember { TimelineTouch() }
     val swell = animateFloatAsState(if (touch.down) 1f else 0f, tween(BcTheme.motion.fadeMillis), label = "day wave")
-    // How far the line stands away from its place, this many pixels along it.
-    val lean: Density.(Float) -> Float = { along ->
-        WAVE_BULGE.toPx() * swell.value * bell(along - touch.finger, WAVE_SPREAD.toPx())
+    // How far the line stands away from its place, this many pixels down.
+    val lean: Density.(Float) -> Float = { y ->
+        WAVE_BULGE.toPx() * swell.value * bell(y - touch.finger, WAVE_SPREAD.toPx())
     }
     val bubbleShown by remember { derivedStateOf { swell.value > 0f && touch.last >= 0 } }
     Box(
@@ -103,20 +112,30 @@ fun BcTimeline(
             }
     ) {
         Canvas(Modifier.matchParentSize()) {
-            drawLine(now.coerceIn(0f, 1f), visible, bent = swell.value > 0f) { lean(it) }
+            val day = DayScale(headroom.toPx(), size.height)
+            drawLine(now.coerceIn(0f, 1f), visible, day, moment, bent = swell.value > 0f) { lean(it) }
         }
         visible.forEachIndexed { index, mark ->
+            val past = mark.position <= now
             BcText(
                 text = mark.label,
                 style = BcTextStyle.Micro,
                 color = if (mark.next || index == touch.reached) BcTextColor.Primary else BcTextColor.Muted,
                 maxLines = 1,
-                modifier = Modifier.matchParentSize().placeBeside(mark.position, lean)
+                modifier = Modifier
+                    .matchParentSize()
+                    .placeBeside(mark.position, headroom, lean)
+                    .graphicsLayer { alpha = if (past && !mark.next) PAST_LABEL_ALPHA else 1f }
             )
         }
-        if (onOpen != null) FingerZone(visible, touch, onOpen)
+        if (onOpen != null) FingerZone(visible, headroom, touch, onOpen)
         if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), swell, touch)
     }
+}
+
+/** Where each moment of the day falls: 7 am [headroom] pixels down, midnight at the bottom of [length]. */
+private class DayScale(private val headroom: Float, private val length: Float) {
+    fun yOf(fraction: Float): Float = headroom + fraction * (length - headroom).coerceAtLeast(0f)
 }
 
 /** Where the finger is on the line, and which appointment it is closest to. */
@@ -124,7 +143,7 @@ private class TimelineTouch {
     /** The length of the line, in pixels. */
     var length by mutableIntStateOf(0)
 
-    /** Where the finger is along the line, in pixels; kept after it lifts, while the wave flattens. */
+    /** Where the finger is down the line, in pixels; kept after it lifts, while the wave flattens. */
     var finger by mutableFloatStateOf(0f)
     var down by mutableStateOf(false)
 
@@ -140,16 +159,23 @@ private class TimelineTouch {
  * the times beside it, so that the rest of the screen keeps its own gestures.
  */
 @Composable
-private fun BoxScope.FingerZone(marks: List<BcTimelineMark>, touch: TimelineTouch, onOpen: (BcTimelineMark?) -> Unit) {
+private fun BoxScope.FingerZone(
+    marks: List<BcTimelineMark>,
+    headroom: Dp,
+    touch: TimelineTouch,
+    onOpen: (BcTimelineMark?) -> Unit
+) {
     val current by rememberUpdatedState(marks)
     val open by rememberUpdatedState(onOpen)
     val haptics by rememberUpdatedState(LocalHapticFeedback.current)
+    val top by rememberUpdatedState(with(LocalDensity.current) { headroom.toPx() })
     Box(
         Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE).followFinger(
-            onMove = { along ->
-                touch.finger = along.coerceIn(0f, touch.length.toFloat())
+            onMove = { y ->
+                touch.finger = y.coerceIn(0f, touch.length.toFloat())
                 touch.down = true
-                val closest = current.indices.minByOrNull { abs(current[it].position * touch.length - touch.finger) }
+                val day = DayScale(top, touch.length.toFloat())
+                val closest = current.indices.minByOrNull { abs(day.yOf(current[it].position) - touch.finger) }
                 if (closest != touch.reached) {
                     touch.reached = closest
                     if (closest != null) {
@@ -199,84 +225,107 @@ private fun BoxScope.Bubble(text: String, swell: State<Float>, touch: TimelineTo
     }
 }
 
-private fun DrawScope.drawLine(now: Float, marks: List<BcTimelineMark>, bent: Boolean, lean: (Float) -> Float) {
+/**
+ * The line itself: from the top edge down to now, thick, in the accent and with its glow; from now to midnight, a
+ * hairline. Then the dots of the appointments and the ring of now. Everything is still: nothing here animates.
+ */
+private fun DrawScope.drawLine(
+    now: Float,
+    marks: List<BcTimelineMark>,
+    day: DayScale,
+    moment: BcMoment,
+    bent: Boolean,
+    lean: (Float) -> Float
+) {
     val inset = LINE_INSET.toPx()
-    val length = size.height
-
-    /** The point of the line at this share of the day, pushed away from its place around the finger. */
-    fun at(fraction: Float): Offset {
-        val along = fraction * length
-        val away = if (bent) lean(along) else 0f
-        return Offset(size.width - inset - away, along)
-    }
+    fun at(y: Float) = Offset(size.width - inset - (if (bent) lean(y) else 0f), y)
 
     fun stretch(from: Float, to: Float) = Path().apply {
         val start = at(from)
         moveTo(start.x, start.y)
-        var fraction = from
-        while (fraction < to) {
-            fraction = (fraction + BEND_STEP.toPx() / length).coerceAtMost(to)
-            val next = at(fraction)
+        var y = from
+        while (y < to) {
+            y = if (bent) (y + BEND_STEP.toPx()).coerceAtMost(to) else to
+            val next = at(y)
             lineTo(next.x, next.y)
         }
     }
 
-    val width = LINE_WIDTH.toPx()
-    val dash = PathEffect.dashPathEffect(floatArrayOf(DASH.toPx(), GAP.toPx()))
-    val future = BcColors.text.copy(alpha = FUTURE_ALPHA)
-    val past = BcColors.text.copy(alpha = PAST_ALPHA)
-    if (bent && length > 0f) {
-        drawPath(stretch(now, 1f), future, style = Stroke(width, cap = StrokeCap.Round, pathEffect = dash))
-        drawPath(stretch(0f, now), past, style = Stroke(width, cap = StrokeCap.Round))
-    } else {
-        drawLine(future, at(now), at(1f), width, StrokeCap.Round, dash)
-        drawLine(past, at(0f), at(now), width, StrokeCap.Round)
-    }
+    val nowY = day.yOf(now)
+    drawPath(stretch(nowY, day.yOf(1f)), BcColors.stroke, style = Stroke(FUTURE_WIDTH.toPx(), cap = StrokeCap.Round))
+    val past = stretch(0f, nowY)
+    drawGlow(past, moment)
+    drawPath(past, moment.accent, style = Stroke(PAST_WIDTH.toPx(), cap = StrokeCap.Round))
     marks.forEach { mark ->
-        val center = at(mark.position)
-        drawCircle(BcColors.text, MARK_RADIUS.toPx(), center)
-        if (mark.next) drawCircle(BcColors.text, NEXT_RADIUS.toPx(), center, style = Stroke(width))
+        val center = at(day.yOf(mark.position))
+        if (mark.next) {
+            drawCircle(BcColors.nightTop, NEXT_GAP.toPx(), center)
+            drawCircle(moment.accent, NEXT_RING.toPx(), center, style = Stroke(RING_WIDTH.toPx()))
+        }
+        val color = if (mark.position <= now) moment.accent else BcColors.text.copy(alpha = FUTURE_DOT_ALPHA)
+        drawCircle(color, MARK_RADIUS.toPx(), center)
     }
-    val dot = at(now)
-    drawCircle(
-        Brush.radialGradient(
-            listOf(BcColors.text.copy(alpha = GLOW_ALPHA), BcColors.text.copy(alpha = 0f)),
-            dot,
-            GLOW.toPx()
-        ),
-        GLOW.toPx(),
-        dot
-    )
-    drawCircle(BcColors.text, NOW_RADIUS.toPx(), dot)
+    drawNow(at(nowY), moment)
+}
+
+/** The soft glow of the accent under [path]. */
+private fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { canvas ->
+    val paint = Paint().apply {
+        color = moment.halo
+        style = PaintingStyle.Stroke
+        strokeWidth = GLOW_WIDTH.toPx()
+        strokeCap = StrokeCap.Round
+    }
+    paint.asFrameworkPaint().maskFilter = BlurMaskFilter(GLOW_BLUR.toPx(), BlurMaskFilter.Blur.NORMAL)
+    canvas.drawPath(path, paint)
+}
+
+/** The ring of now: dark inside, circled in the accent, with its glow. */
+private fun DrawScope.drawNow(center: Offset, moment: BcMoment) {
+    val glow = NOW_GLOW.toPx()
+    drawCircle(Brush.radialGradient(listOf(moment.halo, moment.halo.copy(alpha = 0f)), center, glow), glow, center)
+    drawCircle(BcColors.nightTop.copy(alpha = NOW_OUTLINE_ALPHA), (NOW_RADIUS + NOW_OUTLINE).toPx(), center)
+    drawCircle(BcColors.nightTop, NOW_RADIUS.toPx(), center)
+    val border = NOW_BORDER.toPx()
+    drawCircle(moment.accent, NOW_RADIUS.toPx() - border / 2, center, style = Stroke(border))
 }
 
 /**
  * Places a label beside the line, centered on its fraction of the day and kept inside the timeline; it follows the
  * line when it [lean]s away from its place.
  */
-private fun Modifier.placeBeside(fraction: Float, lean: Density.(Float) -> Float) = layout { measurable, constraints ->
-    val label = measurable.measure(Constraints())
-    layout(constraints.maxWidth, constraints.maxHeight) {
-        val away = lean(fraction * constraints.maxHeight).roundToInt()
-        val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
-        val y = (fraction * constraints.maxHeight - label.height / 2f).roundToInt()
-        label.place(x - away, y.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
+private fun Modifier.placeBeside(fraction: Float, headroom: Dp, lean: Density.(Float) -> Float) =
+    layout { measurable, constraints ->
+        val label = measurable.measure(Constraints())
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            val y = DayScale(headroom.toPx(), constraints.maxHeight.toFloat()).yOf(fraction)
+            val away = lean(y).roundToInt()
+            val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
+            val top = (y - label.height / 2f).roundToInt()
+            label.place(x - away, top.coerceIn(0, (constraints.maxHeight - label.height).coerceAtLeast(0)))
+        }
     }
-}
 
 private const val OPEN_DAY = "Voir la journée"
-private const val PAST_ALPHA = 0.55f
-private const val FUTURE_ALPHA = 0.35f
-private const val GLOW_ALPHA = 0.6f
+private const val PAST_LABEL_ALPHA = 0.5f
+private const val FUTURE_DOT_ALPHA = 0.9f
+private const val NOW_OUTLINE_ALPHA = 0.7f
 private val LINE_INSET = 12.dp
-private val LINE_WIDTH = 1.5.dp
-private val DASH = 3.dp
-private val GAP = 5.dp
+private val PAST_WIDTH = 3.dp
+private val FUTURE_WIDTH = 1.dp
+
+/** The glow of the past: a blurred stroke under it, drawn once, never animated. */
+private val GLOW_WIDTH = 6.dp
+private val GLOW_BLUR = 7.dp
 private val MARK_RADIUS = 3.dp
-private val NEXT_RADIUS = 7.dp
-private val NOW_RADIUS = 3.5.dp
-private val GLOW = 11.dp
-private val LABEL_GAP = 12.dp
+private val NEXT_GAP = 6.dp
+private val NEXT_RING = 6.75.dp
+private val RING_WIDTH = 1.5.dp
+private val NOW_RADIUS = 8.dp
+private val NOW_BORDER = 2.5.dp
+private val NOW_OUTLINE = 4.dp
+private val NOW_GLOW = 18.dp
+private val LABEL_GAP = 18.dp
 
 /** How finely the bent line is drawn. */
 private val BEND_STEP = 4.dp

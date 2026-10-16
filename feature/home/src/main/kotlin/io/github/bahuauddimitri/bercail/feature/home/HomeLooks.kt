@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
@@ -64,4 +65,12 @@ internal val DayPart.brume: BcBrumeColors
         DayPart.Morning -> BcBrumeColors.Morning
         DayPart.Afternoon -> BcBrumeColors.Day
         DayPart.Evening, DayPart.Night -> BcBrumeColors.Evening
+    }
+
+/** The accent of the moment follows the colors of Brume: peach in the morning, blue-green by day, lavender later. */
+internal val DayPart.moment: BcMoment
+    get() = when (this) {
+        DayPart.Morning -> BcMoment.Morning
+        DayPart.Afternoon -> BcMoment.Day
+        DayPart.Evening, DayPart.Night -> BcMoment.Evening
     }

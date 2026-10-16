@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
 import io.github.bahuauddimitri.bercail.core.designsystem.captureComponent
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import org.junit.Rule
 import org.junit.Test
@@ -46,6 +48,27 @@ class BcNavigationScreenshotTest {
             Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
                 BcAlphabetRail(alphabet, onLetter = {}, modifier = Modifier.height(360.dp))
                 BcTimeline(now = 0.1f, marks = day, modifier = Modifier.height(360.dp).width(64.dp))
+            }
+        }
+
+    @Test
+    fun `le fil au matin, à la journée et au soir correspond à sa capture`() =
+        compose.captureComponent("timeline_moments") {
+            Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.l)) {
+                listOf(
+                    BcMoment.Morning to 0.08f,
+                    BcMoment.Day to 0.46f,
+                    BcMoment.Evening to 0.8f
+                ).forEach { (moment, now) ->
+                    BcMomentScope(moment) {
+                        BcTimeline(
+                            now = now,
+                            marks = day.map { it.copy(next = it == day.firstOrNull { mark -> mark.position > now }) },
+                            headroom = 24.dp,
+                            modifier = Modifier.height(360.dp).width(64.dp)
+                        )
+                    }
+                }
             }
         }
 

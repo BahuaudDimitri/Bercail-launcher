@@ -3,11 +3,13 @@ package io.github.bahuauddimitri.bercail.feature.home
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -37,6 +39,13 @@ class HomeTimelineUiTest {
     }
 
     private val line get() = compose.onNodeWithTag(TIMELINE_TAG)
+
+    @Test
+    fun `le fil part du bord haut de l'écran`() {
+        show()
+
+        assertThat(line.getUnclippedBoundsInRoot().top).isEqualTo(0.dp)
+    }
 
     @Test
     fun `toucher la ligne du temps ouvre la feuille de la journée`() {

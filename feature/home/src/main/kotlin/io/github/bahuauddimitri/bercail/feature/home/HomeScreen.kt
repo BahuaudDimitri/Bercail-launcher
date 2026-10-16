@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
@@ -117,34 +118,36 @@ fun HomeScreen(
     val fading = Modifier.graphicsLayer { alpha = uncovered }
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
-            HomeBackdrop(state, brume)
-            // Under a sheet, a screen reader must not read the screen either.
-            Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
-                DrawerOverScreen(
-                    searching = search?.open == true,
-                    screen = {
-                        Box(Modifier.fillMaxSize()) {
-                            Column(Modifier.fillMaxSize()) {
-                                HomeHeader(
+            BcMomentScope(state.dayPart.moment) {
+                HomeBackdrop(state, brume)
+                // Under a sheet, a screen reader must not read the screen either.
+                Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
+                    DrawerOverScreen(
+                        searching = search?.open == true,
+                        screen = {
+                            Box(Modifier.fillMaxSize()) {
+                                Column(Modifier.fillMaxSize()) {
+                                    HomeHeader(
+                                        state = state,
+                                        onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                                        onOpenCalendar = actions::onOpenCalendar
+                                    )
+                                    HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
+                                }
+                                VerticalTimeline(
                                     state = state,
                                     onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                    onOpenCalendar = actions::onOpenCalendar
+                                    modifier = Modifier.align(Alignment.TopEnd).then(fading)
                                 )
-                                HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
                             }
-                            VerticalTimeline(
-                                state = state,
-                                onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                modifier = Modifier.align(Alignment.TopEnd).then(fading)
-                            )
-                        }
-                    },
-                    drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search) } }
-                )
+                        },
+                        drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search) } }
+                    )
+                }
+                DaySheet(state, actions, links)
+                ListenSheet(state, actions, links)
+                TalkSheet(state, actions, links)
             }
-            DaySheet(state, actions, links)
-            ListenSheet(state, actions, links)
-            TalkSheet(state, actions, links)
         }
     }
 }

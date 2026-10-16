@@ -8,9 +8,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -64,7 +67,8 @@ internal fun HomeHeader(
 }
 
 /**
- * The day along the right edge, from 7 am under the status bar to midnight above the drawer.
+ * The day along the right edge, rising from the top edge of the screen (7 am under the status bar) to midnight
+ * above the drawer, in the accent of the moment.
  * It fades and retracts on the Listen screen. Sliding a finger along it names each appointment, and lifting it opens
  * the day on the one reached.
  */
@@ -82,12 +86,13 @@ internal fun VerticalTimeline(state: HomeUiState, onOpenDay: (String?) -> Unit, 
         BcTimeline(
             now = state.dayLine.now,
             marks = state.dayLine.timelineMarks,
+            // The line rises to the top edge; 7 am waits under the status bar, so that nothing of the day hides there.
+            headroom = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + UNDER_STATUS_BAR,
             description = TIMELINE_DESCRIPTION,
             onOpen = { onOpenDay(it?.key) },
             modifier = Modifier
                 .fillMaxHeight()
-                .statusBarsPadding()
-                .padding(top = VERTICAL_TOP, end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)
+                .padding(end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)
                 .width(VERTICAL_WIDTH)
                 .testTag(TIMELINE_TAG)
         )
@@ -104,7 +109,9 @@ private val TOP = 18.dp
 private val TIMELINE_ROOM = 96.dp
 private val LINE_GAP = 3.dp
 private val WEATHER_GAP = 6.dp
-private val VERTICAL_TOP = 34.dp
+
+/** Room between the status bar and 7 am: the ring of now, at 7 am, stays clear of the bar. */
+private val UNDER_STATUS_BAR = 14.dp
 private val VERTICAL_EDGE = 12.dp
 private val VERTICAL_BOTTOM = 24.dp
 private val VERTICAL_WIDTH = 78.dp

@@ -74,6 +74,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoCountdown
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
@@ -320,6 +322,14 @@ private fun Navigation() {
             reached.value = it
         }, modifier = Modifier.height(TALL))
         BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpen = {})
+    }
+    // The same line at each moment of the day, in its accent.
+    Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
+        BcMoment.entries.forEach { moment ->
+            BcMomentScope(moment) {
+                BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH))
+            }
+        }
     }
 }
 

@@ -58,6 +58,14 @@ object BcColors {
     /** Placeholder tile behind an app or result without its own icon. */
     val appTile = Color(0xFFD9D4E6)
 
+    /**
+     * Strokes: everything drawn as a line. The future of the line of the day and the hairlines, the rings of the
+     * lists, the edge of the buttons.
+     */
+    val stroke = text.copy(alpha = 0.22f)
+    val strokeRing = text.copy(alpha = 0.35f)
+    val strokeButton = text.copy(alpha = 0.2f)
+
     /** A home control that is switched off. */
     val off = Color(0xFF4A4A5C)
 

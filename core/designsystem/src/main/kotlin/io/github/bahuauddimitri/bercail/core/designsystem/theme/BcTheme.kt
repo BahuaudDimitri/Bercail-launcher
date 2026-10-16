@@ -15,6 +15,7 @@ import androidx.compose.ui.text.TextStyle
 internal val LocalBcMotion = staticCompositionLocalOf { BcMotion.forAnimatorScale(1f) }
 internal val LocalBcContentColor = compositionLocalOf { BcColors.text }
 internal val LocalBcTextStyle = compositionLocalOf<TextStyle> { BcType.body }
+internal val LocalBcMoment = compositionLocalOf { BcMoment.Day }
 
 /**
  * Root of every Bercail screen: provides the motion settings, the default text color and style, and the veil shown
@@ -40,6 +41,11 @@ object BcTheme {
     val motion: BcMotion
         @Composable @ReadOnlyComposable
         get() = LocalBcMotion.current
+
+    /** The moment of the screen, which gives it its accent. */
+    val moment: BcMoment
+        @Composable @ReadOnlyComposable
+        get() = LocalBcMoment.current
 
     internal val contentColor: Color
         @Composable @ReadOnlyComposable

@@ -54,4 +54,22 @@ class BcThemeUiTest {
 
         assertThat(veil).isEqualTo(BcPressVeil.OnDark)
     }
+
+    @Test
+    fun `sans moment donné, l'accent est celui de la journée`() {
+        var moment: BcMoment? = null
+
+        compose.setContent { BcTheme { moment = BcTheme.moment } }
+
+        assertThat(moment).isEqualTo(BcMoment.Day)
+    }
+
+    @Test
+    fun `le moment donné à un écran colore tout ce qu'il contient`() {
+        var moment: BcMoment? = null
+
+        compose.setContent { BcTheme { BcMomentScope(BcMoment.Evening) { moment = BcTheme.moment } } }
+
+        assertThat(moment).isEqualTo(BcMoment.Evening)
+    }
 }
