@@ -13,15 +13,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
+import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import kotlin.math.abs
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -122,5 +128,83 @@ class BcFrostUiTest {
         }
 
         assertThat(glass()).isEqualTo(SheetGlass.Frosted)
+    }
+
+    /** The band over the background, risen for the search while [open]. */
+    private fun showSearch() = compose.setContent {
+        BcTheme {
+            frost = rememberBcFrost()
+            Box(Modifier.fillMaxSize()) {
+                Canvas(Modifier.fillMaxSize().frostSource(frost)) { drawRect(tint) }
+                BcBand(
+                    onOpen = {},
+                    modifier = Modifier.align(Alignment.BottomCenter).testTag(BAND),
+                    searching = open,
+                    frost = if (frostable) frost else null
+                ) {
+                    BcText("Liste", modifier = Modifier.weight(1f, fill = open))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `la recherche plein écran se givre sur Brume immobile, comme les feuilles`() {
+        showSearch()
+
+        assertThat(glass()).isEqualTo(SheetGlass.Frosted)
+        assertThat(frost.recordings).isGreaterThan(0)
+    }
+
+    @Test
+    fun `sans Brume immobile derrière elle, la recherche garde un verre teinté`() {
+        frostable = false
+        showSearch()
+
+        assertThat(glass()).isEqualTo(SheetGlass.Tinted)
+        assertThat(frost.recordings).isEqualTo(0)
+    }
+
+    @Test
+    fun `en économie d'énergie, la recherche n'est jamais floutée`() {
+        shadowOf(context.getSystemService(PowerManager::class.java)).setIsPowerSaveMode(true)
+        showSearch()
+
+        assertThat(glass()).isEqualTo(SheetGlass.Tinted)
+    }
+
+    @Test
+    fun `recherche fermée, Brume n'est plus enregistrée pour son verre`() {
+        showSearch()
+        open = false
+        compose.waitForIdle()
+        val before = frost.recordings
+
+        tint = Color.Cyan
+        compose.waitForIdle()
+
+        assertThat(frost.recordings).isEqualTo(before)
+    }
+
+    @Test
+    fun `le verre de la recherche n'a ni coins ni liseré sur les côtés`() {
+        frostable = false
+        showSearch()
+
+        val pixels = compose.onNodeWithTag(BAND).captureToImage().toPixelMap()
+        val middle = pixels.height / 2
+        // The top corner is glass, not the background: no rounded corner.
+        assertThat(pixels[1, 1].distanceTo(Color.Magenta)).isGreaterThan(FAR)
+        // The side is the same glass as the middle: no light edge.
+        assertThat(pixels[0, middle].distanceTo(pixels[pixels.width / 2, middle])).isLessThan(CLOSE)
+    }
+
+    private fun Color.distanceTo(other: Color) =
+        maxOf(abs(red - other.red), abs(green - other.green), abs(blue - other.blue))
+
+    private companion object {
+        const val BAND = "band"
+        const val FAR = 0.3f
+        const val CLOSE = 0.02f
     }
 }

@@ -2,8 +2,8 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -35,30 +35,32 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
  * The flat band at the bottom of the home screen: no background, no handle. Sliding more than 24 dp up anywhere on
  * it calls [onOpen], which opens the sheet over it; a slide never presses a button. Without [onOpen] (the band as a
  * remote on the Listen screen), it opens nothing. Its height follows its content smoothly.
- * While [searching], it rises to the whole screen, under the status bar, in a nearly opaque glass; its content
- * fills it.
+ * While [searching], it rises to the whole screen, under the status bar, in the glass of the sheets cut to the
+ * screen: no corner, no edge, darker (80 %), frosted over a still [frost]; its content fills it.
  */
 @Composable
 fun BcBand(
     onOpen: (() -> Unit)?,
     modifier: Modifier = Modifier,
     searching: Boolean = false,
+    frost: BcFrost? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val motion = BcTheme.motion
     val open by rememberUpdatedState(onOpen)
-    val glass by animateColorAsState(
-        targetValue = if (searching) BcColors.glassSearch else Color.Transparent,
+    val shown by animateFloatAsState(
+        targetValue = if (searching) 1f else 0f,
         animationSpec = tween(motion.fadeMillis),
         label = "band glass"
     )
+    // Frosted only while searching: folded, the band has no glass at all.
+    val glass = rememberGlass(frost?.takeIf { searching }, GlassCut.Full)
     // While searching, the band is the whole screen: nothing to slide.
     val opens = onOpen != null && !searching
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(BcShapes.sheet)
-            .background(glass)
+            .glass(glass) { shown }
             .then(if (opens) Modifier.opensOnSlideUp { open?.invoke() } else Modifier)
             .animateContentSize(tween(motion.drawerMillis, easing = motion.easing))
             .then(if (searching) Modifier.fillMaxHeight().statusBarsPadding() else Modifier)

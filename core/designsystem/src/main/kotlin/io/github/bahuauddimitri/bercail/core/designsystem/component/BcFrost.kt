@@ -69,15 +69,21 @@ internal val SheetGlassKey = SemanticsPropertyKey<SheetGlass>("SheetGlass")
 
 /**
  * Draws behind a sheet the background of [frost], blurred by 36 dp and saturated by 1.7, at the place it has on
- * the screen. [blurred] holds the blurred copy; [origin] is where the sheet lies on the screen.
+ * the screen. [blurred] holds the blurred copy; [shown] is how much of it shows; [origin] is where the sheet lies on
+ * the screen.
  */
-internal fun Modifier.frostedBehind(frost: BcFrost, blurred: GraphicsLayer, origin: () -> Offset): Modifier =
-    drawBehind {
-        blurred.renderEffect = frostEffect(this)
-        blurred.record(frost.picture.size) { drawLayer(frost.picture) }
-        val shift = frost.origin - origin()
-        translate(shift.x, shift.y) { drawLayer(blurred) }
-    }
+internal fun Modifier.frostedBehind(
+    frost: BcFrost,
+    blurred: GraphicsLayer,
+    shown: () -> Float,
+    origin: () -> Offset
+): Modifier = drawBehind {
+    blurred.renderEffect = frostEffect(this)
+    blurred.alpha = shown()
+    blurred.record(frost.picture.size) { drawLayer(frost.picture) }
+    val shift = frost.origin - origin()
+    translate(shift.x, shift.y) { drawLayer(blurred) }
+}
 
 private fun frostEffect(density: Density) = with(density) {
     val radius = FROST_BLUR.toPx()

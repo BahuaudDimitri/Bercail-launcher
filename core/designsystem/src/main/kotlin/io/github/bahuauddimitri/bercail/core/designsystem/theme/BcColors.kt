@@ -31,6 +31,9 @@ object BcColors {
     val sheetEdge = Color.White.copy(alpha = 0.16f)
     val sheetSheen = Color.White.copy(alpha = 0.11f)
 
+    /** The fainter sheen at the top of the search, which fills the screen. */
+    val searchSheen = Color.White.copy(alpha = 0.05f)
+
     /** Veil behind an open sheet. */
     val scrim = Color(0xFF08080E).copy(alpha = 0.4f)
 

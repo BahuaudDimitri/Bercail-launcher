@@ -1,8 +1,13 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -10,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
 import io.github.bahuauddimitri.bercail.core.designsystem.captureComponent
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +61,26 @@ class BcBandScreenshotTest {
                 BcRing("Volets", "ouverts", BcRingMark.Icon(BcIcons.Shutters), BcPastel.Blue, on = true, onToggle = {})
                 BcRing("Chauffage", "18 °C", BcRingMark.Icon(BcIcons.Flame), BcPastel.Coral, on = false, onToggle = {})
                 BcRing("Tout", BcRingMark.Icon(BcIcons.House), {}, tone = BcRingTone.Off)
+            }
+        }
+    }
+
+    @Test
+    fun `la recherche plein écran correspond à sa capture`() = compose.captureComponent("band_search") {
+        // Two pastel blocks behind it show the glass: no corner, no edge, 80 % dark.
+        Box(Modifier.size(380.dp, 560.dp)) {
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth().weight(1f).background(BcColors.pastelCoral))
+                Box(Modifier.fillMaxWidth().weight(1f).background(BcColors.pastelBlue))
+            }
+            BcBand(onOpen = {}, searching = true) {
+                Column(Modifier.weight(1f)) {
+                    BcPanelHeader("Toutes les apps", onBack = {}, backDescription = "Fermer la recherche")
+                    BcSectionLabel("Dock")
+                    BcListRow("Chrome", onClick = {}, leading = BcLeading.Icon(BcIcons.Web))
+                    BcListRow("Beeper", onClick = {}, leading = BcLeading.Initials("B"))
+                }
+                BcSearchField(value = "", onValueChange = {})
             }
         }
     }
