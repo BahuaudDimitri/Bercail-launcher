@@ -1,11 +1,7 @@
 package io.github.bahuauddimitri.bercail
 
 import android.content.Intent
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -13,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import assertk.assertThat
@@ -83,9 +80,11 @@ class LauncherDeviceTest {
     }
 
     @Test
-    fun `toucher l’en-tête ouvre la feuille de la journée et sa poignée la referme`() {
-        awaitDescription("Chercher")
-        compose.onNode(opensTheDay).performClick()
+    fun `la ligne du temps ouvre la feuille de la journée et sa poignée la referme`() {
+        // Whatever the phone's calendar holds: the top of the home screen opens the calendar app on a day with
+        // nothing left to come, while the line of the day always opens the day.
+        awaitDescription(TIMELINE)
+        compose.onNodeWithContentDescription(TIMELINE).performSemanticsAction(SemanticsActions.OnClick)
         awaitText("Aujourd'hui")
 
         compose.onNodeWithContentDescription("Fermer la feuille").performClick()
@@ -106,14 +105,6 @@ class LauncherDeviceTest {
 
     private companion object {
         const val TIMEOUT = 10_000L
-
-        /**
-         * The top of the home screen, whatever it says: with or without the right to read the calendar. The line of
-         * the day opens the day with the same words, but it is not a button.
-         */
-        val opensTheDay = SemanticsMatcher("l’en-tête ouvre la journée") {
-            it.config.getOrNull(SemanticsProperties.Role) == Role.Button &&
-                it.config.getOrNull(SemanticsActions.OnClick)?.label == "Voir la journée"
-        }
+        const val TIMELINE = "Ligne du temps de la journée"
     }
 }
