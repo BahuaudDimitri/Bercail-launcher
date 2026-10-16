@@ -5,4 +5,4 @@ Les apps installées sur le téléphone et les liens vers l'extérieur, derrièr
 - **Expose** : `DeviceApps` (liste des apps qu'on peut ouvrir, leur icône, leur dessin d'une seule couleur pour le dock, leur lancement) et `DevicePhone` (recherche web, Play Store, Paramètres du téléphone, choix de l'écran d'accueil, page de Bercail dans les Paramètres).
 - **Ne doit pas** : demander l'accès à la liste complète des paquets (`QUERY_ALL_PACKAGES`) : seules les apps qui s'ouvrent depuis un launcher sont visibles, déclarées dans son manifeste.
 - **Batterie** : Android n'est interrogé que lorsque quelqu'un écoute la liste (recherche ouverte), puis prévient lui-même des installations et suppressions ; rien ne reste enregistré ensuite. Noms et icônes sont lus hors du fil principal.
-- **Tests** : `DeviceAppsUiTest`, `AppGlyphsUiTest` (Robolectric) ; sur le téléphone, la sonde `GlyphProbeDeviceTest` dit comment chaque app sera dessinée (`adb logcat -s BercailGlyphs`).
+- **Tests** : `DeviceAppsUiTest`, `AppGlyphsUiTest` (Robolectric).
