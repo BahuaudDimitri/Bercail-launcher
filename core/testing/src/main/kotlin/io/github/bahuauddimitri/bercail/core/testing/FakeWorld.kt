@@ -31,6 +31,9 @@ enum class Moment(
 /** Every source of the home screen, faked and filled with the prototype's data at a given [moment]. */
 class FakeWorld(moment: Moment = Moment.Matin, playing: Boolean = true) {
     val clock = FakeClock(Samples.day.atTime(moment.time))
+
+    /** The alarm of the next morning, at 7:15. */
+    val alarm = FakeAlarmSource(Samples.day.plusDays(1).atTime(7, 15))
     val access = FakeAccess()
     val agenda = FakeAgendaSource(Samples.eventsOn(Samples.day))
     val weather = FakeWeatherSource(moment.forecast)

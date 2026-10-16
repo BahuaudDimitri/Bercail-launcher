@@ -4,6 +4,7 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
+import io.github.bahuauddimitri.bercail.core.domain.time.AlarmSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -47,6 +48,18 @@ class FakeAgendaSource(events: List<AgendaEvent> = emptyList()) : AgendaSource {
 
     fun set(events: List<AgendaEvent>) {
         this.events.value = events
+    }
+}
+
+/** An alarm clock holding the [next] alarm. It counts how many times its alarms were shown. */
+class FakeAlarmSource(next: LocalDateTime? = null) : AlarmSource {
+    override val next = MutableStateFlow(next)
+
+    var shown = 0
+        private set
+
+    override fun openAlarms() {
+        shown++
     }
 }
 

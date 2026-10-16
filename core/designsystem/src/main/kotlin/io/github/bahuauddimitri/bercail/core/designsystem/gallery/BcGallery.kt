@@ -69,6 +69,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineEnd
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcUndoCountdown
@@ -321,7 +322,13 @@ private fun Navigation() {
         BcAlphabetRail(listOf("A", "B", "D", "G", "M", "S", "W"), onLetter = {
             reached.value = it
         }, modifier = Modifier.height(TALL))
-        BcTimeline(now = NOW, marks = day, modifier = Modifier.height(TALL).width(TIMELINE_WIDTH), onOpenDay = {})
+        BcTimeline(
+            now = NOW,
+            marks = day,
+            modifier = Modifier.height(TALL).width(TIMELINE_WIDTH),
+            end = BcTimelineEnd("07:15", "réveil · 9°", "Réveil demain à 07:15"),
+            onOpenDay = {}
+        )
     }
     // The same line at each moment of the day, in its accent.
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {

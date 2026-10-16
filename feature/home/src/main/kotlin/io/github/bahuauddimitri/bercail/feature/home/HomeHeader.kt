@@ -28,6 +28,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineEnd
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
@@ -78,6 +79,7 @@ internal fun VerticalTimeline(
     state: HomeUiState,
     onOpenDay: (String?) -> Unit,
     onOpenEvent: (String) -> Unit,
+    onOpenAlarms: () -> Unit,
     modifier: Modifier = Modifier,
     titlesBelow: Dp = 0.dp
 ) {
@@ -100,6 +102,8 @@ internal fun VerticalTimeline(
             description = TIMELINE_DESCRIPTION,
             onOpenDay = { onOpenDay(it?.key) },
             onOpenMark = { mark -> mark.key?.let(onOpenEvent) },
+            end = state.wakeUp?.let { BcTimelineEnd(it.time, it.caption, it.spoken) },
+            onOpenEnd = onOpenAlarms,
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)
@@ -123,5 +127,7 @@ private val WEATHER_GAP = 6.dp
 /** Room between the status bar and 7 am: the ring of now, at 7 am, stays clear of the bar. */
 private val UNDER_STATUS_BAR = 14.dp
 private val VERTICAL_EDGE = 12.dp
-private val VERTICAL_BOTTOM = 24.dp
+
+/** The ring of the alarm, at the end of the line, stands at the height of the middle of the music pill. */
+private val VERTICAL_BOTTOM = 36.dp
 private val VERTICAL_WIDTH = 78.dp

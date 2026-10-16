@@ -74,6 +74,16 @@ class FakeWorldTest {
     }
 
     @Test
+    fun `le réveil factice sonne le lendemain à 7 h 15, et retient qu'on a montré les alarmes`() = runTest {
+        val world = FakeWorld(Moment.Soir)
+
+        world.alarm.openAlarms()
+
+        assertThat(world.alarm.next.first()).isEqualTo(Samples.day.plusDays(1).atTime(7, 15))
+        assertThat(world.alarm.shown).isEqualTo(1)
+    }
+
+    @Test
     fun `dans le monde factice, tout est autorisé, et une autorisation se retire ou se redonne`() = runTest {
         val world = FakeWorld(Moment.Matin)
         assertThat(world.access.granted.first()).isEqualTo(Access.entries.toSet())

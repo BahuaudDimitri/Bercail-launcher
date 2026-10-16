@@ -11,6 +11,7 @@ import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
 import io.github.bahuauddimitri.bercail.core.domain.messages.MessagesSource
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
+import io.github.bahuauddimitri.bercail.core.domain.time.AlarmSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.update.Updater
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
@@ -61,16 +62,17 @@ class BercailApplication : Application() {
 internal class Waiting(val home: HomeSource)
 
 /**
- * Every source of Bercail, plugged once. Real today: the clock, the installed apps, the links to the phone, the
- * stored settings, the update of Bercail itself, what the user lets it read, the calendar, the weather, what plays
- * in the media apps and the conversations Beeper keeps. The house waits for its wave (9). The tests plug their
- * own parts.
+ * Every source of Bercail, plugged once. Real today: the clock and its alarm, the installed apps, the links to the
+ * phone, the stored settings, the update of Bercail itself, what the user lets it read, the calendar, the weather,
+ * what plays in the media apps and the conversations Beeper keeps. The house waits for its wave (9). The tests plug
+ * their own parts.
  */
 class Sources(
     context: Context,
     update: UpdateParts? = null,
     agenda: AgendaSource? = null,
     clock: Clock? = null,
+    alarm: AlarmSource? = null,
     weather: WeatherSource? = null,
     media: MediaSource? = null,
     messages: MessagesSource? = null
@@ -79,6 +81,9 @@ class Sources(
     private val waiting = waiting()
 
     val clock: Clock = clock ?: DeviceClock(context)
+
+    /** The alarm of the phone's clock app, only read while the home screen shows. */
+    val alarm: AlarmSource = alarm ?: DeviceAlarm(context)
     val apps: AppsSource = DeviceApps(context)
     val phone: Phone = DevicePhone(context)
     val settings: SettingsSource =
@@ -128,6 +133,7 @@ class Sources(
 
     fun homeViewModel() = HomeViewModel(
         clock = clock,
+        alarm = alarm,
         agenda = agenda,
         weather = weather,
         messages = messages,

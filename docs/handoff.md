@@ -247,12 +247,12 @@ Bercail n'est gardé que s'il ne pèse pas sur la batterie. Chaque fonction se j
 - Tout s'arrête quand l'accueil n'est pas visible : Brume, effets météo, connexion Home Assistant, suivi des conversations Beeper. Reprise à l'affichage, avec les dernières données en cache.
 - Brume et la météo animée : 20 images/s (mesuré : aussi fluide, environ 25 % moins cher que 30 ; pas de rendu basse définition, qui coûte plus qu'il n'épargne), en demandant à l'écran de baisser sa fréquence de rafraîchissement (l'écran du Pixel 9 descend à 60, 40, 30, 24 ou 20 Hz). Image fixe quand l'économiseur de batterie est actif.
 - Brume se fige après 10 secondes sans toucher l'écran, et reprend au toucher ou au changement de morceau. Ses teintes restent sombres : sur un écran OLED, des taches claires coûtent jusqu'à +50 mW d'écran. Pistes à mesurer en vague 2 pour baisser le coût CPU : animation portée par le fil de rendu (RenderThread) plutôt que par la boucle d'images de Compose.
-- Ni service au premier plan, ni verrou de réveil, ni interrogation en boucle. Météo : une fois par heure au plus, plus un rafraîchissement à l'affichage si les données ont plus de 30 min. Recherche de mise à jour : une fois par jour.
+- Ni service au premier plan, ni verrou de réveil, ni interrogation en boucle, ni alarme programmée : Bercail lit seulement le prochain réveil de l'horloge (fin du fil), à l'affichage de l'accueil et quand Android annonce qu'il a changé (16 octobre). Météo : une fois par heure au plus, plus un rafraîchissement à l'affichage si les données ont plus de 30 min. Recherche de mise à jour : une fois par jour.
 - Tout est événementiel : notifications, changements de conversation Beeper, sessions média, états Home Assistant.
 
 **Contrôles** :
 
-- Test d'architecture (Konsist) : interdit les verrous de réveil, les services au premier plan et les alarmes exactes.
+- Test d'architecture (Konsist) : interdit les verrous de réveil, les services au premier plan, les alarmes exactes et toute alarme programmée ; seul `DeviceAlarm` touche aux alarmes d'Android, pour lire le prochain réveil.
 - Profils de démarrage (Baseline Profiles) et R8 en version publiée.
 - Mesures Macrobenchmark sur téléphone branché, avant chaque version importante : démarrage, fluidité, et sur le Pixel 9 énergie consommée (capteurs de puissance intégrés), Brume animée contre Brume fixe. Une régression de plus de 10 % bloque la version.
 - Relevé batterystats d'une journée réelle après chaque vague qui touche l'accueil.

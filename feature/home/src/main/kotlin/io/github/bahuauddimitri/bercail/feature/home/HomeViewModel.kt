@@ -33,8 +33,11 @@ import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import io.github.bahuauddimitri.bercail.core.domain.screen.backgroundFor
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
+import io.github.bahuauddimitri.bercail.core.domain.time.AlarmSource
 import io.github.bahuauddimitri.bercail.core.domain.time.Clock
 import io.github.bahuauddimitri.bercail.core.domain.time.DayPart
+import io.github.bahuauddimitri.bercail.core.domain.time.WakeUp
+import io.github.bahuauddimitri.bercail.core.domain.time.wakeUpAt
 import io.github.bahuauddimitri.bercail.core.domain.weather.Forecast
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherCondition
 import io.github.bahuauddimitri.bercail.core.domain.weather.WeatherSource
@@ -61,6 +64,8 @@ data class HomeUiState(
     val weather: WeatherCondition = WeatherCondition.Clear,
     val dayPart: DayPart = DayPart.Morning,
     val dayLine: DayLine = DayLine(now = 0f, marks = emptyList()),
+    /** The alarm at the end of the line of the day, or nothing: the line then ends at midnight. */
+    val wakeUp: WakeUp? = null,
     /** False until the user lets Bercail read the calendar: the screen then offers to link it. */
     val agendaAllowed: Boolean = true,
     /** The « Aujourd'hui » sheet: whether it is open, the date under its title, the appointments of the day. */
@@ -99,6 +104,7 @@ data class HomeUiState(
  */
 class HomeViewModel private constructor(
     clock: Clock,
+    private val alarm: AlarmSource,
     private val agenda: AgendaSource,
     weather: WeatherSource,
     messages: MessagesSource,
@@ -114,6 +120,7 @@ class HomeViewModel private constructor(
     TalkActions by talk {
     constructor(
         clock: Clock,
+        alarm: AlarmSource,
         agenda: AgendaSource,
         weather: WeatherSource,
         messages: MessagesSource,
@@ -122,7 +129,7 @@ class HomeViewModel private constructor(
         settings: SettingsSource,
         access: AccessSource
     ) : this(
-        clock, agenda, weather, messages, home, settings, access, listen,
+        clock, alarm, agenda, weather, messages, home, settings, access, listen,
         HomeRemote(
             listen
         ),
@@ -148,11 +155,13 @@ class HomeViewModel private constructor(
         clock.minutes,
         clock.minutes.map { it.toLocalDate() }.distinctUntilChanged().flatMapLatest(agenda::eventsOn),
         weather.forecast,
-        access.granted
-    ) { now, events, forecast, granted ->
+        access.granted,
+        alarm.next
+    ) { now, events, forecast, granted, next ->
         // Without the user's agreement, nothing of the calendar is shown, whatever the source says.
+        // The alarm needs no agreement: it shows as soon as there is one.
         val allowed = Access.Calendar in granted
-        Day(now, if (allowed) events else emptyList(), forecast, allowed)
+        Day(now, if (allowed) events else emptyList(), forecast, allowed, next)
     }.onEach { shown = it }
 
     private val drawer: Flow<Drawer> = combine(
@@ -225,6 +234,8 @@ class HomeViewModel private constructor(
         shown?.let { agenda.openCalendar(it.now.toLocalDate()) }
     }
 
+    override fun onOpenAlarms() = alarm.openAlarms()
+
     override fun onToggleControl(id: String) {
         viewModelScope.launch { home.toggle(id) }
     }
@@ -248,6 +259,7 @@ class HomeViewModel private constructor(
             weather = weather?.condition ?: WeatherCondition.Clear,
             dayPart = part,
             dayLine = dayLineAt(day.now, day.events),
+            wakeUp = wakeUpAt(day.now, day.alarm, day.forecast),
             agendaAllowed = day.agendaAllowed,
             dayOpen = choices.day.open,
             dayDate = day.now.toLocalDate().inWords(),
@@ -274,7 +286,8 @@ class HomeViewModel private constructor(
         val now: LocalDateTime,
         val events: List<AgendaEvent>,
         val forecast: Forecast?,
-        val agendaAllowed: Boolean
+        val agendaAllowed: Boolean,
+        val alarm: LocalDateTime?
     )
 
     private data class Drawer(

@@ -2,20 +2,25 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isCloseTo
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
@@ -67,6 +72,38 @@ class HomeTimelineUiTest {
 
     private fun event(title: String, hour: Int, minute: Int) = Samples.day.atTime(hour, minute).let { start ->
         AgendaEvent(id = title, title = title, start = start, end = start.plusMinutes(30))
+    }
+
+    @Test
+    fun `au bout du fil, le réveil du lendemain écrit son heure et la température prévue`() {
+        show(FakeWorld(Moment.Soir))
+
+        compose.onNodeWithText("07:15").assertExists()
+        compose.onNodeWithText("réveil · 12°").assertExists()
+    }
+
+    @Test
+    fun `l'anneau du réveil tombe à la hauteur de la pastille musique, tiroir replié comme ouvert`() {
+        show()
+        fun DpRect.middle() = (top + bottom) / 2
+        fun ringToPill() =
+            compose.onNodeWithContentDescription("Réveil demain à 07:15").getUnclippedBoundsInRoot().middle() -
+                compose.onNodeWithText("Looped · Kiasmos").getUnclippedBoundsInRoot().middle()
+
+        assertThat(ringToPill().value).isCloseTo(0f, 1f)
+        home.onDrawerExpandedChange(true)
+        compose.waitForIdle()
+        assertThat(ringToPill().value).isCloseTo(0f, 1f)
+    }
+
+    @Test
+    fun `toucher l'anneau du réveil ouvre les alarmes de l'horloge du téléphone`() {
+        val world = FakeWorld(Moment.Matin)
+        show(world)
+
+        compose.onNodeWithContentDescription("Réveil demain à 07:15").performSemanticsAction(SemanticsActions.OnClick)
+
+        assertThat(world.alarm.shown).isEqualTo(1)
     }
 
     @Test

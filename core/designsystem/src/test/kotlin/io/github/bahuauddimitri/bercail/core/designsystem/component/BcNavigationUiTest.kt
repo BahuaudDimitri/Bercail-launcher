@@ -22,12 +22,14 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
@@ -196,7 +198,12 @@ class BcNavigationUiTest {
     private val opened = mutableListOf<String>()
 
     /** The line of the day, 400 dp long, tagged "line", at the right of a 400 dp wide box; it opens [opened]. */
-    private fun showLine(marks: List<BcTimelineMark> = day, haptics: HapticFeedback? = null, titlesBelow: Dp = 0.dp) {
+    private fun showLine(
+        marks: List<BcTimelineMark> = day,
+        haptics: HapticFeedback? = null,
+        titlesBelow: Dp = 0.dp,
+        end: BcTimelineEnd? = null
+    ) {
         compose.setContent {
             CompositionLocalProvider(LocalHapticFeedback provides (haptics ?: LocalHapticFeedback.current)) {
                 BcTheme {
@@ -205,9 +212,11 @@ class BcNavigationUiTest {
                             now = 0.1f,
                             marks = marks,
                             titlesBelow = titlesBelow,
+                            end = end,
                             modifier = Modifier.height(400.dp).width(78.dp).testTag("line"),
                             onOpenDay = { opened += "day: ${it?.key}" },
-                            onOpenMark = { opened += "mark: ${it.key}" }
+                            onOpenMark = { opened += "mark: ${it.key}" },
+                            onOpenEnd = { opened += "alarms" }
                         )
                     }
                 }
@@ -380,7 +389,11 @@ class BcNavigationUiTest {
             BcTheme {
                 BcTimeline(
                     now = 0.3f,
-                    marks = listOf(BcTimelineMark(position = 0f, label = "07:00"), BcTimelineMark(0.5f, "15:30")),
+                    marks = listOf(
+                        BcTimelineMark(0f, "07:00"),
+                        BcTimelineMark(0.5f, "15:30"),
+                        BcTimelineMark(1f, "00:00")
+                    ),
                     headroom = 40.dp,
                     modifier = Modifier.height(440.dp).width(64.dp).testTag("line")
                 )
@@ -390,9 +403,86 @@ class BcNavigationUiTest {
         val line = compose.onNodeWithTag("line").getUnclippedBoundsInRoot()
         val seven = compose.onNodeWithText("07:00").getUnclippedBoundsInRoot()
         val halfway = compose.onNodeWithText("15:30").getUnclippedBoundsInRoot()
-        assertThat(((seven.top + seven.bottom) / 2 - line.top).value).isCloseTo(40f, 1f)
-        // Halfway between 7 am and midnight: halfway between the room left at the top and the bottom.
-        assertThat(((halfway.top + halfway.bottom) / 2 - line.top).value).isCloseTo(240f, 1f)
+        val midnight = compose.onNodeWithText("00:00").getUnclippedBoundsInRoot()
+        fun DpRect.middle() = ((top + bottom) / 2 - line.top).value
+        assertThat(seven.middle()).isCloseTo(40f, 1f)
+        assertThat(halfway.middle()).isCloseTo((seven.middle() + midnight.middle()) / 2, 1f)
+        // Midnight leaves room under it for the alarm, at the bottom of the line.
+        assertThat(line.bottom.value - line.top.value - midnight.middle()).isCloseTo(34f, 1f)
+    }
+
+    private val alarm = BcTimelineEnd(time = "07:15", caption = "réveil · 9°", description = "Réveil demain à 07:15")
+
+    private val ring get() = compose.onNodeWithContentDescription("Réveil demain à 07:15")
+
+    @Test
+    fun `au bout du fil, le réveil écrit son heure, puis réveil et la température dessous`() {
+        showLine(end = alarm)
+
+        val time = compose.onNodeWithText("07:15").getUnclippedBoundsInRoot()
+        val caption = compose.onNodeWithText("réveil · 9°").getUnclippedBoundsInRoot()
+        assertThat(time.bottom).isLessThanOrEqualTo(caption.top)
+    }
+
+    @Test
+    fun `le réveil se tient au bas du fil, juste sous minuit`() {
+        showLine(marks = listOf(BcTimelineMark(1f, "00:00")), end = alarm)
+
+        val line = compose.onNodeWithTag("line").getUnclippedBoundsInRoot()
+        val ring = ring.getUnclippedBoundsInRoot()
+        val midnight = compose.onNodeWithText("00:00").getUnclippedBoundsInRoot()
+        assertThat(((ring.top + ring.bottom) / 2).value).isCloseTo((line.bottom - 24.dp).value, 1f)
+        assertThat(((ring.top + ring.bottom - midnight.top - midnight.bottom) / 2).value).isCloseTo(10f, 1f)
+    }
+
+    @Test
+    fun `sans réveil, le fil finit sans anneau`() {
+        showLine()
+
+        ring.assertDoesNotExist()
+        compose.onNodeWithText("07:15").assertDoesNotExist()
+    }
+
+    @Test
+    fun `toucher l'anneau du réveil ouvre les alarmes`() {
+        showLine(end = alarm)
+
+        compose.onNodeWithTag("line").performTouchInput { click(Offset(centerX, height - 24.dp.toPx())) }
+
+        assertThat(opened).containsExactly("alarms")
+    }
+
+    @Test
+    fun `glisser jusqu'au réveil le nomme dans la bulle, et lâcher dessus ouvre les alarmes`() {
+        showLine(end = alarm)
+
+        compose.onNodeWithTag("line").performTouchInput {
+            down(Offset(centerX, height * 0.5f))
+            moveTo(Offset(centerX, height - 20.dp.toPx()))
+        }
+        bubble.assert(hasAnyDescendant(hasText("07:15 · Réveil")) or hasText("07:15 · Réveil"))
+        compose.onNodeWithTag("line").performTouchInput { up() }
+
+        assertThat(opened).containsExactly("alarms")
+    }
+
+    @Test
+    fun `toucher le fil loin du réveil ouvre toujours la journée`() {
+        showLine(end = alarm)
+
+        compose.onNodeWithTag("line").performTouchInput { click(Offset(centerX, height * 0.82f)) }
+
+        assertThat(opened).containsExactly("day: diner")
+    }
+
+    @Test
+    fun `le réveil est annoncé aux lecteurs d'écran, qui peuvent ouvrir les alarmes`() {
+        showLine(end = alarm)
+
+        ring.assert(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick))
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        assertThat(opened).containsExactly("alarms")
     }
 
     @Test

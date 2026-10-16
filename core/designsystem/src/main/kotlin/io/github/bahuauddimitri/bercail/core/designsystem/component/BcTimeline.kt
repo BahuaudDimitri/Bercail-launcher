@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
@@ -78,11 +81,19 @@ data class BcTimelineMark(
 )
 
 /**
+ * What ends the line, just under midnight: the alarm of the phone, its time over its [caption] ("réveil · 9°"), and
+ * what a screen reader says of it ([description]).
+ */
+data class BcTimelineEnd(val time: String, val caption: String, val description: String)
+
+/**
  * The day from 7 am to midnight, along the right edge, in the accent of the moment: the past as a thick line with
  * a glow, rising to the top edge, the future as a hairline, a ring for now, "Title 09:30" beside each appointment,
  * the past ones in the accent and the next one circled. [headroom] is left free above 7 am (for the status bar): the
  * line still rises through it to the edge. Above [titlesBelow] (the top of the screen, where its own title stands),
- * appointments only write their time. Marks outside the day are not drawn.
+ * appointments only write their time. Midnight keeps its place, with room under it for the [end] of the line: the
+ * alarm, a hollow ring in the accent; touching it, or lifting the finger on it, calls [onOpenEnd]. Marks outside
+ * the day are not drawn.
  *
  * With [onOpenDay], the line answers to the finger like the alphabet of the search. A touch without sliding calls
  * [onOpenDay] with the appointment closest to the finger (or nothing on a day without any). While the finger slides
@@ -97,9 +108,11 @@ fun BcTimeline(
     modifier: Modifier = Modifier,
     headroom: Dp = 0.dp,
     titlesBelow: Dp = 0.dp,
+    end: BcTimelineEnd? = null,
     description: String? = null,
     onOpenDay: ((BcTimelineMark?) -> Unit)? = null,
-    onOpenMark: (BcTimelineMark) -> Unit = {}
+    onOpenMark: (BcTimelineMark) -> Unit = {},
+    onOpenEnd: () -> Unit = {}
 ) {
     val visible = marks.filter { it.position in 0f..1f }
     val moment = BcTheme.moment
@@ -116,21 +129,14 @@ fun BcTimeline(
                 touch.length = it.height
                 touch.width = it.width
             }
-            .semantics {
-                if (description != null) contentDescription = description
-                if (onOpenDay != null) {
-                    onClick(label = OPEN_DAY) {
-                        onOpenDay(null)
-                        true
-                    }
-                }
-            }
+            .daySemantics(description, onOpenDay)
     ) {
         Canvas(Modifier.matchParentSize()) {
-            val day = DayScale(headroom.toPx(), size.height)
+            val day = dayScale(headroom, size.height)
             drawLine(now.coerceIn(0f, 1f), visible, day, moment, bent = swell.value > 0f) { lean(it) }
+            if (end != null) drawEnd(day, moment, bent = swell.value > 0f) { lean(it) }
         }
-        val scale = with(LocalDensity.current) { DayScale(headroom.toPx(), maxHeight.toPx()) }
+        val scale = with(LocalDensity.current) { dayScale(headroom, maxHeight.toPx()) }
         val titlesFrom = with(LocalDensity.current) { (titlesBelow + TITLE_CLEARANCE).toPx() }
         visible.forEachIndexed { index, mark ->
             MarkLabel(
@@ -142,10 +148,32 @@ fun BcTimeline(
                 modifier = Modifier.matchParentSize().placeBeside(mark.position, headroom, lean)
             )
         }
-        if (onOpenDay != null) FingerZone(visible, headroom, touch, onOpenDay, onOpenMark)
-        if (bubbleShown) Bubble(visible.getOrNull(touch.last)?.spoken.orEmpty(), swell, touch)
+        if (end != null) EndOfLine(end, onOpenEnd, lean)
+        if (onOpenDay != null) {
+            FingerZone(visible, end != null, headroom, touch, TimelineOpens(onOpenDay, onOpenMark, onOpenEnd))
+        }
+        if (bubbleShown) Bubble(spokenAt(touch.last, visible, end), swell, touch)
     }
 }
+
+/** The line is read as its [description]; with [onOpenDay], a screen reader can open the day from it. */
+private fun Modifier.daySemantics(description: String?, onOpenDay: ((BcTimelineMark?) -> Unit)?) = semantics {
+    if (description != null) contentDescription = description
+    if (onOpenDay != null) {
+        onClick(label = OPEN_DAY) {
+            onOpenDay(null)
+            true
+        }
+    }
+}
+
+/** What the bubble says of what the finger reached: an appointment, or the alarm one place after the last one. */
+private fun spokenAt(reached: Int, marks: List<BcTimelineMark>, end: BcTimelineEnd?): String =
+    if (reached == marks.size) {
+        end?.let { "${it.time} · $ALARM" }.orEmpty()
+    } else {
+        marks.getOrNull(reached)?.spoken.orEmpty()
+    }
 
 /**
  * What is written beside an appointment: "Title 09:30", or only its time. The next one stands out, the past ones
@@ -182,11 +210,6 @@ private fun MarkLabel(mark: BcTimelineMark, named: Boolean, titled: Boolean, pas
     }
 }
 
-/** Where each moment of the day falls: 7 am [headroom] pixels down, midnight at the bottom of [length]. */
-private class DayScale(private val headroom: Float, private val length: Float) {
-    fun yOf(fraction: Float): Float = headroom + fraction * (length - headroom).coerceAtLeast(0f)
-}
-
 /** Where the finger is on the line, and which appointment it is closest to. */
 private class TimelineTouch {
     /** The length and the width of the timeline, in pixels. */
@@ -216,64 +239,140 @@ private class TimelineTouch {
     /** The line answers to the finger: it bends, and the bubble shows. */
     val engaged: Boolean get() = down && !cancelled
 
+    /** The finger is [position] on the zone of the line, [zone] pixels wide; [slop] pixels make a slide. */
+    fun move(position: Offset, slop: Float, zone: Float) {
+        if (!down) start = position.y
+        down = true
+        slid = slid || abs(position.y - start) > slop
+        cancelled = width - zone + position.x < bubbleLeft
+        if (!cancelled) finger = position.y.coerceIn(0f, length.toFloat())
+    }
+
+    /** The finger is closest to [closest]: true when it is a new one, which deserves a tick. */
+    fun reach(closest: Int?): Boolean {
+        if (closest == reached) return false
+        reached = closest
+        if (closest != null) last = closest
+        return closest != null
+    }
+
     fun release() {
         down = false
         cancelled = false
+        slid = false
         reached = null
     }
 }
 
+/** What the line opens: the day, an appointment, the alarms. */
+private class TimelineOpens(
+    val day: (BcTimelineMark?) -> Unit,
+    val mark: (BcTimelineMark) -> Unit,
+    val alarms: () -> Unit
+)
+
 /**
  * The part of the timeline that takes the finger: the line itself and a little around it, not the whole width of
- * the times beside it, so that the rest of the screen keeps its own gestures.
+ * the times beside it, so that the rest of the screen keeps its own gestures. With an [alarm] at the end of the
+ * line, the finger can reach it too: it then stands one place after the last appointment.
  */
 @Composable
 private fun BoxScope.FingerZone(
     marks: List<BcTimelineMark>,
+    alarm: Boolean,
     headroom: Dp,
     touch: TimelineTouch,
-    onOpenDay: (BcTimelineMark?) -> Unit,
-    onOpenMark: (BcTimelineMark) -> Unit
+    opens: TimelineOpens
 ) {
     val current by rememberUpdatedState(marks)
-    val openDay by rememberUpdatedState(onOpenDay)
-    val openMark by rememberUpdatedState(onOpenMark)
+    val withAlarm by rememberUpdatedState(alarm)
+    val open by rememberUpdatedState(opens)
     val haptics by rememberUpdatedState(LocalHapticFeedback.current)
     val density = LocalDensity.current
-    val top by rememberUpdatedState(with(density) { headroom.toPx() })
+    val top by rememberUpdatedState(headroom)
     val zone = with(density) { FINGER_ZONE.toPx() }
+    val reach = with(density) { ALARM_REACH.toPx() }
     val slop = LocalViewConfiguration.current.touchSlop
+    fun scale() = density.dayScale(top, touch.length.toFloat())
     Box(
         Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(FINGER_ZONE).followFinger(
             onMove = { position ->
-                if (!touch.down) touch.start = position.y
-                touch.down = true
-                touch.slid = touch.slid || abs(position.y - touch.start) > slop
-                touch.cancelled = touch.width - zone + position.x < touch.bubbleLeft
-                if (touch.cancelled) return@followFinger
-                touch.finger = position.y.coerceIn(0f, touch.length.toFloat())
-                val day = DayScale(top, touch.length.toFloat())
-                val closest = current.indices.minByOrNull { abs(day.yOf(current[it].position) - touch.finger) }
-                if (closest != touch.reached) {
-                    touch.reached = closest
-                    if (closest != null) {
-                        touch.last = closest
-                        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                    }
+                touch.move(position, slop, zone)
+                if (!touch.cancelled) {
+                    val day = scale()
+                    val places = current.map { day.yOf(it.position) } + listOfNotNull(day.alarm.takeIf { withAlarm })
+                    val closest = places.indices.minByOrNull { abs(places[it] - touch.finger) }
+                    if (touch.reach(closest)) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                 }
             },
             onLift = {
-                val chosen = touch.reached?.let(current::getOrNull)
-                val (cancelled, slid) = touch.cancelled to touch.slid
+                val day = scale()
+                val lift = Lift(
+                    touch.reached,
+                    touch.cancelled,
+                    touch.slid,
+                    withAlarm && abs(touch.finger - day.alarm) <= reach
+                )
                 touch.release()
-                when {
-                    cancelled -> Unit
-                    slid && chosen != null -> openMark(chosen)
-                    else -> openDay(chosen)
-                }
+                lift.open(current, open) { current.minByOrNull { abs(day.yOf(it.position) - touch.finger) } }
             },
             onCancel = touch::release
         )
+    )
+}
+
+/** How the finger left the line: what it reached, whether it was cancelled, whether it slid, whether on the alarm. */
+private class Lift(val reached: Int?, val cancelled: Boolean, val slid: Boolean, val onAlarm: Boolean) {
+    fun open(marks: List<BcTimelineMark>, opens: TimelineOpens, closest: () -> BcTimelineMark?) {
+        when {
+            cancelled -> Unit
+
+            !slid && onAlarm -> opens.alarms()
+
+            // A touch opens the day, on the appointment closest to it.
+            !slid -> opens.day(closest())
+
+            reached == marks.size -> opens.alarms()
+
+            reached != null -> opens.mark(marks[reached])
+
+            else -> opens.day(null)
+        }
+    }
+}
+
+/**
+ * The alarm at the end of the line: its time over its caption, beside a ring drawn with the line. The ring answers
+ * to a screen reader; the finger reaches it through the line itself.
+ */
+@Composable
+private fun BoxScope.EndOfLine(end: BcTimelineEnd, onOpen: () -> Unit, lean: Density.(Float) -> Float) {
+    Column(
+        Modifier.matchParentSize().layout { measurable, constraints ->
+            val label = measurable.measure(Constraints())
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                val y = dayScale(0.dp, constraints.maxHeight.toFloat()).alarm
+                val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
+                label.place(x - lean(y).roundToInt(), (y - label.height / 2f).roundToInt())
+            }
+        },
+        horizontalAlignment = Alignment.End
+    ) {
+        BcText(end.time, style = BcTextStyle.BodySmall, color = BcTextColor.Primary, maxLines = 1)
+        BcText(end.caption, style = BcTextStyle.Micro, color = BcTextColor.Muted, maxLines = 1)
+    }
+    Box(
+        Modifier
+            .align(Alignment.BottomEnd)
+            .offset(x = ALARM_TARGET / 2 - LINE_INSET, y = ALARM_TARGET / 2 - ALARM_LIFT)
+            .size(ALARM_TARGET)
+            .semantics {
+                contentDescription = end.description
+                onClick(label = OPEN_ALARMS) {
+                    onOpen()
+                    true
+                }
+            }
     )
 }
 
@@ -307,71 +406,6 @@ private fun BoxScope.Bubble(text: String, swell: State<Float>, touch: TimelineTo
 }
 
 /**
- * The line itself: from the top edge down to now, thick, in the accent and with its glow; from now to midnight, a
- * hairline. Then the dots of the appointments and the ring of now. Everything is still: nothing here animates.
- */
-private fun DrawScope.drawLine(
-    now: Float,
-    marks: List<BcTimelineMark>,
-    day: DayScale,
-    moment: BcMoment,
-    bent: Boolean,
-    lean: (Float) -> Float
-) {
-    val inset = LINE_INSET.toPx()
-    fun at(y: Float) = Offset(size.width - inset - (if (bent) lean(y) else 0f), y)
-
-    fun stretch(from: Float, to: Float) = Path().apply {
-        val start = at(from)
-        moveTo(start.x, start.y)
-        var y = from
-        while (y < to) {
-            y = if (bent) (y + BEND_STEP.toPx()).coerceAtMost(to) else to
-            val next = at(y)
-            lineTo(next.x, next.y)
-        }
-    }
-
-    val nowY = day.yOf(now)
-    drawPath(stretch(nowY, day.yOf(1f)), BcColors.stroke, style = Stroke(FUTURE_WIDTH.toPx(), cap = StrokeCap.Round))
-    val past = stretch(0f, nowY)
-    drawGlow(past, moment)
-    drawPath(past, moment.accent, style = Stroke(PAST_WIDTH.toPx(), cap = StrokeCap.Round))
-    marks.forEach { mark ->
-        val center = at(day.yOf(mark.position))
-        if (mark.next) {
-            drawCircle(BcColors.nightTop, NEXT_GAP.toPx(), center)
-            drawCircle(moment.accent, NEXT_RING.toPx(), center, style = Stroke(RING_WIDTH.toPx()))
-        }
-        val color = if (mark.position <= now) moment.accent else BcColors.text.copy(alpha = FUTURE_DOT_ALPHA)
-        drawCircle(color, MARK_RADIUS.toPx(), center)
-    }
-    drawNow(at(nowY), moment)
-}
-
-/** The soft glow of the accent under [path]. */
-private fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { canvas ->
-    val paint = Paint().apply {
-        color = moment.halo
-        style = PaintingStyle.Stroke
-        strokeWidth = GLOW_WIDTH.toPx()
-        strokeCap = StrokeCap.Round
-    }
-    paint.asFrameworkPaint().maskFilter = BlurMaskFilter(GLOW_BLUR.toPx(), BlurMaskFilter.Blur.NORMAL)
-    canvas.drawPath(path, paint)
-}
-
-/** The ring of now: dark inside, circled in the accent, with its glow. */
-private fun DrawScope.drawNow(center: Offset, moment: BcMoment) {
-    val glow = NOW_GLOW.toPx()
-    drawCircle(Brush.radialGradient(listOf(moment.halo, moment.halo.copy(alpha = 0f)), center, glow), glow, center)
-    drawCircle(BcColors.nightTop.copy(alpha = NOW_OUTLINE_ALPHA), (NOW_RADIUS + NOW_OUTLINE).toPx(), center)
-    drawCircle(BcColors.nightTop, NOW_RADIUS.toPx(), center)
-    val border = NOW_BORDER.toPx()
-    drawCircle(moment.accent, NOW_RADIUS.toPx() - border / 2, center, style = Stroke(border))
-}
-
-/**
  * Places a label beside the line, centered on its fraction of the day and kept inside the timeline; it follows the
  * line when it [lean]s away from its place.
  */
@@ -379,7 +413,7 @@ private fun Modifier.placeBeside(fraction: Float, headroom: Dp, lean: Density.(F
     layout { measurable, constraints ->
         val label = measurable.measure(Constraints())
         layout(constraints.maxWidth, constraints.maxHeight) {
-            val y = DayScale(headroom.toPx(), constraints.maxHeight.toFloat()).yOf(fraction)
+            val y = dayScale(headroom, constraints.maxHeight.toFloat()).yOf(fraction)
             val away = lean(y).roundToInt()
             val x = constraints.maxWidth - (LINE_INSET + LABEL_GAP).roundToPx() - label.width
             val top = (y - label.height / 2f).roundToInt()
@@ -388,25 +422,11 @@ private fun Modifier.placeBeside(fraction: Float, headroom: Dp, lean: Density.(F
     }
 
 private const val OPEN_DAY = "Voir la journée"
+private const val OPEN_ALARMS = "Ouvrir les alarmes"
+private const val ALARM = "Réveil"
 private const val PAST_LABEL_ALPHA = 0.5f
 private const val TIME_ALPHA = 0.7f
-private const val FUTURE_DOT_ALPHA = 0.9f
-private const val NOW_OUTLINE_ALPHA = 0.7f
-private val LINE_INSET = 12.dp
-private val PAST_WIDTH = 3.dp
-private val FUTURE_WIDTH = 1.dp
 
-/** The glow of the past: a blurred stroke under it, drawn once, never animated. */
-private val GLOW_WIDTH = 6.dp
-private val GLOW_BLUR = 7.dp
-private val MARK_RADIUS = 3.dp
-private val NEXT_GAP = 6.dp
-private val NEXT_RING = 6.75.dp
-private val RING_WIDTH = 1.5.dp
-private val NOW_RADIUS = 8.dp
-private val NOW_BORDER = 2.5.dp
-private val NOW_OUTLINE = 4.dp
-private val NOW_GLOW = 18.dp
 private val LABEL_GAP = 18.dp
 private val TITLE_GAP = 5.dp
 private val TITLE_MAX = 150.dp
@@ -414,8 +434,9 @@ private val TITLE_MAX = 150.dp
 /** A title starts this far below the height given to the titles: half its own height. */
 private val TITLE_CLEARANCE = 8.dp
 
-/** How finely the bent line is drawn. */
-private val BEND_STEP = 4.dp
+/** The ring of the alarm takes the finger this far around it, and screen readers find it in this square. */
+private val ALARM_REACH = 24.dp
+private val ALARM_TARGET = 48.dp
 
 /** How wide the line takes the finger, from the edge it runs along. */
 private val FINGER_ZONE = 48.dp

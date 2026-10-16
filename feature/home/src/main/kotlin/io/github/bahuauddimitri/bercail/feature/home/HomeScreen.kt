@@ -55,6 +55,9 @@ interface HomeActions :
 
     /** Shows today in the phone's calendar app. */
     fun onOpenCalendar()
+
+    /** Shows the alarms in the phone's clock app. */
+    fun onOpenAlarms()
     fun onToggleControl(id: String)
 }
 
@@ -144,6 +147,7 @@ fun HomeScreen(
                                     state = state,
                                     onOpenDay = { actions.onDayOpenChange(true, focus = it) },
                                     onOpenEvent = actions::onOpenEvent,
+                                    onOpenAlarms = actions::onOpenAlarms,
                                     modifier = Modifier.align(Alignment.TopEnd).then(fading),
                                     titlesBelow = with(LocalDensity.current) { headerHeight.toDp() }
                                 )

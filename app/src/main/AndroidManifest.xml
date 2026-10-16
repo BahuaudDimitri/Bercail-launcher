@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Opening the alarms of the clock app (AlarmClock.ACTION_SHOW_ALARMS): the clock app guards that screen with
+         this permission, granted at install without any question. Bercail never sets an alarm. -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+
     <application
         android:name=".BercailApplication"
         android:allowBackup="false"
