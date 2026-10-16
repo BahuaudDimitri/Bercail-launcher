@@ -41,6 +41,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
@@ -90,6 +92,7 @@ internal val GALLERY_SECTIONS = listOf(
     "Boutons",
     "Accueil",
     "Personnes et maison",
+    "Dock",
     "Listes",
     "Réglages",
     "Conversation",
@@ -124,6 +127,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Boutons") { Buttons() }
             Section("Accueil") { Home() }
             Section("Personnes et maison") { PeopleAndHome() }
+            Section("Dock") { Dock() }
             Section("Listes") { Lists() }
             Section("Réglages") { Settings() }
             Section("Conversation") { Conversation() }
@@ -212,6 +216,14 @@ private fun PeopleAndHome() {
         }
         BcRing("Tout", BcRingMark.Icon(BcIcons.House), {}, tone = BcRingTone.Off)
     }
+}
+
+@Composable
+private fun Dock() {
+    var opened by remember { mutableStateOf("") }
+    val names = listOf("Chrome", "Téléphone", "Beeper", "Appareil photo", "Agenda")
+    BcDock(names.map { name -> BcDockApp(name, glyph = null) { opened = name } })
+    BcText(opened.ifEmpty { "Toucher une app du dock" }, style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
 }
 
 @Composable

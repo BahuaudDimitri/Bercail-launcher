@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +20,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -25,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
@@ -37,11 +42,17 @@ internal const val UNREAD_BADGE = "unread-badge-"
 internal const val RING_TAG = "ring-"
 private const val MAX_BADGE = 99
 
-/** What a ring holds: the initial of a person, or an icon. */
+/** What a ring holds: the initial of a person, an icon, or the glyph of an app. */
 sealed interface BcRingMark {
     data class Initial(val letter: String) : BcRingMark
 
     data class Icon(val icon: BcIcons) : BcRingMark
+
+    /**
+     * The icon of an app in one colour: white, its shape in the alpha, framed as the icon is, so that it fills the
+     * ring as the icon would. It takes the colour of the ring.
+     */
+    data class Glyph(val glyph: ImageBitmap) : BcRingMark
 }
 
 /** The color of a ring and of what it holds. */
@@ -133,12 +144,12 @@ private fun RingColumn(label: String, modifier: Modifier, ring: @Composable () -
 }
 
 @Composable
-private fun Ring(key: String, mark: BcRingMark, tone: BcRingTone) {
+internal fun Ring(key: String, mark: BcRingMark, tone: BcRingTone, size: Dp = BcSizes.ring) {
     val ink = tone.ink()
     val edge = if (tone == BcRingTone.Neutral) BcColors.strokeRing else ink
     Box(
         Modifier
-            .size(BcSizes.ring)
+            .size(size)
             .border(RING_STROKE, edge, BcShapes.pill)
             .testTag(RING_TAG + key),
         contentAlignment = Alignment.Center
@@ -146,7 +157,15 @@ private fun Ring(key: String, mark: BcRingMark, tone: BcRingTone) {
         CompositionLocalProvider(LocalBcContentColor provides ink) {
             when (mark) {
                 is BcRingMark.Initial -> BcText(mark.letter, style = BcTextStyle.Initials, maxLines = 1)
+
                 is BcRingMark.Icon -> BcIcon(mark.icon, contentDescription = null, size = ICON)
+
+                is BcRingMark.Glyph -> Image(
+                    bitmap = mark.glyph,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(ink)
+                )
             }
         }
     }

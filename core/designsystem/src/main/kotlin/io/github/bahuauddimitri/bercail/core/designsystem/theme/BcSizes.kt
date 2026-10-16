@@ -25,11 +25,15 @@ object BcSizes {
     val listRow = 48.dp
     val icon = 22.dp
 
+    /** A ring of the dock, the whole of it touchable. */
+    val dock = 44.dp
+
     val touchTargets: Map<String, Dp> = mapOf(
         "minTouch" to minTouch,
         "ring" to ring,
         "iconButton" to iconButton,
-        "listRow" to listRow
+        "listRow" to listRow,
+        "dock" to dock
     )
 }
 
