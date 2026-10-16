@@ -1,13 +1,11 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -18,7 +16,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -40,9 +37,6 @@ sealed interface BcLeading {
 
     /** The icon of an app in one colour ([BcRingMark.Glyph]), in the colour of the ring. */
     data class Glyph(val glyph: ImageBitmap) : BcLeading
-
-    /** An app icon or a photo, in its own colours. */
-    data class Picture(val bitmap: ImageBitmap) : BcLeading
 
     /** A time of day, for agenda rows. */
     data class Time(val text: String) : BcLeading
@@ -120,13 +114,6 @@ private fun Leading(key: String, leading: BcLeading, accent: Boolean) {
         is BcLeading.Icon -> RowRing(key, BcRingMark.Icon(leading.icon), neutral)
 
         is BcLeading.Glyph -> RowRing(key, BcRingMark.Glyph(leading.glyph), neutral)
-
-        is BcLeading.Picture -> Image(
-            leading.bitmap,
-            contentDescription = null,
-            modifier = Modifier.size(RING_SIZE).clip(BcShapes.pill),
-            contentScale = ContentScale.Crop
-        )
 
         is BcLeading.Time -> CompositionLocalProvider(
             LocalBcContentColor provides if (accent) BcTheme.moment.accent else BcTextColor.Muted.color
