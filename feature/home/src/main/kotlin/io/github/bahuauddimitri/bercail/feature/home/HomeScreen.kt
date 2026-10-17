@@ -142,6 +142,9 @@ fun HomeScreen(
     // the page: the transition then plays the rest of the way alone.
     val transition = rememberBcHeldTransition(state.page.side)
     LaunchedEffect(state.page) { transition.playTo(state.page.side) }
+    // The phone's status bar hides once Écoute has fully arrived, and comes back as soon as one starts to leave it.
+    val listening by remember { derivedStateOf { transition.progress == 1f && !transition.isMoving } }
+    StatusBarHiddenWhile(listening)
     Box(modifier.fillMaxSize().testTag(HOME_TAG).wakesBrume(brume)) {
         if (state.loaded) {
             BcMomentScope(state.dayPart.moment) {
