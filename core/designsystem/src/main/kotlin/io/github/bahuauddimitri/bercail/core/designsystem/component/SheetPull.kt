@@ -62,6 +62,9 @@ internal class SheetPull(private val transition: BcHeldTransition) {
     /** How far down the sheet is drawn, in pixels. */
     val offset: Float get() = transition.progress * height
 
+    /** True while it is not resting in its place: held, pulled down, or on its way. */
+    val isAway: Boolean get() = transition.progress > 0f || transition.isMoving
+
     /** True once it has gone the whole way down and rests there. */
     val isGone: Boolean get() = transition.progress == 1f && !transition.isMoving
 

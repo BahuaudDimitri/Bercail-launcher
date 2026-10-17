@@ -72,6 +72,8 @@ internal fun HomeDrawer(
             BcBand(
                 onOpen = { actions.onDrawerExpandedChange(true) },
                 searching = searching,
+                // Pulled down, the search closes as the arrow does: the field emptied, the keyboard put away.
+                onCloseSearch = search?.let { s -> { s.onOpenChange(false) } },
                 frost = frost
             ) {
                 val content = if (searching) BandContent.Search else BandContent.Summary

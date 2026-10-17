@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -15,6 +16,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -139,6 +142,48 @@ class HomeSearchUiTest {
         compose.onNodeWithContentDescription("Chercher").assertIsNotFocused()
     }
 
+    /** Puts a finger on the search list, then moves it down by [distance] dp, the screen drawn between steps. */
+    private fun pullSearchDown(distance: Float) {
+        compose.onNodeWithText("Toutes les apps").performTouchInput { down(Offset(centerX, top + 10f)) }
+        repeat(PULL_STEPS) {
+            compose.onNodeWithTag(DRAWER_TAG).performTouchInput {
+                moveBy(Offset(0f, (distance / PULL_STEPS).dp.toPx()), delayMillis = 100)
+            }
+            compose.waitForIdle()
+        }
+        compose.onNodeWithTag(DRAWER_TAG).performTouchInput { up() }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun `tirer la recherche vers le bas la ferme comme la flèche, champ vidé et clavier rangé`() {
+        show()
+        val before = searchBarBottom()
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        compose.onNodeWithContentDescription("Chercher").performTextInput("spo")
+
+        pullSearchDown(distance = screenHeight().value * 0.4f)
+
+        assertThat(open).isFalse()
+        assertThat(query).isEqualTo("")
+        compose.onNodeWithContentDescription("Chercher").assertIsNotFocused()
+        compose.onNodeWithText("2 non lus · Léa, Tom").assertExists()
+        assertThat(searchBarBottom()).isEqualTo(before)
+    }
+
+    @Test
+    fun `tirée de moins d'un tiers de l'écran, la recherche reste ouverte`() {
+        show()
+        compose.onNodeWithContentDescription("Chercher").performClick()
+        compose.onNodeWithContentDescription("Chercher").performTextInput("spo")
+
+        pullSearchDown(distance = screenHeight().value * 0.2f)
+
+        assertThat(open).isTrue()
+        assertThat(query).isEqualTo("spo")
+        assertThat(drawerHeight()).isEqualTo(screenHeight())
+    }
+
     @Test
     fun `pendant la recherche, le haut de l'accueil s'efface sous le bandeau`() {
         show()
@@ -163,3 +208,6 @@ class HomeSearchUiTest {
         compose.onHeaderTitle("Stand-up").assertExists()
     }
 }
+
+/** The steps a finger takes to pull the search down. */
+private const val PULL_STEPS = 15
