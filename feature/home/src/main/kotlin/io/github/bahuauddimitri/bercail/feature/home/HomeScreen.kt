@@ -144,7 +144,7 @@ fun HomeScreen(
                     HomeOrPlayer(
                         state = state,
                         home = {
-                            Accueil(state, actions, links, search, still = !brume.isAnimating, sheetFrost, fading)
+                            Accueil(state, actions, links, search, still = !brume.isAnimating, sheetFrost) { uncovered }
                         },
                         player = { loaded -> Player(loaded, position, state.dayPart.brume, actions, fading) }
                     )
@@ -179,7 +179,10 @@ private fun HomeOrPlayer(
     }
 }
 
-/** Accueil: the hero, the line of the day, the music pill, and the band with its sheet at the bottom. */
+/**
+ * Accueil: the hero, the line of the day, the music pill, and the band with its sheet at the bottom. Under a sheet,
+ * they fade by [uncovered], as read at each frame.
+ */
 @Composable
 private fun Accueil(
     state: HomeUiState,
@@ -188,9 +191,10 @@ private fun Accueil(
     search: HomeSearch?,
     still: Boolean,
     sheetFrost: BcFrost?,
-    fading: Modifier
+    uncovered: () -> Float
 ) {
     var headerHeight by remember { mutableIntStateOf(0) }
+    val fading = Modifier.graphicsLayer { alpha = uncovered() }
     DrawerOverScreen(
         searching = search?.open == true,
         screen = {
