@@ -49,7 +49,7 @@ fun BcArchCover(
     }
     Box(
         modifier
-            .size(ARCH_WIDTH, ARCH_HEIGHT)
+            .size(ARCH_WIDTH, BcArchCoverHeight)
             .then(announced)
             .drawBehind {
                 val center = Offset(size.width / 2, BcArchCoverCurveCentre.toPx())
@@ -77,8 +77,10 @@ fun BcArchCover(
 val BcArchCoverCurveCentre = 290.dp
 
 private val ARCH_WIDTH = 300.dp
-private val ARCH_HEIGHT = 440.dp
-private val ARCH_RADIUS = ARCH_HEIGHT - BcArchCoverCurveCentre
+
+/** How far [BcArchCover] hangs from the top edge of the screen. */
+val BcArchCoverHeight = 440.dp
+private val ARCH_RADIUS = BcArchCoverHeight - BcArchCoverCurveCentre
 private val ARCH_SHAPE = RoundedCornerShape(0.dp, 0.dp, ARCH_RADIUS, ARCH_RADIUS)
 
 // A fine light edge, white 12 %, as on the reference.

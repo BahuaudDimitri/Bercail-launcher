@@ -1,7 +1,10 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerInputScope
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -30,6 +33,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgres
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgressCurveCentre
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCoverCurveCentre
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCoverHeight
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
@@ -38,6 +42,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
+import io.github.bahuauddimitri.bercail.core.designsystem.motion.BcHeldTransition
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
@@ -54,8 +59,10 @@ internal const val PLAYER_TAG = "home-player"
  * The Listen screen, the player alone over Brume, laid out from the top edge of the screen as on the reference: the
  * arch of the cover hanging from it, the half circle of the progress around the arch's curve with the times at its
  * centre, the title on two lines at most and « Artiste · Album » under it, then the remote, the way to the app, and
- * the chevron that says sliding up goes back to the home. Nothing moves when the title takes one line or two. The
- * system back gesture goes back to the home.
+ * the chevron that says sliding up goes back to the home. Nothing moves when the title takes one line or two.
+ * Along [transition], the arch and its half circle come down from the top edge, as if lowered, and the rest appears
+ * as they arrive. Sliding up rolls the arch back up under the finger: past half way, or with a flick, the home comes
+ * back. The system back gesture goes back to the home too.
  * A content without cover takes the colors Brume has at that moment ([fallback]).
  */
 @Composable
@@ -64,6 +71,7 @@ internal fun Player(
     position: StateFlow<Duration>,
     fallback: BcBrumeColors,
     actions: HomeActions,
+    transition: BcHeldTransition,
     modifier: Modifier = Modifier
 ) {
     val content = loaded.content
@@ -71,27 +79,33 @@ internal fun Player(
     val leave by rememberUpdatedState { actions.onPageWanted(HomePage.Home) }
     BackHandler { leave() }
     val below = Modifier.fillMaxWidth().padding(horizontal = TEXT_SIDE)
+    val arrival = { transition.progress }
+    val appearing = Modifier.appears(arrival)
+    // Sliding up rolls the arch back up under the finger: the whole way is the height of the arch.
+    val travel = with(LocalDensity.current) { BcArchCoverHeight.toPx() }
+    val slide = rememberDraggableState { delta -> transition.drag(delta / travel) }
     Box(
-        modifier.fillMaxSize().testTag(PLAYER_TAG).pointerInput(Unit) { leavesUpwards { leave() } },
+        modifier.fillMaxSize().testTag(PLAYER_TAG).leavesUpwards(slide, travel, transition) { leave() },
         contentAlignment = Alignment.TopCenter
     ) {
         BcArchCover(
             image = content.cover.asImage(),
             colors = content.colors?.pair ?: (fallback.first to fallback.second),
-            contentDescription = "Pochette de ${content.title}"
+            contentDescription = "Pochette de ${content.title}",
+            modifier = Modifier.lowered(arrival)
         )
-        ArcProgress(loaded, position, actions, Modifier.padding(top = ARC_TOP))
-        Titles(content, below.padding(top = TITLES_TOP))
-        Remote(loaded, actions, Modifier.padding(top = REMOTE_TOP))
+        ArcProgress(loaded, position, actions, Modifier.padding(top = ARC_TOP).lowered(arrival).then(appearing))
+        Titles(content, below.padding(top = TITLES_TOP).then(appearing))
+        Remote(loaded, actions, Modifier.padding(top = REMOTE_TOP).then(appearing))
         BcButton(
             "Ouvrir dans ${content.app}",
             onClick = actions::onOpenMediaApp,
-            modifier = Modifier.padding(top = OPEN_TOP)
+            modifier = Modifier.padding(top = OPEN_TOP).then(appearing)
         )
         BcIcon(
             BcIcons.ChevronUp,
             contentDescription = null,
-            modifier = Modifier.padding(top = CHEVRON_TOP).semantics {
+            modifier = Modifier.padding(top = CHEVRON_TOP).then(appearing).semantics {
                 contentDescription = BACK_HOME_HINT
                 // A screen reader cannot slide: the chevron offers the way back as an action.
                 customActions = listOf(
@@ -108,15 +122,29 @@ internal fun Player(
 }
 
 /**
- * Calls [onLeave] when a finger slides up far enough. A finger put down on the arc is taken by the arc, to move in
- * the content; sideways, nothing happens.
+ * Sliding up rolls the arch back up along [transition], by [slide], as far as the finger goes, [travel] being the
+ * whole way; letting go past half way, or with a flick upwards, calls [onLeave]. A finger put down on the arc is
+ * taken by the arc, to move in the content; sideways, nothing happens.
  */
-private suspend fun PointerInputScope.leavesUpwards(onLeave: () -> Unit) {
-    var travel = 0f
-    detectVerticalDragGestures(
-        onDragStart = { travel = 0f },
-        onDragEnd = { if (travel <= -LEAVE_SWIPE.toPx()) onLeave() }
-    ) { _, amount -> travel += amount }
+private fun Modifier.leavesUpwards(
+    slide: DraggableState,
+    travel: Float,
+    transition: BcHeldTransition,
+    onLeave: () -> Unit
+) = draggable(
+    slide,
+    Orientation.Vertical,
+    onDragStopped = { velocity -> if (transition.release(velocity / travel) == 0f) onLeave() }
+)
+
+/** Comes down from above the top edge, by the height of the arch, to its place at the end of [arrival]. */
+private fun Modifier.lowered(arrival: () -> Float) = graphicsLayer {
+    translationY = -(1f - arrival()) * BcArchCoverHeight.toPx()
+}
+
+/** Shows only as the arch arrives: from half way of [arrival], fully at its end. */
+private fun Modifier.appears(arrival: () -> Float) = graphicsLayer {
+    alpha = ((arrival() - APPEARS_FROM) / (1f - APPEARS_FROM)).coerceIn(0f, 1f)
 }
 
 /**
@@ -199,8 +227,8 @@ private fun Remote(loaded: MediaState.Loaded, actions: HomeActions, modifier: Mo
 private const val BACK_HOME_HINT = "Glisser vers le haut pour revenir à l'accueil"
 private const val BACK_HOME = "Revenir à l'accueil"
 
-/** How far a finger must slide up to leave the Listen screen: as far as a slide to the left to open it. */
-private val LEAVE_SWIPE = 40.dp
+/** From where along [BcHeldTransition] the texts and controls of the player start to show. */
+private const val APPEARS_FROM = 0.5f
 
 // Distances from the top edge of the screen, as on the reference (a 390 × 844 phone, the arch at the top).
 private val ARC_TOP = BcArchCoverCurveCentre - BcArcProgressCurveCentre

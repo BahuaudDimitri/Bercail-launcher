@@ -1,11 +1,5 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,7 +11,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
@@ -31,9 +24,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimeline
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineEnd
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTimelineMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcWeatherLine
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.DayLine
-import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 
 /**
  * The top of the home screen: weather in one line, the next appointment, the one after. Touching it opens the day
@@ -78,8 +69,8 @@ internal fun HomeHeader(
 /**
  * The day along the right edge, rising from the top edge of the screen (7 am under the status bar) to midnight
  * above the drawer, in the accent of the moment.
- * It fades and retracts on the Listen screen. A touch opens the day; sliding a finger along it names each
- * appointment, and lifting it opens the one reached in the phone's calendar app.
+ * Towards the Listen screen, it retracts into the top edge. A touch opens the day; sliding a finger along it names
+ * each appointment, and lifting it opens the one reached in the phone's calendar app.
  */
 @Composable
 internal fun VerticalTimeline(
@@ -90,34 +81,24 @@ internal fun VerticalTimeline(
     modifier: Modifier = Modifier,
     titlesBelow: Dp = 0.dp
 ) {
-    val motion = BcTheme.motion
-    AnimatedVisibility(
-        visible = state.page == HomePage.Home,
-        modifier = modifier,
-        enter = fadeIn(tween(motion.fadeMillis)) +
-            expandVertically(tween(motion.timelineMillis, easing = motion.easing), expandFrom = Alignment.Top),
-        exit = fadeOut(tween(motion.fadeMillis)) +
-            shrinkVertically(tween(motion.timelineMillis, easing = motion.easing), shrinkTowards = Alignment.Top)
-    ) {
-        BcTimeline(
-            now = state.dayLine.now,
-            marks = state.dayLine.timelineMarks,
-            // The line rises to the top edge; 7 am waits under the status bar, so that nothing of the day hides there.
-            headroom = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + UNDER_STATUS_BAR,
-            // Beside the top of the screen, where its own title stands, the line only writes the times.
-            titlesBelow = titlesBelow,
-            description = TIMELINE_DESCRIPTION,
-            onOpenDay = { onOpenDay(it?.key) },
-            onOpenMark = { mark -> mark.key?.let(onOpenEvent) },
-            end = state.wakeUp.let { BcTimelineEnd(it.time, it.caption, it.spoken, it.set) },
-            onOpenEnd = onOpenAlarms,
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)
-                .width(VERTICAL_WIDTH)
-                .testTag(TIMELINE_TAG)
-        )
-    }
+    BcTimeline(
+        now = state.dayLine.now,
+        marks = state.dayLine.timelineMarks,
+        // The line rises to the top edge; 7 am waits under the status bar, so that nothing of the day hides there.
+        headroom = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + UNDER_STATUS_BAR,
+        // Beside the top of the screen, where its own title stands, the line only writes the times.
+        titlesBelow = titlesBelow,
+        description = TIMELINE_DESCRIPTION,
+        onOpenDay = { onOpenDay(it?.key) },
+        onOpenMark = { mark -> mark.key?.let(onOpenEvent) },
+        end = state.wakeUp.let { BcTimelineEnd(it.time, it.caption, it.spoken, it.set) },
+        onOpenEnd = onOpenAlarms,
+        modifier = modifier
+            .fillMaxHeight()
+            .padding(end = VERTICAL_EDGE, bottom = VERTICAL_BOTTOM)
+            .width(VERTICAL_WIDTH)
+            .testTag(TIMELINE_TAG)
+    )
 }
 
 private val DayLine.timelineMarks

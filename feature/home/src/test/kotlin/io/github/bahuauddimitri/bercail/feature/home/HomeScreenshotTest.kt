@@ -87,6 +87,39 @@ class HomeScreenshotTest {
         capture("home_evening_listen")
     }
 
+    /** Holds a finger on the middle of the home, slid left by [share] of the width of the screen. */
+    private fun holdTowardsListen(share: Float) {
+        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput {
+            down(center)
+            moveBy(Offset(-viewConfiguration.touchSlop, 0f))
+            moveBy(Offset(-width * share, 0f))
+        }
+    }
+
+    @Test
+    fun `le soir, le doigt au quart du chemin vers Écoute, correspond à sa capture`() {
+        show(FakeWorld(Moment.Soir))
+        holdTowardsListen(share = 0.25f)
+
+        capture("home_evening_towards_listen_25")
+    }
+
+    @Test
+    fun `le soir, le doigt à mi-chemin entre l'Accueil et Écoute, correspond à sa capture`() {
+        show(FakeWorld(Moment.Soir))
+        holdTowardsListen(share = 0.5f)
+
+        capture("home_evening_towards_listen_50")
+    }
+
+    @Test
+    fun `le soir, le doigt aux trois quarts du chemin vers Écoute, correspond à sa capture`() {
+        show(FakeWorld(Moment.Soir))
+        holdTowardsListen(share = 0.75f)
+
+        capture("home_evening_towards_listen_75")
+    }
+
     @Test
     fun `sans musique, sur l'image de l'utilisateur, correspond à sa capture`() {
         show(FakeWorld(Moment.Matin).apply { media.stop() })
