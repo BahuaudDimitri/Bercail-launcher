@@ -29,6 +29,7 @@ import io.github.bahuauddimitri.bercail.core.testing.FakeAgendaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeClock
 import io.github.bahuauddimitri.bercail.core.testing.Samples
 import java.time.ZoneId
+import kotlin.math.abs
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -137,7 +138,12 @@ class AgendaUiTest {
             compose.onNodeWithText("Réglages de Bercail").performClick()
             awaitText("Agenda du téléphone")
 
-            compose.onNodeWithText("Agenda du téléphone").performScrollTo().performClick()
+            compose.onNodeWithText("Agenda du téléphone").performScrollTo()
+            // Each missing access has its own « Autoriser »: the agenda's is the one beside its row.
+            val row = compose.onNodeWithText("Agenda du téléphone").fetchSemanticsNode().boundsInRoot
+            val buttons = compose.onAllNodesWithText("Autoriser").fetchSemanticsNodes()
+            val beside = buttons.indices.minBy { abs(buttons[it].boundsInRoot.center.y - row.center.y) }
+            compose.onAllNodesWithText("Autoriser")[beside].performClick()
 
             assertThat(home.asked()).containsExactly(Manifest.permission.READ_CALENDAR)
         }
