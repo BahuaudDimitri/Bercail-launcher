@@ -7,7 +7,9 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -60,7 +62,7 @@ class BcDockUiTest {
     }
 
     @Test
-    fun `une app sans dessin montre son initiale dans l'anneau`() {
+    fun `une app sans dessin montre son initiale, seule`() {
         show(app("Chrome"), app("Beeper", glyph = null))
 
         compose.onNodeWithText("B", useUnmergedTree = true).assertExists()
@@ -76,11 +78,12 @@ class BcDockUiTest {
     }
 
     @Test
-    fun `chaque icône du dock est un anneau de 44 dp, qui se touche sur toute sa surface`() {
+    fun `chaque icône du dock est une place de 44 dp sans anneau, son dessin cadré sur 56 dp, touchable partout`() {
         show(app("Chrome"))
 
         assertThat(BcSizes.dock).isEqualTo(44.dp)
-        compose.onNodeWithTag(RING_TAG + "Chrome", useUnmergedTree = true)
+        compose.onNodeWithTag(RING_TAG + "Chrome", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag(DOCK_GLYPH_TAG + "Chrome", useUnmergedTree = true)
             .assertWidthIsAtLeast(BcSizes.dock)
             .assertHeightIsAtLeast(BcSizes.dock)
         compose.onNodeWithContentDescription("Chrome")
