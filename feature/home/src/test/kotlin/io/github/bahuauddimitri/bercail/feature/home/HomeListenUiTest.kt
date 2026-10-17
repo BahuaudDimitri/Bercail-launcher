@@ -3,6 +3,7 @@ package io.github.bahuauddimitri.bercail.feature.home
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
@@ -11,16 +12,20 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsAtLeast
 import assertk.assertions.containsExactly
 import assertk.assertions.containsNone
+import assertk.assertions.isEqualTo
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -179,6 +184,76 @@ class HomeListenUiTest {
 
         compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
         compose.onNodeWithText("Écouter…").assertExists()
+    }
+
+    @Test
+    fun `en lecture, un appui long sur la pastille ouvre la feuille Écouter, sans quitter l'accueil`() {
+        show()
+
+        compose.onNodeWithText("Looped · Kiasmos").performTouchInput { longClick() }
+
+        compose.onNode(hasText("Écouter") and isHeading() and inTheListenSheet).assertExists()
+        listOf("Spotify", "Netflix", "Pocket Casts", "YouTube").forEach {
+            compose.onNode(hasText(it) and inTheListenSheet).assertExists()
+        }
+        compose.onNodeWithText("Ouvrir dans Spotify").assertDoesNotExist()
+    }
+
+    @Test
+    fun `en pause aussi, un appui long sur la pastille ouvre la feuille Écouter`() {
+        val world = show()
+        world.media.pause()
+
+        compose.onNodeWithText("Looped · Kiasmos").performTouchInput { longClick() }
+
+        compose.onNode(hasText("Écouter") and isHeading() and inTheListenSheet).assertExists()
+    }
+
+    @Test
+    fun `choisir une app dans la feuille de l'appui long l'ouvre, sans changer l'app média principale`() {
+        val world = show()
+        val before = world.settings.settings.value
+        compose.onNodeWithText("Looped · Kiasmos").performTouchInput { longClick() }
+
+        compose.onNode(hasText("YouTube") and inTheListenSheet).performClick()
+
+        assertThat(world.apps.opened).containsExactly("youtube")
+        assertThat(world.settings.settings.value).isEqualTo(before)
+    }
+
+    @Test
+    fun `la feuille de l'appui long reste ouverte quand le morceau change ou se met en pause`() {
+        val world = show()
+        compose.onNodeWithText("Looped · Kiasmos").performTouchInput { longClick() }
+
+        world.media.next()
+        world.media.pause()
+
+        compose.onNode(hasText("Écouter") and isHeading() and inTheListenSheet).assertExists()
+    }
+
+    @Test
+    fun `en pause, le bouton lecture de l'app principale relance la lecture et referme la feuille de l'appui long`() {
+        val world = show()
+        world.media.pause()
+        world.media.lastPlayed = Samples.spotify
+        compose.onNodeWithText("Looped · Kiasmos").performTouchInput { longClick() }
+
+        compose.onNodeWithContentDescription("Reprendre dans Spotify").performClick()
+
+        compose.onNodeWithTag(LISTEN_TAG).assertDoesNotExist()
+        compose.onNodeWithText("Looped · Kiasmos").assertExists()
+    }
+
+    @Test
+    fun `un lecteur d'écran trouve l'action « Apps d'écoute » sur la pastille, qui ouvre la feuille Écouter`() {
+        show()
+        val pill = compose.onNodeWithText("Looped · Kiasmos")
+        assertThat(pill.fetchSemanticsNode().config[SemanticsActions.OnLongClick].label).isEqualTo("Apps d'écoute")
+
+        pill.performSemanticsAction(SemanticsActions.OnLongClick)
+
+        compose.onNode(hasText("Écouter") and isHeading() and inTheListenSheet).assertExists()
     }
 
     @Test

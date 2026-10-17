@@ -196,13 +196,15 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   - Ce qui est « sloppy », précisément : pochette, état, latence des boutons, volume, session qui disparaît.
   - Captures et constat sur le Pixel, avec Spotify en local et Spotify sur Sonos.
 
-### 4.2 Changer d'app musicale facilement — `À préciser`
+### 4.2 Changer d'app musicale facilement — `Précisé`
 
 - **Piste :** un appui long sur la pastille musique ouvre la liste des apps média détectées (`mediaApps` existe déjà dans l'écran Écoute). Le choix lance la lecture dans l'app choisie.
-- **À préciser :**
-  - Le geste.
-  - Le choix change-t-il l'app principale des réglages, ou seulement la lecture en cours ?
-  - Faut-il pouvoir transférer la lecture en cours (sans doute impossible entre apps) ?
+- **Décisions (17 octobre, avec Dimitri) :**
+  - Le geste : un appui long sur la pastille musique de l'accueil ouvre la feuille « Écouter » qui existe déjà (la liste des apps média, celle qu'ouvre la pastille quand rien n'est chargé), en Lecture comme en Pause.
+  - Rien d'autre ne change : toucher une app de la feuille l'ouvre ; le bouton lecture plein d'accent de l'app principale relance ; choisir une app ne change **pas** le réglage « App média principale ». Toucher la pastille ouvre toujours Écoute, la glisser vers la droite ouvre toujours l'app qui joue, glisser vers la gauche mène toujours à Écoute.
+  - Un lecteur d'écran trouve sur la pastille l'action « Apps d'écoute ».
+  - Pas de transfert de la lecture d'une app à l'autre.
+- **En cours de code (17 octobre) :** l'appui long n'est compté que si le doigt reste immobile ; dès qu'il glisse (vers la droite pour ouvrir l'app, vers la gauche vers Écoute), l'appui long est abandonné. La feuille se refermait à chaque nouvelle de ce qui joue ; elle ne se referme plus que quand un contenu arrive ou se met à jouer : ouverte par l'appui long, elle reste ouverte quand le morceau change ou se met en pause, et se referme quand le bouton lecture de l'app principale relance la musique.
 
 ## Lot 5 — Messages
 

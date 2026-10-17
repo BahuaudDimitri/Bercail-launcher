@@ -196,14 +196,17 @@ class HomeViewModel private constructor(
 
     /**
      * What plays, once the user has agreed to let Bercail see it. When the content goes away, the Listen page goes
-     * with it, and does not come back by itself; when a content comes, the « Écouter » sheet has done its job.
+     * with it, and does not come back by itself; when a content comes, or starts playing, the « Écouter » sheet has
+     * done its job. Opened by a long press on the pill over what plays, it stays while the track changes or pauses.
      */
     private val listening: Flow<Listening> = combine(listen.media.state, access.granted) { playing, granted ->
         val allowed = Access.Notifications in granted
         Listening(if (allowed) playing else MediaState.None, allowed)
     }.onEach {
+        val before = remote.shown
         remote.shown = it.media
-        if (it.media.isLoaded) remote.sheetOpen.value = false else wantedPage.value = HomePage.Home
+        if (startsPlaying(before, it.media)) remote.sheetOpen.value = false
+        if (!it.media.isLoaded) wantedPage.value = HomePage.Home
         (it.media as? MediaState.Loaded)?.content?.let(::remember)
     }
 
@@ -331,3 +334,7 @@ class HomeViewModel private constructor(
     /** What the user chose on the screen: the page, the drawer, the sheets of the day and of the media apps. */
     private data class Choices(val page: HomePage, val drawerExpanded: Boolean?, val day: DaySheet, val listen: Boolean)
 }
+
+/** Whether a content has come since [before], or starts playing: a pause, or a new track while it plays, do not. */
+private fun startsPlaying(before: MediaState, now: MediaState): Boolean =
+    (now.isLoaded && !before.isLoaded) || (now.isPlaying && !before.isPlaying)

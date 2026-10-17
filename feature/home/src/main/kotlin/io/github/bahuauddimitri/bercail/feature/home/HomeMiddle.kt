@@ -72,7 +72,7 @@ internal fun HomeMiddle(
 
 /**
  * With a content: its cover, "Title · Artist", the equalizer and the chevron; sliding it to the right shows the
- * content in its app. Without: "Écouter…", which opens the media apps.
+ * content in its app, and a long press opens the media apps. Without: "Écouter…", which opens the media apps.
  */
 @Composable
 private fun MusicPill(
@@ -95,7 +95,10 @@ private fun MusicPill(
             modifier = modifier,
             coverColors = media.content.colors?.pair,
             still = resting,
-            swipe = BcRowSwipe("Ouvrir ${media.content.app}", onOpenApp)
+            swipe = BcRowSwipe("Ouvrir ${media.content.app}", onOpenApp),
+            // To change app without leaving the home: the same « Écouter » sheet as without content.
+            onLongClick = onOpenMediaApps,
+            onLongClickLabel = "Apps d'écoute"
         )
     }
 }
