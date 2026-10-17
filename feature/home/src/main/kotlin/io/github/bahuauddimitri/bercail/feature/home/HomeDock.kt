@@ -27,10 +27,7 @@ data class DockMenu(val appId: String, val shortcuts: List<AppShortcut>)
 
 /** What the home screen does with the dock: its icons, and the shortcuts a long press shows. */
 interface DockActions {
-    /**
-     * The icon of an app in one colour, drawn when the dock or the media apps sheet first shows it; nothing for its
-     * initial.
-     */
+    /** The icon of an app of the dock in one colour, drawn when the dock first shows it; nothing for its initial. */
     suspend fun glyphOf(appId: String): Picture?
 
     /** A long press on an app of the dock: its shortcuts are read now, and stand above it if it has any. */

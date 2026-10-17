@@ -20,7 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsAtLeast
 import assertk.assertions.containsExactly
-import assertk.assertions.isEmpty
+import assertk.assertions.containsNone
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
@@ -122,13 +122,13 @@ class HomeListenUiTest {
     }
 
     @Test
-    fun `les apps de la feuille Écouter sont dessinées d'une seule couleur, dans leur anneau`() {
+    fun `les apps de la feuille Écouter montrent leur vraie icône en couleurs, sans anneau`() {
         val world = show(silent())
         compose.onNodeWithText("Écouter…").performClick()
         compose.waitForIdle()
 
-        assertThat(world.apps.glyphRequests).containsAtLeast("spotify", "netflix", "pocket casts", "youtube")
-        assertThat(world.apps.iconRequests).isEmpty()
+        assertThat(world.apps.iconRequests).containsAtLeast("spotify", "netflix", "pocket casts", "youtube")
+        assertThat(world.apps.glyphRequests).containsNone("spotify", "netflix", "pocket casts", "youtube")
     }
 
     @Test

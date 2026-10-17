@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
@@ -43,6 +44,9 @@ interface ListenActions {
      * plays a moment later, the app is opened instead: the touch always does something.
      */
     fun onResume(appId: String)
+
+    /** The real icon of a media app, in its own colours, drawn when its line first shows; nothing for its initial. */
+    suspend fun iconOf(appId: String): Picture?
 }
 
 /** The remote of the home screen. Its buttons are about [shown], what the screen shows at that moment. */
@@ -93,6 +97,8 @@ internal class HomeRemote(private val sources: ListenSources) :
             if (!shown.isLoaded) sources.apps.open(appId)
         }
     }
+
+    override suspend fun iconOf(appId: String): Picture? = sources.apps.icon(appId)
 
     override fun close() = scope.cancel()
 

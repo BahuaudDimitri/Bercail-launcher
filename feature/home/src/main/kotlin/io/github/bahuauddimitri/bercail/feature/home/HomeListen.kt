@@ -17,7 +17,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
@@ -60,8 +59,8 @@ internal fun ListenSheet(state: HomeUiState, actions: HomeActions, links: HomeLi
 private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: HomeActions) {
     Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
         rows.forEach { row ->
-            // In one colour in its ring, drawn when the line first shows; until then, and without one, its initial.
-            val glyph by produceState<Picture?>(null, row.app.id) { value = actions.glyphOf(row.app.id) }
+            // Its real icon, without a ring, drawn when the line first shows; until then, and without one, its initial.
+            val icon by produceState<Picture?>(null, row.app.id) { value = actions.iconOf(row.app.id) }
             val resume: (@Composable () -> Unit)? = row.resume?.let {
                 {
                     BcIconButton(
@@ -79,8 +78,7 @@ private fun ColumnScope.MediaApps(rows: List<MediaAppRow>, actions: HomeActions)
                 onClick = { actions.onOpenApp(row.app.id) },
                 subtitle = row.resume,
                 leading =
-                    glyph.asImage()?.let(BcLeading::Glyph) ?: BcLeading.Initials(row.app.name.take(1).uppercase()),
-                emphasis = if (row.main) BcRowEmphasis.Accent else BcRowEmphasis.Normal,
+                    icon.asImage()?.let(BcLeading::Picture) ?: BcLeading.Initials(row.app.name.take(1).uppercase()),
                 trailing = resume
             )
         }

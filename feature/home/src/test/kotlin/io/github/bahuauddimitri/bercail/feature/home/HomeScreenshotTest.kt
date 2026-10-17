@@ -143,7 +143,7 @@ class HomeScreenshotTest {
 
     @Test
     fun `la feuille « Écouter » et ses apps média, quand la musique s'est tue, correspond à sa capture`() {
-        val world = FakeWorld(Moment.Matin)
+        val world = FakeWorld(Moment.Matin).apply { apps.paintIcon("spotify", color = SPOTIFY_GREEN, size = ICON_PX) }
         show(world)
         // The music was heard, then its app went away: the main app offers to play it again.
         world.media.stop()
@@ -211,6 +211,8 @@ private const val THUMBNAIL_WIDTH = 320
 private const val THUMBNAIL_HEIGHT = 180
 private const val APRICOT = 0xFFFFC48A.toInt()
 private const val CORAL = 0xFFFF9A8A.toInt()
+private const val SPOTIFY_GREEN = 0xFF1ED760.toInt()
+private const val ICON_PX = 96
 
 /** Full screens are kept at half size: the pictures stay readable and four times lighter in the repository. */
 private val HALF_SIZE = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(resizeScale = 0.5))
