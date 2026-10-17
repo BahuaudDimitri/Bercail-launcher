@@ -92,6 +92,19 @@ class BcArchCoverUiTest {
         assertThat(pixels.at(296.dp, 200.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
     }
 
+    @Test
+    fun `une image plus petite que l'arche est agrandie en douceur, sans gros pixels`() {
+        // Two pixels side by side, black then green: stretched across the arch, the eye must see a blend between
+        // them, not a black half next to a green half.
+        val image = solid(GREEN, width = 2, height = 2)
+        Canvas(image).drawRect(Rect(0f, 0f, 1f, 2f), Paint().apply { color = Color.Black })
+        show(image)
+
+        val between = pixels().at(110.dp, 240.dp).green
+        assertThat(between).isGreaterThan(GREEN.green * BLEND_LOW)
+        assertThat(between).isLessThan(GREEN.green * BLEND_HIGH)
+    }
+
     private fun show(image: ImageBitmap?) {
         compose.setContent {
             BcTheme {
@@ -133,6 +146,8 @@ class BcArchCoverUiTest {
         const val COVER = "Pochette de Looped"
         const val TOLERANCE = 0.06f
         const val HALF = 0.5f
+        const val BLEND_LOW = 0.1f
+        const val BLEND_HIGH = 0.9f
         const val THUMB_WIDTH = 160
         const val THUMB_HEIGHT = 90
         val GREEN = Color(0xFF20C040)

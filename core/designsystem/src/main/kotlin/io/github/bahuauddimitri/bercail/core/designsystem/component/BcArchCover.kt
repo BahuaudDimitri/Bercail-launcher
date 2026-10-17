@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
@@ -67,6 +68,8 @@ fun BcArchCover(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.Center,
+                // The cover is kept at the size the arch shows it on the Pixel 9; a smaller one is enlarged smoothly.
+                filterQuality = FilterQuality.High,
                 modifier = Modifier.matchParentSize()
             )
         }

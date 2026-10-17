@@ -2,6 +2,8 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -36,6 +38,7 @@ import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThanOrEqualTo
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaContent
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaSource
@@ -113,6 +116,16 @@ class HomePlayerUiTest {
         assertThat(boundsOf("Pause").top.value).isCloseTo(REMOTE_TOP, TOLERANCE)
         val open = compose.onNode(hasText("Ouvrir dans Spotify") and hasClickAction()).getUnclippedBoundsInRoot()
         assertThat(open.top.value).isCloseTo(OPEN_TOP, TOLERANCE)
+    }
+
+    @Test
+    fun `la grande pochette garde aussi des versions réduites, pour rester nette dans la petite pastille`() {
+        val cover = Picture(COVER_SIDE, COVER_SIDE, IntArray(COVER_SIDE * COVER_SIDE) { BLUE })
+        var image: ImageBitmap? = null
+
+        compose.setContent { image = cover.asImage() }
+
+        assertThat(image!!.asAndroidBitmap().hasMipMap()).isTrue()
     }
 
     @Test
@@ -269,6 +282,8 @@ class HomePlayerUiTest {
         const val TOLERANCE = 1f
         const val TEXT_TOLERANCE = 4f
         const val TWO_LINES = 62f
+        const val COVER_SIDE = 1280
+        const val BLUE = 0xFF2040C0.toInt()
         const val LONG_TITLE = "Ramen maison en 20 minutes, la recette complète du bouillon aux nouilles fraîches"
     }
 }

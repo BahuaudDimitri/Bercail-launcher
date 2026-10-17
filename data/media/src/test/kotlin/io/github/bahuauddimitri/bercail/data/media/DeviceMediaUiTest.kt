@@ -429,13 +429,37 @@ class DeviceMediaUiTest {
     }
 
     @Test
-    fun `une grande vignette est réduite avant d'être gardée`() = runTest(dispatcher) {
-        apps.open(YOUTUBE, "Tiny Desk Concert", cover = cover(width = 1280, height = 720))
+    fun `une grande vignette est réduite avant d'être gardée, à 1 280 px de long`() = runTest(dispatcher) {
+        apps.open(YOUTUBE, "Tiny Desk Concert", cover = cover(width = 1920, height = 1080))
 
         val picture = watch().content.cover
 
-        assertThat(picture!!.width).isEqualTo(512)
-        assertThat(picture.height).isEqualTo(288)
+        assertThat(picture!!.width).isEqualTo(1280)
+        assertThat(picture.height).isEqualTo(720)
+    }
+
+    @Test
+    fun `une pochette de la taille où l'arche la montre est gardée telle quelle, sans perdre de netteté`() =
+        runTest(dispatcher) {
+            // The arch is 484 dp tall: about 1 270 px on the Pixel 9.
+            apps.open(SPOTIFY, cover = cover(width = 1280, height = 1280))
+
+            val picture = watch().content.cover
+
+            assertThat(picture!!.width).isEqualTo(1280)
+            assertThat(picture.height).isEqualTo(1280)
+        }
+
+    @Test
+    fun `une très grande pochette est réduite à 1 280 px, et donne toujours ses deux couleurs`() = runTest(dispatcher) {
+        apps.open(SPOTIFY, cover = cover(width = 3000, height = 3000))
+
+        val shown = watch().content
+
+        assertThat(shown.cover!!.width).isEqualTo(1280)
+        assertThat(shown.cover!!.height).isEqualTo(1280)
+        assertThat(Color.blue(shown.colors!!.first)).isGreaterThan(Color.red(shown.colors!!.first))
+        assertThat(Color.red(shown.colors!!.second)).isGreaterThan(Color.blue(shown.colors!!.second))
     }
 
     @Test

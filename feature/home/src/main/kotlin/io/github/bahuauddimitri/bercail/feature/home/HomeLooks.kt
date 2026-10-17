@@ -54,10 +54,17 @@ internal val CoverColors.pair: Pair<Color, Color> get() = Color(first) to Color(
 
 internal val CoverColors.brume: BcBrumeColors get() = BcBrumeColors.of(Color(first), Color(second))
 
-/** The cover as a picture ready to draw, made once for each cover. */
+/**
+ * The cover as a picture ready to draw, made once for each cover. It also carries smaller versions of itself
+ * (mipmaps): a cover kept large for the arch of Écoute stays clean when drawn small, in the music pill.
+ */
 @Composable
 internal fun Picture?.asImage(): ImageBitmap? = remember(this) {
-    this?.let { Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888).asImageBitmap() }
+    this?.let {
+        Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888)
+            .apply { setHasMipMap(true) }
+            .asImageBitmap()
+    }
 }
 
 /** Brume without a cover takes the colors of the moment: peach in the morning, blue-green by day, lavender later. */

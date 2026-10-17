@@ -13,7 +13,8 @@ import kotlin.math.roundToInt
 internal class Cover(val picture: Picture, val colors: CoverColors?)
 
 /**
- * Reads the cover an app gives. A large one (a video thumbnail) is reduced first: the screen shows it at 200 dp.
+ * Reads the cover an app gives. A larger one than the arch of the Listen screen shows (a video thumbnail, a cover in
+ * full resolution) is reduced first, to [LONGEST_SIDE]; a smaller one is kept as it is, never enlarged.
  * The pixels are copied, because the picture of the app lives in memory Bercail does not own.
  */
 internal fun Bitmap.asCover(): Cover {
@@ -36,10 +37,12 @@ internal fun Bitmap.asCover(): Cover {
 /**
  * The most present color of the cover, then the most present of those that stand apart from it. Near-black and
  * near-white do not count: they tint nothing. Every other color does, oranges included, which Palette leaves
- * out by default because they look like skin.
+ * out by default because they look like skin. The colors are read on a copy of about 112 × 112 px, whatever the
+ * size of the cover: a large cover costs barely more to read than a small one.
  */
 private fun Bitmap.twoColors(): CoverColors? {
     val colors = Palette.from(this)
+        .resizeBitmapArea(SAMPLE_SIDE * SAMPLE_SIDE)
         .clearFilters()
         .addFilter { _, hsl -> hsl[2] in DARKEST..LIGHTEST }
         .generate()
@@ -62,7 +65,13 @@ private fun Palette.Swatch.standsApartFrom(other: Palette.Swatch): Boolean {
         abs(saturation - otherSaturation) >= SATURATION_APART
 }
 
-private const val LONGEST_SIDE = 512
+/**
+ * The longest side a cover is kept at: the arch of the Listen screen shows it 484 dp tall, about 1 270 px on the
+ * Pixel 9 (2.625 px per dp), rounded up. A smaller cover is kept as it is: it is never enlarged here. A square cover
+ * of this size weighs 6.5 MB; Bercail keeps one for each media app whose session is open.
+ */
+private const val LONGEST_SIDE = 1280
+private const val SAMPLE_SIDE = 112
 private const val FULL_TURN = 360f
 private const val HUE_APART = 30f
 private const val LIGHTNESS_APART = 0.25f
