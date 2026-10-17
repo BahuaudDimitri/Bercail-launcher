@@ -95,7 +95,7 @@ internal fun DrawScope.drawAppointment(center: Offset, radius: Float, color: Col
 internal val FUTURE_DOT = BcColors.text.copy(alpha = 0.9f)
 
 /** The soft glow of the accent under [path]. */
-private fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { canvas ->
+internal fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { canvas ->
     val paint = Paint().apply {
         color = moment.halo
         style = PaintingStyle.Stroke

@@ -10,6 +10,8 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
 import io.github.bahuauddimitri.bercail.core.designsystem.captureComponent
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +36,20 @@ class BcListenScreenshotTest {
         compose.captureComponent("arch_cover_video") {
             BcArchCover(image = thumbnail, colors = APRICOT to SALMON, contentDescription = null)
         }
+
+    @Test
+    fun `l'arc d'un morceau lu au tiers correspond à sa capture`() = compose.captureComponent("arc_progress") {
+        BcMomentScope(BcMoment.Evening) {
+            BcArcProgress(progress = 0.3f, elapsed = "5:24", duration = "18:00", onSeek = {})
+        }
+    }
+
+    @Test
+    fun `l'arc d'un direct correspond à sa capture`() = compose.captureComponent("arc_progress_live") {
+        BcMomentScope(BcMoment.Evening) {
+            BcArcProgress(progress = 0f, elapsed = "", duration = "", onSeek = null, live = true)
+        }
+    }
 
     /** A 16:9 thumbnail, as in the reference: apricot above, salmon below, a light disc for its subject. */
     private val thumbnail by lazy {

@@ -47,6 +47,9 @@ object BcType {
     val body = style(size = 15.sp, weight = FontWeight.Normal)
     val bodyStrong = style(size = 15.sp, weight = FontWeight.SemiBold)
 
+    /** The time elapsed under the half circle of the Listen screen, and « En direct » in its place. */
+    val trackTime = style(size = 15.sp, weight = FontWeight.Medium)
+
     /** Message bubbles. */
     val message = style(size = 14.sp, weight = FontWeight.Normal, lineHeight = 19.sp)
 
@@ -87,6 +90,7 @@ object BcType {
         "title" to title,
         "body" to body,
         "bodyStrong" to bodyStrong,
+        "trackTime" to trackTime,
         "message" to message,
         "bodySmall" to bodySmall,
         "caption" to caption,

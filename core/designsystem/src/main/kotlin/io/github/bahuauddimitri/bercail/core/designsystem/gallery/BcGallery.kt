@@ -35,7 +35,10 @@ import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcAlphabetRail
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgress
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgressCurveCentre
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCover
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCoverCurveCentre
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
@@ -366,10 +369,29 @@ private fun Music() {
 
 @Composable
 private fun ColumnScope.Listen() {
-    BcArchCover(
-        image = null,
-        colors = BcColors.pastelBlue to BcColors.pastelCoral,
-        contentDescription = "Pochette de Looped",
+    var progress by remember { mutableFloatStateOf(PROGRESS) }
+    val seconds = (progress * TRACK_SECONDS).toInt()
+    // As on the Listen screen: the arc around the centre of the arch's curve.
+    Box(Modifier.align(Alignment.CenterHorizontally), contentAlignment = Alignment.TopCenter) {
+        BcArchCover(
+            image = null,
+            colors = BcColors.pastelBlue to BcColors.pastelCoral,
+            contentDescription = "Pochette de Looped"
+        )
+        BcArcProgress(
+            progress = progress,
+            elapsed = "${seconds / SECONDS_PER_MINUTE}:${"%02d".format(seconds % SECONDS_PER_MINUTE)}",
+            duration = "18:00",
+            onSeek = { progress = it },
+            modifier = Modifier.padding(top = BcArchCoverCurveCentre - BcArcProgressCurveCentre)
+        )
+    }
+    BcArcProgress(
+        progress = 0f,
+        elapsed = "",
+        duration = "",
+        onSeek = null,
+        live = true,
         modifier = Modifier.align(Alignment.CenterHorizontally)
     )
 }
@@ -467,6 +489,8 @@ private fun Brume() {
 
 private const val ICONS_PER_ROW = 7
 private const val PROGRESS = 0.35f
+private const val TRACK_SECONDS = 1080
+private const val SECONDS_PER_MINUTE = 60
 private const val UNDO_REMAINING = 0.6f
 private const val UNDO_MILLIS = 6_000
 private const val NOW = 0.1f

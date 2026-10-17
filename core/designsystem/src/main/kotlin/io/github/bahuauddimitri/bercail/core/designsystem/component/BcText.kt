@@ -22,6 +22,7 @@ enum class BcTextStyle(internal val style: TextStyle) {
     Title(BcType.title),
     Body(BcType.body),
     BodyStrong(BcType.bodyStrong),
+    TrackTime(BcType.trackTime),
     Message(BcType.message),
     BodySmall(BcType.bodySmall),
     Caption(BcType.caption),

@@ -67,6 +67,18 @@ class BcTypeTest {
     }
 
     @Test
+    fun `le temps écoulé sous l'arc d'Écoute est en 15 sp graisse 500, la durée en 12 sp graisse 400`() {
+        assertThat(BcType.trackTime).all {
+            prop("taille") { it.fontSize }.isEqualTo(15.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Medium)
+        }
+        assertThat(BcType.listSubtitle).all {
+            prop("taille") { it.fontSize }.isEqualTo(12.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Normal)
+        }
+    }
+
+    @Test
     fun `tous les textes utilisent la police Outfit`() {
         BcType.all.values.forEach { style ->
             assertThat(style.fontFamily).isEqualTo(Outfit)
