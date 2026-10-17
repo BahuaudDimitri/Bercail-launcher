@@ -28,7 +28,7 @@ Documents du chantier :
 3. ~~**Vague 2, le bandeau et la feuille**~~ : livrée le 16 octobre 2026 (fiche 6.1, « Vague 2 livrée ») ; le verre givré (6.2) attend sa mesure Perfetto sur le Pixel avant d'être gardé.
 4. ~~**Vague 3, le dock**~~ : livrée le 16 octobre 2026 (fiche 6.1, « Vague 3 livrée ») et 1.7 avec elle ; les vraies icônes et les raccourcis du toucher long restent à voir sur le Pixel, avec la version publiée choisie comme écran d'accueil.
 5. ~~**Vague 4, les feuilles**~~ : livrée le 17 octobre 2026 (fiche 6.1, « Vague 4 livrée ») : boutons en pilule, lignes de liste, feuilles sans voile, recherche givrée, réglages à plat, fond `#101119` ; le 17 octobre, les apps de la recherche et de la feuille « Écouter » ont repris leur vraie icône en couleurs, sans anneau, et le dock a perdu ses anneaux. Ce qui reste à voir sur le Pixel est listé dans la fiche.
-6. **Suivante : la vague 5, Écoute (l'arche)**, dans l'ordre de la feuille de route 6.1 ; elle porte aussi la première transition de 2.4 et le masquage de la barre native.
+6. ~~**Vague 5, Écoute (l'arche)**~~ : livrée le 17 octobre 2026 (fiche 6.1, « Vague 5 livrée ») : l'arche et son arc, le lecteur seul, la sortie en glissant vers le haut, la pastille à chevron, la première transition de 2.4 tenue par le doigt, et la barre native cachée sur Écoute seulement. Ce qui reste à voir sur le Pixel est listé dans la fiche, dont l'aller-retour de la barre (point 4). Toutes les vagues de la direction « Cadran » sont livrées : ce document peut être supprimé.
 
 ## 3. Décisions — verrouillées et ouvertes
 
@@ -52,7 +52,7 @@ Documents du chantier :
 - **Le rendu des trois planches** : jamais regardé par moi. Le navigateur intégré n'est pas connecté à claude.ai (artefacts privés invisibles), un fichier HTML hors projet en `file://` ne charge pas, et l'outil de capture a été bloqué par le hook anti-boucle après trois échecs. Dimitri a validé à l'écran ; les figcaptions et le tableau des décisions sont la source sûre, pas le pixel.
 - **Lâcher sur un rendez-vous ouvre l'agenda** : `[Likely]` faisable par `ACTION_VIEW` sur `CalendarContract.Events` + id ; non testé sur le Pixel.
 - **La CI après les commits docs** : non regardée (`docs:` ne publie rien ; `CatalogTest` ne lit pas le handoff).
-- **Le masquage de la barre native** : `[Likely]` `WindowInsetsControllerCompat.hide(statusBars())` avec `BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`, animé par le système ; non essayé sur le Pixel. À vérifier en vague 5 : l'aller-retour de la barre à chaque entrée/sortie d'Écoute ne doit pas agacer, sinon la cacher partout ou nulle part (l'accueil n'a pas d'horloge à lui : la barre est la seule).
+- **Le masquage de la barre native** : `[Likely]` `WindowInsetsControllerCompat.hide(statusBars())` avec `BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`, animé par le système ; codé par la vague 5 (cachée une fois Écoute posé, rendue dès qu'on commence à en repartir), non essayé sur le Pixel. À vérifier sur le Pixel : l'aller-retour de la barre à chaque entrée/sortie d'Écoute ne doit pas agacer, sinon la cacher partout ou nulle part (l'accueil n'a pas d'horloge à lui : la barre est la seule).
 - **Le tiré de l'arc** : l'anneau suit l'angle du doigt autour du centre de l'arche ; précision sous le pouce non testée.
 
 ## 5. Les pièges de CE chantier
