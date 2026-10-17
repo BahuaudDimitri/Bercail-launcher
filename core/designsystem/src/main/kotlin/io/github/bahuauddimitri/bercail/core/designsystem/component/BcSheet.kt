@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,8 +54,9 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 /**
  * A sheet of glass opened over the screen, for a conversation, the day or the media apps. It takes 62 % of
  * the screen at most, and more while the keyboard is out, which hides the bottom of it.
- * No veil darkens the screen behind it. Sliding it down, touching the screen above it or the system back gesture
- * closes it.
+ * No veil darkens the screen behind it. Pulling it down (from where [grip] allows), touching the screen above it or
+ * the system back gesture closes it: pulled, the glass follows the finger, and closes once let go past a third of
+ * its height or flicked down; let go before, it goes back up.
  */
 @Composable
 fun BcSheet(
@@ -62,6 +64,7 @@ fun BcSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     frost: BcFrost? = null,
+    grip: BcSheetGrip = BcSheetGrip.Anywhere,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val motion = BcTheme.motion
@@ -95,38 +98,49 @@ fun BcSheet(
             enter = slideInVertically(tween(motion.sheetMillis, easing = motion.easing)) { it },
             exit = slideOutVertically(tween(motion.sheetMillis, easing = motion.easing)) { it }
         ) {
-            SheetSurface({ dismiss() }, modifier.heightIn(max = maxSheet), frost, content)
+            SheetSurface({ dismiss() }, modifier.heightIn(max = maxSheet), frost, grip, content)
         }
     }
 }
 
 /**
- * The glass of every sheet, from the bottom of the screen: its handle on top, which closes it, as does sliding it
- * down. Its content stays above the phone's navigation bar and above the keyboard.
+ * The glass of every sheet, from the bottom of the screen: its handle on top, which closes it. Pulled down from
+ * where [grip] allows, it follows the finger, and closes once it has gone the whole way down. Its content stays
+ * above the phone's navigation bar and above the keyboard. Each opening starts with the sheet in its place.
  */
 @Composable
 internal fun SheetSurface(
     onClose: () -> Unit,
     modifier: Modifier,
     frost: BcFrost?,
+    grip: BcSheetGrip,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val glass = rememberGlass(frost)
+    val pull = rememberSheetPull()
+    ClosesWhenGone(pull, onClose)
+    val anywhere = grip == BcSheetGrip.Anywhere
     Column(
-        modifier = modifier
+        // The slide is read outside the sheet, which moves: what the sheet is called (its test tag) moves with it.
+        modifier = Modifier
+            .pullsDown(pull, anywhere)
+            .followsPull(pull)
+            .then(modifier)
             .fillMaxWidth()
             .glass(glass)
-            .verticalSlide { up -> if (!up) onClose() }
+            .then(if (anywhere) Modifier.pullsWithLists(pull) else Modifier)
             .padding(start = BcSpacing.l, end = BcSpacing.l, bottom = bottomPadding()),
         verticalArrangement = Arrangement.spacedBy(SHEET_GAP),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Handle(description = "Fermer la feuille", onClick = onClose)
-        Column(
-            Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(SHEET_GAP),
-            content = content
-        )
+        Handle(description = "Fermer la feuille", onClick = onClose, modifier = Modifier.gripsSheet(pull))
+        CompositionLocalProvider(LocalSheetGrip provides pull.takeIf { !anywhere }) {
+            Column(
+                Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(SHEET_GAP),
+                content = content
+            )
+        }
     }
 }
 

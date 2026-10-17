@@ -92,7 +92,8 @@ private fun Modifier.opensOnSlideUp(open: () -> Unit): Modifier = this
 
 /**
  * The sheet that rises over the band and covers it: the same glass as every sheet, with its handle. It takes
- * 62 % of the screen at most. Its handle, sliding it down or the system back gesture closes it; touching beside it
+ * 62 % of the screen at most. Its handle, pulling it down (it follows the finger, and closes once let go past a
+ * third of its height or flicked down) or the system back gesture closes it; touching beside it
  * does not. It grows from the bottom, so that what stands above it makes room as it rises.
  */
 @Composable
@@ -113,7 +114,7 @@ fun BcBandSheet(
             enter = expandVertically(tween(motion.sheetMillis, easing = motion.easing), expandFrom = Alignment.Top),
             exit = shrinkVertically(tween(motion.sheetMillis, easing = motion.easing), shrinkTowards = Alignment.Top)
         ) {
-            SheetSurface({ close() }, Modifier.heightIn(max = room), frost, content)
+            SheetSurface({ close() }, Modifier.heightIn(max = room), frost, BcSheetGrip.Anywhere, content)
         }
     }
 }

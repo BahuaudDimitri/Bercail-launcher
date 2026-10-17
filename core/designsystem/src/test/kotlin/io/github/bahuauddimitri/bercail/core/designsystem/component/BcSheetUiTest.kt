@@ -63,6 +63,7 @@ class BcSheetUiTest {
                 durationMillis = 300
             )
         }
+        compose.waitForIdle()
 
         assertThat(sheetVisible).isEqualTo(false)
     }

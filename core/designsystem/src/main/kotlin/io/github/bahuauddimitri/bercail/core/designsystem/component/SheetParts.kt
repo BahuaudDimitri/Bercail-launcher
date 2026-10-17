@@ -29,7 +29,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import kotlin.math.abs
 
-/** Distance a finger must travel up or down for the band to open the sheet, or for a sheet to close. */
+/** Distance a finger must travel up for the band to open the sheet; a sheet closes by being pulled. */
 val SLIDE_THRESHOLD = 24.dp
 
 /**
@@ -45,9 +45,9 @@ internal fun bottomPadding(): Dp {
 
 /** The grab bar: a short light line inside a 120 × 40 dp touch area. */
 @Composable
-internal fun Handle(description: String, onClick: () -> Unit) {
+internal fun Handle(description: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(HANDLE_TOUCH_WIDTH, BcSizes.minTouch)
             .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description },

@@ -32,13 +32,13 @@ class BcHeldTransitionUiTest {
 
     private lateinit var transition: BcHeldTransition
 
-    private fun show(resting: Float = 0f, animatorScale: Float = 1f) {
+    private fun show(resting: Float = 0f, animatorScale: Float = 1f, tipsOver: Float = 0.5f) {
         // Frames are advanced by hand, to count them.
         compose.mainClock.autoAdvance = false
         compose.setContent {
             BcTheme {
                 CompositionLocalProvider(LocalBcMotion provides BcMotion.forAnimatorScale(animatorScale)) {
-                    transition = rememberBcHeldTransition(resting)
+                    transition = rememberHeldTransition(resting, tipsOver)
                 }
             }
         }
@@ -112,6 +112,26 @@ class BcHeldTransitionUiTest {
 
         assertThat(frames.last()).isEqualTo(1f)
         frames.zipWithNext().forEach { (before, after) -> assertThat(after).isGreaterThanOrEqualTo(before) }
+    }
+
+    @Test
+    fun `avec un seuil au tiers, lâchée au-delà du tiers, elle va au bout`() {
+        show(tipsOver = 1f / 3)
+        act { drag(0.36f) }
+        framesFor(millis = 100)
+        act { release() }
+        framesFor(millis = 600)
+        assertThat(transition.progress).isEqualTo(1f)
+    }
+
+    @Test
+    fun `avec un seuil au tiers, lâchée avant le tiers, elle revient`() {
+        show(tipsOver = 1f / 3)
+        act { drag(0.3f) }
+        framesFor(millis = 100)
+        act { release() }
+        framesFor(millis = 600)
+        assertThat(transition.progress).isEqualTo(0f)
     }
 
     @Test

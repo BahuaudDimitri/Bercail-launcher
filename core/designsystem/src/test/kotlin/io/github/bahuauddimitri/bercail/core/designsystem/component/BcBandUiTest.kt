@@ -175,8 +175,9 @@ class BcBandUiTest {
         showBandSheet()
 
         compose.onNodeWithTag("sheet").performTouchInput {
-            swipe(start = Offset(centerX, top + 4f), end = Offset(centerX, top + 4f + 60.dp.toPx()), 300)
+            swipe(start = Offset(centerX, top + 4f), end = Offset(centerX, top + 4f + 150.dp.toPx()), 300)
         }
+        compose.waitForIdle()
 
         assertThat(sheetOpen).isEqualTo(false)
     }

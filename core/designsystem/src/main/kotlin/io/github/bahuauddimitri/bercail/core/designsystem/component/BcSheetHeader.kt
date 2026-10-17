@@ -14,6 +14,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 /**
  * The header of a sheet: its [title] large and light (24 sp), the [subtitle] under it in grey (13 sp), and on the
  * right, standing on the same line as the subtitle, a bordered button named [action] (« Beeper », « Agenda »).
+ * In a sheet that only its header may pull ([BcSheetGrip.Header]), sliding the header down pulls the sheet.
  */
 @Composable
 fun BcSheetHeader(
@@ -23,8 +24,9 @@ fun BcSheetHeader(
     action: String? = null,
     onAction: () -> Unit = {}
 ) {
+    val grip = LocalSheetGrip.current
     Row(
-        modifier.fillMaxWidth(),
+        modifier.fillMaxWidth().then(grip?.let { Modifier.gripsSheet(it) } ?: Modifier),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(BcSpacing.m)
     ) {

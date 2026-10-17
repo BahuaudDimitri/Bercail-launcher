@@ -7,10 +7,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
@@ -66,6 +72,34 @@ class BcBandScreenshotTest {
     }
 
     @Test
+    fun `une feuille tirée à mi-chemin par le doigt correspond à sa capture`() = compose.captureComponent(
+        "sheet_pulled",
+        before = {
+            // The finger stays down, half way: the glass has gone down by half its height, under the finger.
+            onNodeWithTag(PULLED).performTouchInput { down(Offset(centerX, top + 10f)) }
+            repeat(PULL_STEPS) {
+                onNodeWithTag(PULLED).performTouchInput { moveBy(Offset(0f, PULL_STEP.dp.toPx()), delayMillis = 100) }
+                waitForIdle()
+            }
+        }
+    ) {
+        // The screen ends at the bottom of the box: what goes below it is not seen.
+        Box(Modifier.size(380.dp, 560.dp).clipToBounds()) {
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth().weight(1f).background(BcColors.pastelCoral))
+                Box(Modifier.fillMaxWidth().weight(1f).background(BcColors.pastelBlue))
+            }
+            BcSheet(visible = true, onDismiss = {}, modifier = Modifier.height(320.dp).testTag(PULLED)) {
+                BcSheetHeader("Écouter")
+                BcListRow("Spotify", onClick = {
+                }, subtitle = "Reprendre « Nekketsu »", leading = BcLeading.Initials("S"))
+                BcListRow("YouTube Music", onClick = {}, leading = BcLeading.Initials("Y"))
+                BcListRow("Deezer", onClick = {}, leading = BcLeading.Initials("D"))
+            }
+        }
+    }
+
+    @Test
     fun `la recherche plein écran correspond à sa capture`() = compose.captureComponent("band_search") {
         // Two pastel blocks behind it show the glass: no corner, no edge, 80 % dark.
         Box(Modifier.size(380.dp, 560.dp)) {
@@ -85,3 +119,9 @@ class BcBandScreenshotTest {
         }
     }
 }
+
+private const val PULLED = "pulled"
+
+/** Eleven steps of 16 dp: the touch slop (16 dp here), then 160 dp, half of the 320 dp sheet. */
+private const val PULL_STEPS = 11
+private const val PULL_STEP = 16

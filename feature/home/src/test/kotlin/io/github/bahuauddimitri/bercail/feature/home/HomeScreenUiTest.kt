@@ -273,7 +273,7 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `glisser de plus de 24 dp vers le haut sur le bandeau ouvre la feuille, vers le bas la ferme`() {
+    fun `glisser de plus de 24 dp vers le haut sur le bandeau ouvre la feuille, la tirer vers le bas la ferme`() {
         show()
 
         compose.onNodeWithTag(DRAWER_TAG).performTouchInput {
@@ -282,7 +282,7 @@ class HomeScreenUiTest {
         compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
 
         compose.onNodeWithTag(DRAWER_TAG).performTouchInput {
-            swipe(start = Offset(centerX, top + 8f), end = Offset(centerX, top + 8f + 40.dp.toPx()), 300)
+            swipe(start = Offset(centerX, top + 8f), end = Offset(centerX, top + 8f + 200.dp.toPx()), 300)
         }
         compose.onNode(OPENS_THE_SHEET).assertExists()
     }

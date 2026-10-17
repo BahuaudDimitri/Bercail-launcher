@@ -26,7 +26,12 @@ import kotlinx.coroutines.launch
  * rests on a side nothing runs any more.
  */
 @Stable
-class BcHeldTransition internal constructor(resting: Float, private val scope: CoroutineScope) {
+class BcHeldTransition internal constructor(
+    resting: Float,
+    private val scope: CoroutineScope,
+    /** Let go past this share of the way, it goes on to the second screen. */
+    private val tipsOver: Float = HALF_WAY
+) {
     internal var motion: BcMotion = BcMotion.forAnimatorScale(1f)
     private val shown = mutableFloatStateOf(resting)
     private var unsettled by mutableStateOf(false)
@@ -60,7 +65,7 @@ class BcHeldTransition internal constructor(resting: Float, private val scope: C
         val side = when {
             velocity >= FLING -> 1f
             velocity <= -FLING -> 0f
-            from >= HALF_WAY -> 1f
+            from >= tipsOver -> 1f
             else -> 0f
         }
         settleTo(from, side)
@@ -111,19 +116,23 @@ class BcHeldTransition internal constructor(resting: Float, private val scope: C
         }
     }
 
-    private companion object {
+    internal companion object {
         /** A flick this fast (the whole way in a second) carries it over, even before half way. */
-        const val FLING = 1f
+        private const val FLING = 1f
         const val HALF_WAY = 0.5f
-        const val NANOS_PER_MILLI = 1_000_000f
+        private const val NANOS_PER_MILLI = 1_000_000f
     }
 }
 
 /** A transition held by the finger, resting at first on [resting]: 0 for the first screen, 1 for the second. */
 @Composable
-fun rememberBcHeldTransition(resting: Float = 0f): BcHeldTransition {
+fun rememberBcHeldTransition(resting: Float = 0f): BcHeldTransition = rememberHeldTransition(resting)
+
+/** The same, going on to the second screen once let go past [tipsOver] of the way (a sheet: a third). */
+@Composable
+internal fun rememberHeldTransition(resting: Float, tipsOver: Float = BcHeldTransition.HALF_WAY): BcHeldTransition {
     val scope = rememberCoroutineScope()
-    val transition = remember { BcHeldTransition(resting, scope) }
+    val transition = remember { BcHeldTransition(resting, scope, tipsOver) }
     val motion = BcTheme.motion
     SideEffect { transition.motion = motion }
     return transition
