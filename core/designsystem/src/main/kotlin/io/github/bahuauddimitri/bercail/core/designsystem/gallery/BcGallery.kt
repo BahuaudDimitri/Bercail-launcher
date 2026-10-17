@@ -35,6 +35,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcWeather
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcAlphabetRail
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
@@ -140,6 +141,7 @@ fun BcGallery(modifier: Modifier = Modifier) {
             Section("Réglages") { Settings() }
             Section("Conversation") { Conversation() }
             Section("Musique") { Music() }
+            Section("Écoute") { Listen() }
             Section("Navigation") { Navigation() }
             Section("Bandeau et feuilles") {
                 DrawerAndSheet(onOpenSheet = { sheetOpen = true }, onOpenPanel = { panelOpen = true })
@@ -360,6 +362,16 @@ private fun Music() {
             BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = BcIconButtonVariant.Ghost, size = REMOTE)
         }
     }
+}
+
+@Composable
+private fun ColumnScope.Listen() {
+    BcArchCover(
+        image = null,
+        colors = BcColors.pastelBlue to BcColors.pastelCoral,
+        contentDescription = "Pochette de Looped",
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
 }
 
 @Composable
