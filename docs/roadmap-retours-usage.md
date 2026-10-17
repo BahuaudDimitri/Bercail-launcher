@@ -271,6 +271,7 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
   - Réglages, ligne de mise à jour : quand une version attend, une pilule d'accent « Installer » à droite ; seul le bouton installe (toucher la ligne n'installe plus).
   - Réglages, filets entre les lignes : blanc 10 % (les 22 % restent pour le fil futur) ; la direction artistique est corrigée.
   - Choix techniques acceptés : les boutons sont dessinés à 36 dp dans une cible de 40 dp au moins (les tests des 40 dp portent sur la cible) ; les commandes faites d'une seule icône (flèche retour, × qui vide la recherche) restent des icônes nues ; le champ « Répondre » reste une pilule entière même quand il grandit jusqu'à 4 lignes ; le fond de base `BcColors.base` devient `#101119`, comme dans la direction artistique.
+  - Recherche, ordre des résultats (17 octobre) : en tapant, les résultats montent depuis la barre (Apps tout en bas, juste au-dessus de « Chercher », puis Gens, Messages, Agenda, Maison, Réglages) ; dans le groupe Apps, la meilleure app, celle qu'ouvre Entrée (anneau d'accent et « Entrée »), est en bas contre la barre, les suivantes au-dessus d'elle. Les autres familles gardent leur ordre, de haut en bas.
 
 ### 6.2 Effet « frozen glass » sur les écrans transparents — `Précisé`
 

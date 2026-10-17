@@ -225,11 +225,12 @@ class SearchListUiTest {
     }
 
     @Test
-    fun `la touche Entrée ouvre la première app trouvée, en haut du groupe Apps sous son titre`() {
+    fun `Entrée ouvre la meilleure app, en bas du groupe Apps contre la barre, les suivantes au-dessus`() {
         show(typed = "s")
 
-        assertThat(topOf("Apps")).isLessThan(topOf("Spotify"))
-        assertThat(topOf("Spotify")).isLessThan(topOf("Strava"))
+        assertThat(topOf("Apps")).isLessThan(topOf("Strava"))
+        assertThat(topOf("Strava")).isLessThan(topOf("Spotify"))
+        assertThat(lowestResult()).contains("Spotify")
 
         search.onSubmit()
         assertThat(world.apps.opened).containsExactly("spotify")

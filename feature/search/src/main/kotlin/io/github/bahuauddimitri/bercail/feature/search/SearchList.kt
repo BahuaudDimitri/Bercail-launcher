@@ -143,7 +143,8 @@ private fun Results(
 
 /**
  * The results read from the search bar up, the closest to the thumb first: apps, people, messages, agenda, home,
- * then Bercail's settings at the far end. Within a family, the title then its members in their own order, top down.
+ * then Bercail's settings at the far end. Within a family, the title then its members in their own order, top down;
+ * the apps alone are drawn the other way, the best one at the bottom, against the bar.
  */
 private fun LazyListScope.found(
     results: SearchResults,
@@ -190,8 +191,9 @@ private fun LazyListScope.found(
             found = foundIn(person.name, state.query)
         )
     }
-    family("Apps", results.apps, key = { "app ${it.id}" }) { app ->
-        // The first app is the one the keyboard's Enter opens: its ring is in the accent, and it says so.
+    // The best app sits against the search bar, the next ones above it.
+    family("Apps", results.apps.asReversed(), key = { "app ${it.id}" }) { app ->
+        // The best app is the one the keyboard's Enter opens: its ring is in the accent, and it says so.
         val first = app == results.apps.first()
         AppRow(app, icons, actions::onOpenApp, found = foundIn(app.name, state.query), first = first)
     }
