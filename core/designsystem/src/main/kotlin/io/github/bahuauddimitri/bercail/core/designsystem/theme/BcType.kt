@@ -28,8 +28,8 @@ object BcType {
     /** Title of the next appointment. */
     val agendaTitle = style(size = 34.sp, weight = FontWeight.ExtraLight, letterSpacing = (-0.025).em)
 
-    /** Track title on the Listen screen. */
-    val display = style(size = 22.sp, weight = FontWeight.Normal, lineHeight = 26.sp)
+    /** Track title on the Listen screen, on two lines at most. */
+    val display = style(size = 28.sp, weight = FontWeight.Light, lineHeight = 31.sp, letterSpacing = (-0.015).em)
 
     /** Sheet header: the person, the day. */
     val headline = style(size = 20.sp, weight = FontWeight.Medium)

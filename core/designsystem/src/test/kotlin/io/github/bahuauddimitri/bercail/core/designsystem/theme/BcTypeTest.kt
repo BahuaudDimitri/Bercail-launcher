@@ -67,6 +67,16 @@ class BcTypeTest {
     }
 
     @Test
+    fun `le titre d'Écoute est en 28 sp graisse 300, lettres un peu resserrées, lignes serrées`() {
+        assertThat(BcType.display).all {
+            prop("taille") { it.fontSize }.isEqualTo(28.sp)
+            prop("graisse") { it.fontWeight }.isEqualTo(FontWeight.Light)
+            prop("espacement") { it.letterSpacing }.isEqualTo((-0.015).em)
+            prop("interligne") { it.lineHeight }.isEqualTo(31.sp)
+        }
+    }
+
+    @Test
     fun `le temps écoulé sous l'arc d'Écoute est en 15 sp graisse 500, la durée en 12 sp graisse 400`() {
         assertThat(BcType.trackTime).all {
             prop("taille") { it.fontSize }.isEqualTo(15.sp)
