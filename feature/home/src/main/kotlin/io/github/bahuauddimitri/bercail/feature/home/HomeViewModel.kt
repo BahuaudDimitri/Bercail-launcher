@@ -66,8 +66,8 @@ data class HomeUiState(
     val weather: WeatherCondition = WeatherCondition.Clear,
     val dayPart: DayPart = DayPart.Morning,
     val dayLine: DayLine = DayLine(now = 0f, marks = emptyList()),
-    /** The alarm at the end of the line of the day, or nothing: the line then ends at midnight. */
-    val wakeUp: WakeUp? = null,
+    /** The alarm at the end of the line of the day, or « Aucun réveil »: either way it opens the alarms. */
+    val wakeUp: WakeUp = WakeUp.None,
     /** False until the user lets Bercail read the calendar: the screen then offers to link it. */
     val agendaAllowed: Boolean = true,
     /**

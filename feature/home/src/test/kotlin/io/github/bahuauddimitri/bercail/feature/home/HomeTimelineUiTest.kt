@@ -3,12 +3,14 @@ package io.github.bahuauddimitri.bercail.feature.home
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -21,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isCloseTo
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
@@ -104,6 +107,36 @@ class HomeTimelineUiTest {
         compose.onNodeWithContentDescription("Réveil demain à 07:15").performSemanticsAction(SemanticsActions.OnClick)
 
         assertThat(world.alarm.shown).isEqualTo(1)
+    }
+
+    @Test
+    fun `sans réveil, le bout du fil écrit Aucun réveil, et le toucher ouvre quand même les alarmes`() {
+        val world = FakeWorld(Moment.Soir)
+        world.alarm.next.value = null
+        show(world)
+
+        compose.onNode(hasText("Aucun réveil") and onTheLine).assertExists()
+        compose.onNodeWithContentDescription("Aucun réveil").performSemanticsAction(SemanticsActions.OnClick)
+
+        assertThat(world.alarm.shown).isEqualTo(1)
+    }
+
+    @Test
+    fun `sans réveil, lâcher le doigt sur l'anneau gris après avoir glissé ouvre les alarmes`() {
+        val world = FakeWorld(Moment.Matin)
+        world.alarm.next.value = null
+        show(world)
+
+        line.performTouchInput {
+            down(Offset(width - 30f, height * 0.5f))
+            moveTo(Offset(width - 30f, height - 1f))
+        }
+        // Beside the ring, and in the bubble under the finger.
+        compose.onAllNodesWithText("Aucun réveil").assertCountEquals(2)
+        line.performTouchInput { up() }
+
+        assertThat(world.alarm.shown).isEqualTo(1)
+        assertThat(world.agenda.opened).isEmpty()
     }
 
     @Test

@@ -17,16 +17,22 @@ interface AlarmSource {
 
 /**
  * The alarm at the end of the line of the day: "07:15" over "réveil · 9°", and what a screen reader says of it,
- * "Réveil demain à 07:15".
+ * "Réveil demain à 07:15". Without one ([set] false), see [None].
  */
-data class WakeUp(val time: String, val caption: String, val spoken: String)
+data class WakeUp(val time: String, val caption: String, val spoken: String, val set: Boolean = true) {
+    companion object {
+        /** No alarm within 24 hours: the line still ends on a grey ring, "Aucun réveil", which opens the alarms. */
+        val None = WakeUp(time = "", caption = "Aucun réveil", spoken = "Aucun réveil", set = false)
+    }
+}
 
 /**
  * The alarm the line of the day ends on: the next one, if it rings within 24 hours, with the temperature forecast
- * for its hour when there is one. Otherwise the line ends at midnight, without it.
+ * for its hour when there is one. Otherwise [WakeUp.None]: the line ends on "Aucun réveil", to reach the alarms all
+ * the same.
  */
-fun wakeUpAt(now: LocalDateTime, alarm: LocalDateTime?, forecast: Forecast?): WakeUp? {
-    if (alarm == null || alarm < now || Duration.between(now, alarm) > AHEAD) return null
+fun wakeUpAt(now: LocalDateTime, alarm: LocalDateTime?, forecast: Forecast?): WakeUp {
+    if (alarm == null || alarm < now || Duration.between(now, alarm) > AHEAD) return WakeUp.None
     val time = alarm.toLocalTime().asClockTime()
     val hour = alarm.truncatedTo(ChronoUnit.HOURS)
     val degrees = forecast?.hours?.firstOrNull { it.time == hour }?.temperature

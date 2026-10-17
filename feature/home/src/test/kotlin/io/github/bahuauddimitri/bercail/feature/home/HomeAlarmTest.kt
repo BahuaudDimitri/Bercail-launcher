@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail.feature.home
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.time.WakeUp
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -51,17 +50,39 @@ class HomeAlarmTest {
         val home = homeOf(world)
         show(home)
 
-        assertThat(home.state.value.wakeUp?.time).isEqualTo("07:15")
+        assertThat(home.state.value.wakeUp.time).isEqualTo("07:15")
     }
 
     @Test
-    fun `sans réveil, la ligne finit à minuit sans anneau`() = runTest(dispatcher) {
+    fun `sans réveil, la ligne finit sur l'anneau gris Aucun réveil`() = runTest(dispatcher) {
         val world = FakeWorld(Moment.Soir)
         world.alarm.next.value = null
         val home = homeOf(world)
         show(home)
 
-        assertThat(home.state.value.wakeUp).isNull()
+        assertThat(home.state.value.wakeUp).isEqualTo(WakeUp.None)
+    }
+
+    @Test
+    fun `sans accord pour l'agenda ni réveil, Aucun réveil reste au bout du fil`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Soir)
+        world.access.refuse(Access.Calendar)
+        world.alarm.next.value = null
+        val home = homeOf(world)
+        show(home)
+
+        assertThat(home.state.value.wakeUp).isEqualTo(WakeUp.None)
+    }
+
+    @Test
+    fun `quand le réveil est coupé, le bout du fil passe à Aucun réveil`() = runTest(dispatcher) {
+        val world = FakeWorld(Moment.Soir)
+        val home = homeOf(world)
+        show(home)
+
+        world.alarm.next.value = null
+
+        assertThat(home.state.value.wakeUp).isEqualTo(WakeUp.None)
     }
 
     @Test

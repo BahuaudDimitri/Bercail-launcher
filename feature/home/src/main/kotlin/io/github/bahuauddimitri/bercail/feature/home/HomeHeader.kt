@@ -109,7 +109,7 @@ internal fun VerticalTimeline(
             description = TIMELINE_DESCRIPTION,
             onOpenDay = { onOpenDay(it?.key) },
             onOpenMark = { mark -> mark.key?.let(onOpenEvent) },
-            end = state.wakeUp?.let { BcTimelineEnd(it.time, it.caption, it.spoken) },
+            end = state.wakeUp.let { BcTimelineEnd(it.time, it.caption, it.spoken, it.set) },
             onOpenEnd = onOpenAlarms,
             modifier = Modifier
                 .fillMaxHeight()
