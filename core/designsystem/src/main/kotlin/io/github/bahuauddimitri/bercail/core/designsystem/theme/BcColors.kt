@@ -8,7 +8,7 @@ import kotlin.math.min
 /** The single, dark palette of Bercail, taken from the prototype (v14). There is no light theme. */
 object BcColors {
     /** Background under Brume. */
-    val base = Color(0xFF15161F)
+    val base = Color(0xFF101119)
 
     /** Night gradient behind everything, from top to bottom. */
     val nightTop = Color(0xFF101119)

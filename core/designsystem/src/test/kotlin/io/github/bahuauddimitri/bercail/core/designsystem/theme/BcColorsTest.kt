@@ -81,6 +81,11 @@ class BcColorsTest {
     }
 
     @Test
+    fun `le fond de base, sous la brume et derrière les réglages, est le noir bleuté #101119`() {
+        assertThat(BcColors.base).isEqualTo(Color(0xFF101119))
+    }
+
+    @Test
     fun `les filets entre les réglages sont blancs à 10 %, le bord d'un sélecteur blanc à 12 %`() {
         assertThat(BcColors.hairline).isEqualTo(BcColors.text.copy(alpha = 0.1f))
         assertThat(BcColors.segmentEdge).isEqualTo(Color.White.copy(alpha = 0.12f))
