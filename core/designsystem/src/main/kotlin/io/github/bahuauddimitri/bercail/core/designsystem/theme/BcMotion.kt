@@ -15,6 +15,8 @@ data class BcMotion(
     val sheetMillis: Int,
     val fadeMillis: Int,
     val timelineMillis: Int,
+    /** One screen giving way to the next, played alone (Accueil and Écoute). */
+    val screenMillis: Int,
     val easing: Easing,
     val reduced: Boolean
 ) {
@@ -23,6 +25,7 @@ data class BcMotion(
         private const val SHEET = 350
         private const val FADE = 250
         private const val TIMELINE = 500
+        private const val SCREEN = 400
 
         /** The prototype's curve: fast start, long soft landing. */
         val Easing: Easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
@@ -34,6 +37,7 @@ data class BcMotion(
                 sheetMillis = scaled(SHEET),
                 fadeMillis = scaled(FADE),
                 timelineMillis = scaled(TIMELINE),
+                screenMillis = scaled(SCREEN),
                 easing = Easing,
                 reduced = scale == 0f
             )

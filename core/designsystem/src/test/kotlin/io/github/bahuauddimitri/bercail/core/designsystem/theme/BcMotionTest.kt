@@ -18,6 +18,11 @@ class BcMotionTest {
     }
 
     @Test
+    fun `un écran laisse sa place au suivant en 400 ms`() {
+        assertThat(BcMotion.forAnimatorScale(1f).screenMillis).isEqualTo(400)
+    }
+
+    @Test
     fun `les animations s'arrêtent quand Android demande de les supprimer`() {
         val motion = BcMotion.forAnimatorScale(0f)
 
@@ -25,6 +30,7 @@ class BcMotionTest {
         assertThat(motion.drawerMillis).isEqualTo(0)
         assertThat(motion.fadeMillis).isEqualTo(0)
         assertThat(motion.timelineMillis).isEqualTo(0)
+        assertThat(motion.screenMillis).isEqualTo(0)
     }
 
     @Test
