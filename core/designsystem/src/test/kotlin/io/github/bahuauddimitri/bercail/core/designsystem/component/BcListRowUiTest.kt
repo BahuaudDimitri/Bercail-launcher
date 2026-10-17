@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toPixelMap
@@ -111,6 +115,36 @@ class BcListRowUiTest {
     }
 
     @Test
+    fun `l'icône d'une app est dans ses vraies couleurs, en 36 dp, sans anneau, même mise en avant`() {
+        val red = ImageBitmap(PICTURE_PX, PICTURE_PX).apply {
+            Canvas(this).drawRect(
+                Rect(0f, 0f, PICTURE_PX.toFloat(), PICTURE_PX.toFloat()),
+                Paint().apply {
+                    color = Color.Red
+                }
+            )
+        }
+        show {
+            BcListRow(
+                "Spotify",
+                onClick = {},
+                modifier = Modifier.testTag(ROW),
+                leading = BcLeading.Picture(red),
+                emphasis = BcRowEmphasis.Accent
+            )
+        }
+
+        compose.onNodeWithTag(PICTURE_TAG + "Spotify", useUnmergedTree = true)
+            .assertWidthIsEqualTo(36.dp)
+            .assertHeightIsEqualTo(36.dp)
+        compose.onNodeWithTag(RING_TAG + "Spotify", useUnmergedTree = true).assertDoesNotExist()
+        val pixels = rowPixels()
+        assertThat(pixels.at(PICTURE_MIDDLE, MIDDLE).distanceTo(Color.Red)).isLessThan(TOLERANCE)
+        assertThat(pixels.ringDistanceTo(BcMoment.Day.accent)).isGreaterThan(FAR)
+        assertThat(pixels.ringDistanceTo(BcColors.strokeRing.compositeOver(BcColors.base))).isGreaterThan(TOLERANCE)
+    }
+
+    @Test
     fun `les lettres trouvées du titre sont dans l'accent du moment, les autres non`() {
         show {
             Column {
@@ -204,6 +238,10 @@ class BcListRowUiTest {
         /** The 1.5 dp stroke of the ring, at its left, read halfway down the 50 dp row. */
         val RING_STROKE_WIDTH = 1.5.dp
         val MIDDLE = 25.dp
+
+        /** The middle of the picture of an app, 36 dp wide. */
+        val PICTURE_MIDDLE = 18.dp
+        const val PICTURE_PX = 96
 
         /** Inside the ring, beside its initial. */
         val INSIDE_RING = 5.dp

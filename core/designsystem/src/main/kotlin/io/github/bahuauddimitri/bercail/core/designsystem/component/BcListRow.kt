@@ -1,11 +1,13 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -16,6 +18,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -28,7 +32,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.LocalBcContentColor
 
-/** What sits at the start of a list row: a 36 dp ring holding an initial, an icon or an app, or a time. */
+/** What sits at the start of a list row: an initial, an icon or an app in a 36 dp ring, an app as it is, or a time. */
 sealed interface BcLeading {
     /** An initial in a white ring, or a person's initial in a ring of their [pastel]. */
     data class Initials(val text: String, val pastel: BcPastel? = null) : BcLeading
@@ -37,6 +41,9 @@ sealed interface BcLeading {
 
     /** The icon of an app in one colour ([BcRingMark.Glyph]), in the colour of the ring. */
     data class Glyph(val glyph: ImageBitmap) : BcLeading
+
+    /** The real icon of an app, in its own colours, 36 dp round and without a ring, even when the row stands out. */
+    data class Picture(val bitmap: ImageBitmap) : BcLeading
 
     /** A time of day, for agenda rows. */
     data class Time(val text: String) : BcLeading
@@ -115,6 +122,13 @@ private fun Leading(key: String, leading: BcLeading, accent: Boolean) {
 
         is BcLeading.Glyph -> RowRing(key, BcRingMark.Glyph(leading.glyph), neutral)
 
+        is BcLeading.Picture -> Image(
+            leading.bitmap,
+            contentDescription = null,
+            modifier = Modifier.size(RING_SIZE).clip(BcShapes.pill).testTag(PICTURE_TAG + key),
+            contentScale = ContentScale.Crop
+        )
+
         is BcLeading.Time -> CompositionLocalProvider(
             LocalBcContentColor provides if (accent) BcTheme.moment.accent else BcTextColor.Muted.color
         ) {
@@ -127,6 +141,9 @@ private fun Leading(key: String, leading: BcLeading, accent: Boolean) {
 private fun RowRing(key: String, mark: BcRingMark, tone: BcRingTone) {
     Ring(key, mark, tone, size = RING_SIZE, initialStyle = BcTextStyle.ListInitial, iconSize = RING_ICON)
 }
+
+/** Tags the picture of an app at the start of its row, after the row's title: for the tests. */
+internal const val PICTURE_TAG = "picture-"
 
 private const val DIMMED_ALPHA = 0.45f
 private val ROW_HEIGHT = 50.dp

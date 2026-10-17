@@ -57,6 +57,7 @@ class BcControlsScreenshotTest {
             BcSectionLabel("Apps")
             BcListRow("Réglages de Bercail", onClick = {}, leading = BcLeading.Icon(BcIcons.Settings))
             BcListRow("Gmail", onClick = {}, leading = BcLeading.Glyph(squareGlyph), found = 1..2)
+            BcListRow("Spotify", onClick = {}, leading = BcLeading.Picture(colourIcon), found = 0..1)
             BcListRow(
                 "Maps",
                 onClick = {},
@@ -75,6 +76,16 @@ class BcControlsScreenshotTest {
             )
             BcListRow("Stand-up", onClick = {}, leading = BcLeading.Time("08:00"), emphasis = BcRowEmphasis.Dimmed)
         }
+    }
+
+    /** The real icon of an app: a green ground with a dark square in its middle. */
+    private val colourIcon by lazy {
+        val image = ImageBitmap(GLYPH_PX, GLYPH_PX)
+        val canvas = Canvas(image)
+        val edge = GLYPH_PX / EDGE_PART
+        canvas.drawRect(Rect(0f, 0f, GLYPH_PX.toFloat(), GLYPH_PX.toFloat()), Paint().apply { color = ICON_GREEN })
+        canvas.drawRect(Rect(edge, edge, GLYPH_PX - edge, GLYPH_PX - edge), Paint().apply { color = Color.Black })
+        image
     }
 
     /** A glyph as an app gives it: white, framed as the icon is, a square in its middle half. */
@@ -121,5 +132,6 @@ class BcControlsScreenshotTest {
     private companion object {
         const val GLYPH_PX = 96
         const val EDGE_PART = 3f
+        val ICON_GREEN = Color(0xFF1ED760)
     }
 }
