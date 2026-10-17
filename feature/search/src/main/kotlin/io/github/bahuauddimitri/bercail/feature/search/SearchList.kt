@@ -26,7 +26,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeader
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
@@ -193,7 +192,7 @@ private fun LazyListScope.found(
     }
     // The best app sits against the search bar, the next ones above it.
     family("Apps", results.apps.asReversed(), key = { "app ${it.id}" }) { app ->
-        // The best app is the one the keyboard's Enter opens: its ring is in the accent, and it says so.
+        // The best app is the one the keyboard's Enter opens, and it says so.
         val first = app == results.apps.first()
         AppRow(app, icons, actions::onOpenApp, found = foundIn(app.name, state.query), first = first)
     }
@@ -232,8 +231,8 @@ private fun SettingsRow(note: String?, onOpen: () -> Unit) {
 }
 
 /**
- * An app with its icon in one colour in its ring; until it is drawn, or without one, its initial. The [first] app
- * found has its ring in the accent and « Entrée » on its right.
+ * An app with its real icon, in its own colours and without a ring; until it is drawn, or without one, its initial.
+ * The [first] app found has « Entrée » on its right.
  */
 @Composable
 private fun AppRow(
@@ -243,12 +242,11 @@ private fun AppRow(
     found: IntRange? = null,
     first: Boolean = false
 ) {
-    val glyph by produceState(initialValue = icons.known(app.id), app.id) { value = icons.of(app.id) }
+    val icon by produceState(initialValue = icons.known(app.id), app.id) { value = icons.of(app.id) }
     BcListRow(
         title = app.name,
         onClick = { onOpen(app.id) },
-        leading = glyph?.let { BcLeading.Glyph(it) } ?: BcLeading.Initials(app.name.take(1).uppercase()),
-        emphasis = if (first) BcRowEmphasis.Accent else BcRowEmphasis.Normal,
+        leading = icon?.let { BcLeading.Picture(it) } ?: BcLeading.Initials(app.name.take(1).uppercase()),
         found = found,
         trailing = if (first) EnterHint else null
     )

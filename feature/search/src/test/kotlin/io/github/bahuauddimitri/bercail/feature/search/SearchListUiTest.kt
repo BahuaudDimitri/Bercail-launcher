@@ -127,13 +127,13 @@ class SearchListUiTest {
     }
 
     @Test
-    fun `les apps sont dessinées d'une seule couleur, seulement celles que la liste montre`() {
+    fun `les apps montrent leur vraie icône en couleurs, seulement celles que la liste montre`() {
         show()
         compose.waitForIdle()
 
-        assertThat(world.apps.glyphRequests).contains("chrome")
-        assertThat(world.apps.glyphRequests).doesNotContain("youtube")
-        assertThat(world.apps.iconRequests).isEmpty()
+        assertThat(world.apps.iconRequests).contains("chrome")
+        assertThat(world.apps.iconRequests).doesNotContain("youtube")
+        assertThat(world.apps.glyphRequests).isEmpty()
     }
 
     @Test
