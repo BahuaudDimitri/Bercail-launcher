@@ -18,6 +18,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheet
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetGrip
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSheetHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
@@ -29,7 +30,8 @@ import io.github.bahuauddimitri.bercail.core.domain.messages.via
 
 /**
  * The sheet of a conversation: who and through which network, a way to the messaging app, the last messages (the
- * latest always in view), and the field to answer, by hand or by voice. Nothing is written for the user.
+ * latest always in view), and the field to answer, by hand or by voice. Nothing is written for the user. It closes
+ * by being pulled down from its header only: sliding on the messages always scrolls them.
  */
 @Composable
 internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLinks, frost: BcFrost?) {
@@ -40,6 +42,8 @@ internal fun TalkSheet(state: HomeUiState, actions: HomeActions, links: HomeLink
         visible = state.talk != null,
         onDismiss = actions::onCloseConversation,
         modifier = Modifier.testTag(TALK_TAG),
+        // Only its header pulls it down: sliding on the messages always scrolls them.
+        grip = BcSheetGrip.Header,
         frost = frost
     ) {
         val talk = state.talk ?: kept[0] ?: return@BcSheet
