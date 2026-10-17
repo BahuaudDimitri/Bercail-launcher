@@ -294,7 +294,7 @@ class HomeTransitionUiTest {
     private companion object {
         const val COVER = "Pochette de Looped"
         const val PHONE_WIDTH = 411f
-        const val ARCH_HEIGHT = 440f
+        const val ARCH_HEIGHT = 484f
         const val LIFT = 110f
         const val FLICK = 80f
         const val FLICK_MILLIS = 100L

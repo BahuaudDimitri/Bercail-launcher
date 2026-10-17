@@ -9,6 +9,8 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -72,7 +74,7 @@ class HomePlayerUiTest {
     private val seekable = SemanticsMatcher.keyIsDefined(SemanticsActions.SetProgress)
 
     @Test
-    fun `la pochette est une arche de 300 sur 440 dp, pendue au bord haut de l'écran et centrée`() {
+    fun `la pochette est une arche de 300 sur 484 dp, pendue au bord haut de l'écran et centrée`() {
         listen()
 
         val cover = boundsOf("Pochette de Looped")
@@ -81,7 +83,7 @@ class HomePlayerUiTest {
         assertThat(cover.left.value).isCloseTo((PHONE_WIDTH - ARCH_WIDTH) / 2, TOLERANCE)
         compose.onNodeWithContentDescription("Pochette de Looped")
             .assertWidthIsEqualTo(300.dp)
-            .assertHeightIsEqualTo(440.dp)
+            .assertHeightIsEqualTo(484.dp)
     }
 
     @Test
@@ -96,11 +98,21 @@ class HomePlayerUiTest {
     }
 
     @Test
-    fun `les temps sont au centre de l'arc, 470 dp sous le bord haut`() {
+    fun `les temps sont au centre de l'arc, 514 dp sous le bord haut`() {
         listen()
 
-        // The centre of the arch's curve is 290 dp below its top; the times sit 180 dp under it.
+        // The centre of the arch's curve is 334 dp below its top; the times sit 180 dp under it.
         assertThat(bounds("1:12").top.value).isCloseTo(TIMES_TOP, TEXT_TOLERANCE)
+    }
+
+    @Test
+    fun `sous l'arche, le titre, la télécommande et « Ouvrir dans » descendent avec elle, 44 dp plus bas qu'avant`() {
+        listen()
+
+        assertThat(bounds("Looped").top.value).isCloseTo(TITLE_TOP, TEXT_TOLERANCE)
+        assertThat(boundsOf("Pause").top.value).isCloseTo(REMOTE_TOP, TOLERANCE)
+        val open = compose.onNode(hasText("Ouvrir dans Spotify") and hasClickAction()).getUnclippedBoundsInRoot()
+        assertThat(open.top.value).isCloseTo(OPEN_TOP, TOLERANCE)
     }
 
     @Test
@@ -152,7 +164,7 @@ class HomePlayerUiTest {
     }
 
     @Test
-    fun `sous le chevron, il reste plus de 100 dp sur le Pixel 9`() {
+    fun `sous le chevron, il reste plus de 70 dp sur le Pixel 9`() {
         listen()
 
         val chevron = boundsOf(CHEVRON)
@@ -208,8 +220,8 @@ class HomePlayerUiTest {
         listen()
 
         compose.onNodeWithTag(PLAYER_TAG).performTouchInput {
-            // The bottom of the arc: 164 dp under the centre of the arch's curve, itself 290 dp under the top edge.
-            val bottomOfArc = Offset(centerX, (290 + 164).dp.toPx())
+            // The bottom of the arc: 164 dp under the centre of the arch's curve, itself 334 dp under the top edge.
+            val bottomOfArc = Offset(centerX, (334 + 164).dp.toPx())
             swipe(start = bottomOfArc, end = bottomOfArc - Offset(0f, 150.dp.toPx()))
         }
 
@@ -248,9 +260,12 @@ class HomePlayerUiTest {
         const val PHONE_WIDTH = 411f
         const val PHONE_HEIGHT = 923f
         const val ARCH_WIDTH = 300f
-        const val TIMES_TOP = 470f
-        const val CHEVRON_TOP = 776f
-        const val MIN_ROOM_UNDER_CHEVRON = 100f
+        const val TIMES_TOP = 514f
+        const val TITLE_TOP = 550f
+        const val REMOTE_TOP = 648f
+        const val OPEN_TOP = 746f
+        const val CHEVRON_TOP = 820f
+        const val MIN_ROOM_UNDER_CHEVRON = 70f
         const val TOLERANCE = 1f
         const val TEXT_TOLERANCE = 4f
         const val TWO_LINES = 62f

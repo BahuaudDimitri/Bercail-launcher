@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.PIXEL_9
@@ -42,10 +43,16 @@ class BcArchCoverUiTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun `l'arche fait 300 sur 440 dp et s'annonce par son titre`() {
+    fun `l'arche fait 300 sur 484 dp et s'annonce par son titre`() {
         show(image = null)
 
-        compose.onNodeWithContentDescription(COVER).assertWidthIsEqualTo(300.dp).assertHeightIsEqualTo(440.dp)
+        compose.onNodeWithContentDescription(COVER).assertWidthIsEqualTo(300.dp).assertHeightIsEqualTo(484.dp)
+    }
+
+    @Test
+    fun `seule la partie droite grandit, le centre de la courbe à 334 dp du haut, 150 dp au-dessus du bas`() {
+        assertThat(BcArchCoverCurveCentre).isEqualTo(334.dp)
+        assertThat(BcArchCoverHeight - BcArchCoverCurveCentre).isEqualTo(150.dp)
     }
 
     @Test
@@ -57,9 +64,9 @@ class BcArchCoverUiTest {
         assertThat(pixels.at(2.dp, 2.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
         assertThat(pixels.at(298.dp, 2.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
         // The bottom is a half circle of 150 dp: its middle is covered, its corners are not.
-        assertThat(pixels.at(150.dp, 436.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
-        assertThat(pixels.at(4.dp, 436.dp).green).isLessThan(HALF)
-        assertThat(pixels.at(296.dp, 436.dp).green).isLessThan(HALF)
+        assertThat(pixels.at(150.dp, 480.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
+        assertThat(pixels.at(4.dp, 480.dp).green).isLessThan(HALF)
+        assertThat(pixels.at(296.dp, 480.dp).green).isLessThan(HALF)
     }
 
     @Test
@@ -68,7 +75,7 @@ class BcArchCoverUiTest {
 
         val pixels = pixels()
         val top = pixels.at(6.dp, 6.dp)
-        val bottom = pixels.at(150.dp, 430.dp)
+        val bottom = pixels.at(150.dp, 474.dp)
         assertThat(top.red).isGreaterThan(top.blue)
         assertThat(bottom.blue).isGreaterThan(bottom.red)
     }

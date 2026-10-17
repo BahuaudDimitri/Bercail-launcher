@@ -230,14 +230,16 @@ private const val BACK_HOME = "Revenir à l'accueil"
 /** From where along [BcHeldTransition] the texts and controls of the player start to show. */
 private const val APPEARS_FROM = 0.5f
 
-// Distances from the top edge of the screen, as on the reference (a 390 × 844 phone, the arch at the top).
+// Distances from the top edge of the screen, as on the reference (a 390 × 844 phone, the arch at the top), each kept
+// under the bottom of the arch: a taller arch takes everything under it down with it. With the arch of 484 dp, the
+// title starts at 550 dp, the remote at 648 dp, the button at 746 dp and the chevron at 820 dp.
 private val ARC_TOP = BcArchCoverCurveCentre - BcArcProgressCurveCentre
-private val TITLES_TOP = 506.dp
-private val REMOTE_TOP = 604.dp
+private val TITLES_TOP = BcArchCoverHeight + 66.dp
+private val REMOTE_TOP = BcArchCoverHeight + 164.dp
 
-// The pill of the button is drawn at 704 dp, centred in its 40 dp touch target.
-private val OPEN_TOP = 702.dp
-private val CHEVRON_TOP = 776.dp
+// The pill of the button is drawn 2 dp lower, centred in its 40 dp touch target.
+private val OPEN_TOP = BcArchCoverHeight + 262.dp
+private val CHEVRON_TOP = BcArchCoverHeight + 336.dp
 
 private val TEXT_SIDE = 24.dp
 private val CREDITS_GAP = 5.dp

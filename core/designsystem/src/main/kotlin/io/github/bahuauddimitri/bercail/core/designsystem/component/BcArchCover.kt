@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 
 /**
- * The cover of the Listen screen: an arch of 300 × 440 dp hanging from the top edge of the screen, flat on top with
+ * The cover of the Listen screen: an arch of 300 × 484 dp hanging from the top edge of the screen, flat on top with
  * square corners, its bottom a half circle of 150 dp, with a halo of its first color around the curve. Without
  * [image], it is the blend of its two [colors]; an image of another shape (a 16:9 video thumbnail) fills it, cropped
  * to its centre. Never any text inside.
@@ -74,12 +74,12 @@ fun BcArchCover(
 }
 
 /** How far below the top edge of [BcArchCover] the centre of its curve lies: its height less its bottom radius. */
-val BcArchCoverCurveCentre = 290.dp
+val BcArchCoverCurveCentre = 334.dp
 
 private val ARCH_WIDTH = 300.dp
 
 /** How far [BcArchCover] hangs from the top edge of the screen. */
-val BcArchCoverHeight = 440.dp
+val BcArchCoverHeight = 484.dp
 private val ARCH_RADIUS = BcArchCoverHeight - BcArchCoverCurveCentre
 private val ARCH_SHAPE = RoundedCornerShape(0.dp, 0.dp, ARCH_RADIUS, ARCH_RADIUS)
 
