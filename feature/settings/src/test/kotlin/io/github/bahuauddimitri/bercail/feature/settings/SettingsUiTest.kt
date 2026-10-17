@@ -526,7 +526,29 @@ class SettingsUiTest {
         compose.onNodeWithText("Téléchargement de la version 0.9.0…").assertExists()
 
         world.updates.status.value = UpdateStatus.Ready(Version(0, 9, 0), needsUser = true)
-        compose.onNodeWithText("Version 0.9.0 prête · toucher pour l'installer").assertExists()
+        compose.onNodeWithText("Version 0.9.0 prête").assertExists()
+        compose.onNodeWithText("Installer").assertExists()
+    }
+
+    @Test
+    fun `une version prête s'installe par son bouton « Installer », plus en touchant la ligne`() {
+        world.updates.status.value = UpdateStatus.Ready(Version(0, 9, 0), needsUser = true)
+        show()
+
+        compose.onNodeWithText("Bercail 0.8.1").performScrollTo().assertHasNoClickAction()
+        assertThat(world.updates.proceeded).isEqualTo(0)
+
+        compose.onNodeWithText("Installer").performScrollTo().assertHeightIsAtLeast(40.dp).performClick()
+        assertThat(world.updates.proceeded).isEqualTo(1)
+    }
+
+    @Test
+    fun `tant qu'aucune version n'est prête, la ligne de mise à jour n'offre pas « Installer »`() {
+        world.updates.status.value = UpdateStatus.Waiting(Version(0, 9, 0))
+        show()
+
+        compose.onNodeWithText("Version 0.9.0 disponible · toucher pour la télécharger").performScrollTo()
+        compose.onNodeWithText("Installer").assertDoesNotExist()
     }
 
     @Test

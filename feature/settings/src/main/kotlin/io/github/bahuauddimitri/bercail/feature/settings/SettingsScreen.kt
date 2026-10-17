@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
@@ -21,6 +22,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
+import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
 
 /**
  * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the dock and the
@@ -162,11 +164,7 @@ fun SettingsScreen(
             }
         )
         BcSectionLabel("Mise à jour")
-        BcSettingRow(
-            title = state.update.title,
-            subtitle = state.update.detail,
-            onClick = if (state.update.touchable) actions::onUpdateTouched else null
-        )
+        UpdateRow(state.update, actions::onUpdateTouched)
         BcSectionLabel("Android")
         BcSettingRow(
             title = "Écran d'accueil par défaut",
@@ -175,6 +173,24 @@ fun SettingsScreen(
         )
         BcSettingRow("Paramètres du téléphone", onClick = actions::onOpenPhoneSettings)
     }
+}
+
+/**
+ * The update of Bercail: a touch on the row looks again or fetches; a ready version waits for its « Installer »
+ * button, filled with the accent, and only that button installs it.
+ */
+@Composable
+private fun UpdateRow(line: UpdateLine, onProceed: () -> Unit) {
+    BcSettingRow(
+        title = line.title,
+        subtitle = line.detail,
+        onClick = if (line.touchable) onProceed else null,
+        trailing = if (line.installable) {
+            { BcButton("Installer", onClick = onProceed, variant = BcButtonVariant.Accent) }
+        } else {
+            null
+        }
+    )
 }
 
 /** What plays: the access Android asks for, and the media app the « Écouter » sheet shows first. */

@@ -136,8 +136,12 @@ internal val AFTER_A_FAILURE: Duration = Duration.ofHours(1)
 fun updateNotice(status: UpdateStatus): String? =
     (status as? UpdateStatus.Ready)?.takeIf { it.needsUser }?.let { "Version ${it.version} prête à installer" }
 
-/** The update row of the settings: the version running, what is going on, and whether a touch does something. */
-data class UpdateLine(val title: String, val detail: String, val touchable: Boolean)
+/**
+ * The update row of the settings: the version running, what is going on, whether a touch on the row does something
+ * ([touchable]: look again, fetch), and whether a ready version waits for its « Installer » button ([installable]):
+ * only that button installs.
+ */
+data class UpdateLine(val title: String, val detail: String, val touchable: Boolean, val installable: Boolean = false)
 
 fun updateLine(current: Version?, status: UpdateStatus): UpdateLine {
     val title = if (current == null) "Bercail, version de mise au point" else "Bercail $current"
@@ -165,11 +169,12 @@ fun updateLine(current: Version?, status: UpdateStatus): UpdateLine {
         is UpdateStatus.Ready -> UpdateLine(
             title,
             if (status.needsUser) {
-                "Version ${status.version} prête · toucher pour l'installer"
+                "Version ${status.version} prête"
             } else {
                 "Version ${status.version} prête · elle s'installera quand tu quitteras l'accueil"
             },
-            touchable = true
+            touchable = false,
+            installable = true
         )
 
         is UpdateStatus.Installing ->

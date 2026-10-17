@@ -88,7 +88,7 @@ interface SettingsActions {
     fun onMainMediaApp(appId: String)
     fun onToggleFavoritePerson(id: String)
 
-    /** Looks for a newer version, fetches it or installs it: whatever the update row offers. */
+    /** Looks for a newer version, fetches it, or installs a ready one: whatever the update row or its button offers. */
     fun onUpdateTouched()
     fun onOpenHomeScreenSettings()
     fun onOpenPhoneSettings()

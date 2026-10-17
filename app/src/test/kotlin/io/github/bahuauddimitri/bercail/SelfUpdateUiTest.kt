@@ -104,7 +104,7 @@ class SelfUpdateUiTest {
     }
 
     @Test
-    fun `si Android veut un accord, les Réglages de Bercail proposent d'installer la version d'un toucher`() {
+    fun `si Android veut un accord, les Réglages de Bercail installent la version d'un bouton Installer`() {
         packages.answer = InstallAnswer.NeedsUser
         showHome().use { home ->
             home.hideHome()
@@ -116,7 +116,8 @@ class SelfUpdateUiTest {
             compose.onNodeWithText("Réglages de Bercail").performClick()
             await { compose.onAllNodesWithText("Bercail 0.8.1").fetchSemanticsNodes().isNotEmpty() }
 
-            compose.onNodeWithText("Version 0.9.0 prête · toucher pour l'installer").performScrollTo().performClick()
+            compose.onNodeWithText("Version 0.9.0 prête").assertExists()
+            compose.onNodeWithText("Installer").performScrollTo().performClick()
 
             await { packages.installs.size == 2 }
             assertThat(packages.installs).containsExactly("0.9.0 without asking", "0.9.0 asking the user")

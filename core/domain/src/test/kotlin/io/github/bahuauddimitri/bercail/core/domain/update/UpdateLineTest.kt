@@ -56,16 +56,34 @@ class UpdateLineTest {
     }
 
     @Test
-    fun `une version prête annonce qu'elle s'installera quand on quittera l'accueil`() {
+    fun `une version prête annonce qu'elle s'installera quand on quittera l'accueil, ou d'un bouton Installer`() {
         assertThat(line(UpdateStatus.Ready(next)).detail)
             .isEqualTo("Version 0.9.0 prête · elle s'installera quand tu quitteras l'accueil")
-        assertThat(line(UpdateStatus.Ready(next)).touchable).isTrue()
+        assertThat(line(UpdateStatus.Ready(next)).installable).isTrue()
+        assertThat(line(UpdateStatus.Ready(next)).touchable).isFalse()
     }
 
     @Test
-    fun `si Android veut un accord, la version prête s'installe au toucher`() {
-        assertThat(line(UpdateStatus.Ready(next, needsUser = true)).detail)
-            .isEqualTo("Version 0.9.0 prête · toucher pour l'installer")
+    fun `si Android veut un accord, la version prête attend son bouton Installer, la ligne ne se touche plus`() {
+        val line = line(UpdateStatus.Ready(next, needsUser = true))
+
+        assertThat(line.detail).isEqualTo("Version 0.9.0 prête")
+        assertThat(line.installable).isTrue()
+        assertThat(line.touchable).isFalse()
+    }
+
+    @Test
+    fun `seule une version prête offre le bouton Installer`() {
+        val others = listOf(
+            UpdateStatus.UpToDate(),
+            UpdateStatus.Checking,
+            UpdateStatus.Waiting(next),
+            UpdateStatus.Downloading(next),
+            UpdateStatus.Installing(next),
+            UpdateStatus.Off
+        )
+
+        others.forEach { assertThat(line(it).installable).isFalse() }
     }
 
     @Test
