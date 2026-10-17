@@ -7,6 +7,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
@@ -14,7 +15,9 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasi
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSegmented
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.access.SourceLine
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
@@ -28,8 +31,10 @@ fun SettingsRoute(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onAskAccess: (Access) -> Unit = {}
+    onAskAccess: (Access) -> Unit = {},
+    onOpenAccessPage: (Access) -> Unit = {}
 ) {
+    val access = AccessLinks(ask = onAskAccess, openPage = onOpenAccessPage)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val place by viewModel.place.state.collectAsStateWithLifecycle()
     var shown by rememberSaveable { mutableStateOf(Shown.Settings) }
@@ -54,6 +59,7 @@ fun SettingsRoute(
             place = place,
             actions = viewModel.place,
             onAskLocation = { onAskAccess(Access.Location) },
+            onOpenLocationPage = { onOpenAccessPage(Access.Location) },
             onBack = backToSettings,
             modifier = modifier
         )
@@ -64,7 +70,7 @@ fun SettingsRoute(
             onBack = onBack,
             onPickDock = { shown = Shown.Dock },
             modifier = modifier,
-            onAskAccess = onAskAccess,
+            access = access,
             onPickPlace = { shown = Shown.Place },
             onPickMediaApp = { shown = Shown.MediaApp },
             onPickPeople = { shown = Shown.People }
@@ -75,10 +81,33 @@ fun SettingsRoute(
 /** What the settings panel shows: itself, or one of the lists it opens. */
 private enum class Shown { Settings, Dock, Place, MediaApp, People }
 
-/** What Bercail reads only once allowed: its row says where it stands, and a touch asks Android for it. */
+/** What the settings ask of Android about an access: the question while it is missing, its page once given. */
+class AccessLinks(val ask: (Access) -> Unit = {}, val openPage: (Access) -> Unit = {})
+
+/**
+ * What Bercail reads only once allowed: its row says where it stands. While the access is missing, « Autoriser »
+ * on the right asks Android for it; once given, « Autorisé » in grey, and a touch on the row opens Android's page
+ * where it is taken back.
+ */
 @Composable
-private fun SourceRow(line: SourceLine, onAsk: () -> Unit) {
-    BcSettingRow(title = line.title, subtitle = line.detail, onClick = if (line.touchable) onAsk else null)
+internal fun SourceRow(line: SourceLine, access: Access, links: AccessLinks) {
+    val missing = line.touchable
+    BcSettingRow(
+        title = line.title,
+        subtitle = line.detail,
+        onClick = if (missing) null else ({ links.openPage(access) }),
+        trailing = { AccessState(missing, onAsk = { links.ask(access) }) }
+    )
+}
+
+/** Where an access stands, on the right of its row: a button to ask for it, or the word that it is given. */
+@Composable
+internal fun AccessState(missing: Boolean, onAsk: () -> Unit) {
+    if (missing) {
+        BcButton("Autoriser", onClick = onAsk)
+    } else {
+        BcText("Autorisé", style = BcTextStyle.BodySmall, color = BcTextColor.Muted, maxLines = 1)
+    }
 }
 
 /**
@@ -92,7 +121,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onPickDock: () -> Unit,
     modifier: Modifier = Modifier,
-    onAskAccess: (Access) -> Unit = {},
+    access: AccessLinks = AccessLinks(),
     onPickPlace: () -> Unit = {},
     onPickMediaApp: () -> Unit = {},
     onPickPeople: () -> Unit = {}
@@ -107,10 +136,10 @@ fun SettingsScreen(
                 onSelect = { actions.onIdleBackground(if (it == 0) IdleBackground.Brume else IdleBackground.Wallpaper) }
             )
         }
-        ListenRows(state, onAsk = { onAskAccess(Access.Notifications) }, onPickMediaApp)
-        MessagesRows(state, onAsk = { onAskAccess(Access.Messages) }, onPickPeople)
+        ListenRows(state, access, onPickMediaApp)
+        MessagesRows(state, access, onPickPeople)
         BcSectionLabel("Agenda")
-        SourceRow(state.agenda, onAsk = { onAskAccess(Access.Calendar) })
+        SourceRow(state.agenda, Access.Calendar, access)
         BcSectionLabel("Météo")
         BcSettingRow(
             title = state.weather.title,
@@ -150,10 +179,10 @@ fun SettingsScreen(
 
 /** What plays: the access Android asks for, and the media app the « Écouter » sheet shows first. */
 @Composable
-private fun ListenRows(state: SettingsUiState, onAsk: () -> Unit, onPickMediaApp: () -> Unit) {
+private fun ListenRows(state: SettingsUiState, access: AccessLinks, onPickMediaApp: () -> Unit) {
     val main = state.mainMediaApp
     BcSectionLabel("Écoute")
-    SourceRow(state.media, onAsk)
+    SourceRow(state.media, Access.Notifications, access)
     BcSettingRow(
         title = "App média principale",
         subtitle = main?.let { "${it.name} · en tête quand tu touches « Écouter… »" } ?: NO_MEDIA_APP,

@@ -128,7 +128,12 @@ class MainActivity : ComponentActivity() {
                 ) { SearchList(searching, search, search.icons, links = searchLinks) }
             )
             AnimatedVisibility(visible = settingsOpen, enter = fadeIn(), exit = fadeOut()) {
-                SettingsRoute(settings, onBack = { settingsOpen = false }, onAskAccess = questions::ask)
+                SettingsRoute(
+                    settings,
+                    onBack = { settingsOpen = false },
+                    onAskAccess = questions::ask,
+                    onOpenAccessPage = questions::openPage
+                )
             }
         }
     }

@@ -77,6 +77,14 @@ internal class AccessQuestions(
     }
 
     /**
+     * Opens the page of Android where an access already given is taken back, without a question: the page of the
+     * "notification access" for what plays, the page of Bercail in the phone settings for the others.
+     */
+    fun openPage(what: Access) {
+        if (what.permissions.isEmpty()) openNotificationAccess() else phone().openAppSettings()
+    }
+
+    /**
      * The "notification access" is given on a page of Android's settings: Bercail opens the one that is about
      * itself. The answer is read when the home screen comes back.
      */

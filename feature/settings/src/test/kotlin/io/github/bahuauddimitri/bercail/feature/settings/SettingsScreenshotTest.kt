@@ -17,6 +17,7 @@ import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -34,9 +35,10 @@ class SettingsScreenshotTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun show(update: UpdateStatus = UpdateStatus.UpToDate()) {
+    private fun show(update: UpdateStatus = UpdateStatus.UpToDate(), refused: Set<Access> = emptySet()) {
         val world = FakeWorld()
         world.updates.status.value = update
+        refused.forEach(world.access::refuse)
         val settings =
             SettingsViewModel(
                 world.settings,
@@ -73,6 +75,13 @@ class SettingsScreenshotTest {
         compose.onNodeWithText("Paramètres du téléphone").performScrollTo()
 
         capture("settings_update_ready")
+    }
+
+    @Test
+    fun `les réglages sans aucun accès, chacun avec son bouton « Autoriser », correspondent à leur capture`() {
+        show(refused = setOf(Access.Notifications, Access.Messages, Access.Calendar))
+
+        capture("settings_access_missing")
     }
 
     @Test

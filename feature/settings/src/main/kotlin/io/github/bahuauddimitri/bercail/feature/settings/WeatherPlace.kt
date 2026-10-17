@@ -101,27 +101,12 @@ fun PlaceScreen(
     actions: PlaceActions,
     onAskLocation: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenLocationPage: () -> Unit = {}
 ) {
     val city = state.settings.weatherCity
-    val positionUsed = city == null && state.locationAllowed
     BcPanel("Lieu des prévisions", onBack, backDescription = "Retour aux réglages", modifier = modifier) {
-        BcSettingRow(
-            title = "Ma position approximative",
-            subtitle = when {
-                positionUsed -> "Utilisée · envoyée arrondie à Open-Meteo, jamais la position précise"
-                city != null -> "Toucher pour l'utiliser à la place de ${city.name}"
-                else -> "Toucher pour l'autoriser · elle est envoyée arrondie à Open-Meteo"
-            },
-            onClick = if (positionUsed) {
-                null
-            } else {
-                {
-                    actions.onUsePhonePosition()
-                    if (!state.locationAllowed) onAskLocation()
-                }
-            }
-        )
+        PositionRow(state, actions, onAskLocation, onOpenLocationPage)
         BcSectionLabel("Ou une ville")
         if (city != null) BcSettingRow(city.name, subtitle = "${city.region} · utilisée")
         // Unlike the flat rows, the field, its button and what they find need room between them.
@@ -141,6 +126,41 @@ fun PlaceScreen(
             )
         }
     }
+}
+
+/**
+ * The approximate position of the phone. While it is not allowed, « Autoriser » asks Android and chooses it. Once
+ * allowed, « Autorisé » in grey: a touch chooses it again in place of a city, or, when it is already used, opens
+ * Android's page where it is taken back.
+ */
+@Composable
+private fun PositionRow(
+    state: SettingsUiState,
+    actions: PlaceActions,
+    onAskLocation: () -> Unit,
+    onOpenLocationPage: () -> Unit
+) {
+    val city = state.settings.weatherCity
+    val allowed = state.locationAllowed
+    BcSettingRow(
+        title = "Ma position approximative",
+        subtitle = when {
+            city == null && allowed -> "Utilisée · envoyée arrondie à Open-Meteo, jamais la position précise"
+            city != null -> "Toucher pour l'utiliser à la place de ${city.name}"
+            else -> "Toucher pour l'autoriser · elle est envoyée arrondie à Open-Meteo"
+        },
+        onClick = when {
+            !allowed -> null
+            city != null -> actions::onUsePhonePosition
+            else -> onOpenLocationPage
+        },
+        trailing = {
+            AccessState(missing = !allowed) {
+                actions.onUsePhonePosition()
+                onAskLocation()
+            }
+        }
+    )
 }
 
 @Composable

@@ -8,17 +8,14 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
+import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.messages.MAX_FAVORITE_PEOPLE
 
 /** The messages: the access Beeper asks for, and the people whose tiles stand in the open drawer. */
 @Composable
-internal fun MessagesRows(state: SettingsUiState, onAsk: () -> Unit, onPickPeople: () -> Unit) {
+internal fun MessagesRows(state: SettingsUiState, access: AccessLinks, onPickPeople: () -> Unit) {
     BcSectionLabel("Messages")
-    BcSettingRow(
-        title = state.messages.title,
-        subtitle = state.messages.detail,
-        onClick = if (state.messages.touchable) onAsk else null
-    )
+    SourceRow(state.messages, Access.Messages, access)
     BcSettingRow(
         title = "Personnes favorites",
         subtitle = state.favoritePeopleNames,

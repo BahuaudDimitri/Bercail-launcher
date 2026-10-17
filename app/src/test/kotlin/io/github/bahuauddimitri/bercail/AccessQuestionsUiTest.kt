@@ -147,6 +147,24 @@ class AccessQuestionsUiTest {
         assertThat(access.granted.value).isEqualTo(setOf(Access.Messages))
     }
 
+    @Test
+    fun `pour retirer ce qui joue, Bercail ouvre la page de son accès dans les réglages d'Android`() {
+        questions.openPage(Access.Notifications)
+
+        val opened = shadowOf(app).nextStartedActivity
+        assertThat(opened.action).isEqualTo(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+        assertThat(android.asked).isEmpty()
+        assertThat(phone.visits).isEmpty()
+    }
+
+    @Test
+    fun `pour retirer l'agenda, la position ou Beeper, Bercail ouvre sa page dans les Paramètres, sans question`() {
+        listOf(Access.Calendar, Access.Location, Access.Messages).forEach(questions::openPage)
+
+        assertThat(phone.visits).containsExactly("app settings", "app settings", "app settings")
+        assertThat(android.asked).isEmpty()
+    }
+
     /** Android's permission screen: it remembers what it was asked, and answers when the test says so. */
     private class AndroidAsked : ActivityResultRegistry() {
         val asked = mutableListOf<String>()

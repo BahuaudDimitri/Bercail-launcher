@@ -3,8 +3,10 @@ package io.github.bahuauddimitri.bercail.feature.settings
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -12,9 +14,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
@@ -42,6 +46,7 @@ class SettingsUiTest {
     private val world = FakeWorld()
     private var closed = 0
     private val asked = mutableListOf<Access>()
+    private val pages = mutableListOf<Access>()
 
     private fun show() {
         val settings =
@@ -55,7 +60,16 @@ class SettingsUiTest {
                 world.mediaApps,
                 world.messages
             )
-        compose.setContent { BcTheme { SettingsRoute(settings, onBack = { closed++ }, onAskAccess = { asked += it }) } }
+        compose.setContent {
+            BcTheme {
+                SettingsRoute(
+                    settings,
+                    onBack = { closed++ },
+                    onAskAccess = { asked += it },
+                    onOpenAccessPage = { pages += it }
+                )
+            }
+        }
     }
 
     private val stored: Settings get() = world.settings.settings.value
@@ -89,22 +103,35 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `sans autorisation, la ligne « Agenda du téléphone » la demande à Android d'un toucher`() {
+    fun `sans autorisation, la ligne « Agenda du téléphone » offre « Autoriser », qui la demande à Android`() {
         world.access.refuse(Access.Calendar)
         show()
         compose.onNodeWithText("Toucher pour autoriser Bercail à lire tes rendez-vous").assertExists()
+        compose.onNodeWithText("Agenda du téléphone").performScrollTo().assertHasNoClickAction()
 
-        compose.onNodeWithText("Agenda du téléphone").performScrollTo().performClick()
+        compose.onNodeWithText("Autoriser").performScrollTo().assertHeightIsAtLeast(40.dp).performClick()
 
         assertThat(asked).containsExactly(Access.Calendar)
+        assertThat(pages).isEmpty()
     }
 
     @Test
-    fun `une fois l'agenda autorisé, sa ligne le dit et ne se touche plus`() {
+    fun `une fois l'agenda autorisé, sa ligne dit « Autorisé » et ouvre la page d'Android pour le retirer`() {
         show()
 
         compose.onNodeWithText("Bercail lit tes rendez-vous, sans rien y changer").assertExists()
-        compose.onNodeWithText("Agenda du téléphone").performScrollTo().assertHasNoClickAction()
+        compose.onNode(hasText("Agenda du téléphone") and hasText("Autorisé")).performScrollTo().performClick()
+
+        assertThat(pages).containsExactly(Access.Calendar)
+        assertThat(asked).isEmpty()
+    }
+
+    @Test
+    fun `une fois tout autorisé, aucune ligne n'offre plus « Autoriser » ni d'interrupteur`() {
+        show()
+
+        compose.onAllNodesWithText("Autoriser").assertCountEquals(0)
+        compose.onAllNodes(isToggleable()).assertCountEquals(0)
     }
 
     @Test
@@ -120,15 +147,24 @@ class SettingsUiTest {
     // ---------- messages ----------
 
     @Test
-    fun `sans l'accès à Beeper, la ligne « Messages de Beeper » le demande à Android d'un toucher`() {
+    fun `sans l'accès à Beeper, la ligne « Messages de Beeper » offre « Autoriser », qui le demande à Android`() {
         world.access.refuse(Access.Messages)
         show()
         compose.onNodeWithText("Toucher pour autoriser Bercail à lire tes conversations et à y répondre")
             .assertExists()
 
-        compose.onNodeWithText("Messages de Beeper").performScrollTo().performClick()
+        compose.onNodeWithText("Autoriser").performScrollTo().performClick()
 
         assertThat(asked).containsExactly(Access.Messages)
+    }
+
+    @Test
+    fun `Beeper relié, sa ligne dit « Autorisé » et ouvre la page d'Android pour le retirer`() {
+        show()
+
+        compose.onNode(hasText("Messages de Beeper") and hasText("Autorisé")).performScrollTo().performClick()
+
+        assertThat(pages).containsExactly(Access.Messages)
     }
 
     @Test
@@ -136,7 +172,6 @@ class SettingsUiTest {
         world.access.refuse(Access.Notifications)
         show()
 
-        compose.onNodeWithText("Messages de Beeper").performScrollTo().assertHasNoClickAction()
         compose
             .onNodeWithText(
                 "Relié · pour voir un message dès qu'il arrive, autorise aussi « Musique en cours », plus haut"
@@ -203,18 +238,22 @@ class SettingsUiTest {
         compose.onNodeWithText("Toucher pour autoriser · Android range ce droit sous « Accès aux notifications »")
             .assertExists()
 
-        compose.onNodeWithText("Musique en cours").performScrollTo().performClick()
+        compose.onNodeWithText("Musique en cours").performScrollTo().assertHasNoClickAction()
+        compose.onNodeWithText("Autoriser").performScrollTo().performClick()
 
         assertThat(asked).containsExactly(Access.Notifications)
     }
 
     @Test
-    fun `une fois l'accès donné, la ligne « Musique en cours » dit ce que Bercail en fait et ne se touche plus`() {
+    fun `une fois l'accès donné, la ligne « Musique en cours » dit « Autorisé » et ouvre la page pour le retirer`() {
         show()
 
         compose.onNodeWithText("Bercail voit ce qui joue et sait qu'un message arrive, sans lire aucune notification")
             .assertExists()
-        compose.onNodeWithText("Musique en cours").performScrollTo().assertHasNoClickAction()
+        compose.onNode(hasText("Musique en cours") and hasText("Autorisé")).performScrollTo().performClick()
+
+        assertThat(pages).containsExactly(Access.Notifications)
+        assertThat(asked).isEmpty()
     }
 
     @Test
@@ -278,21 +317,27 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `position autorisée et sans ville, la position est dite utilisée et ne se touche pas`() {
+    fun `position autorisée et sans ville, sa ligne dit « Autorisé » et ouvre la page d'Android`() {
         openPlace()
 
         compose.onNodeWithText("Utilisée · envoyée arrondie à Open-Meteo, jamais la position précise").assertExists()
-        compose.onNodeWithText("Ma position approximative").assertHasNoClickAction()
+        compose.onNode(hasText("Ma position approximative") and hasText("Autorisé")).performClick()
+
+        assertThat(pages).containsExactly(Access.Location)
+        assertThat(asked).isEmpty()
     }
 
     @Test
-    fun `sans autorisation, toucher « Ma position approximative » la demande à Android`() {
+    fun `sans autorisation, « Autoriser » sur « Ma position approximative » la demande à Android et la choisit`() {
+        world.settings.change { it.copy(weatherCity = Samples.cities.first()) }
         world.access.refuse(Access.Location)
         openPlace()
+        compose.onNodeWithText("Ma position approximative").assertHasNoClickAction()
 
-        compose.onNodeWithText("Ma position approximative").performClick()
+        compose.onNodeWithText("Autoriser").performClick()
 
         assertThat(asked).containsExactly(Access.Location)
+        assertThat(stored.weatherCity).isNull()
     }
 
     @Test
