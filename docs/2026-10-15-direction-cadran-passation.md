@@ -27,7 +27,8 @@ Documents du chantier :
 2. ~~**Vague 1, le fil**~~ : livrée le 16 octobre 2026 (voir la fiche 6.1 de la feuille de route, « Vague 1 livrée »).
 3. ~~**Vague 2, le bandeau et la feuille**~~ : livrée le 16 octobre 2026 (fiche 6.1, « Vague 2 livrée ») ; le verre givré (6.2) attend sa mesure Perfetto sur le Pixel avant d'être gardé.
 4. ~~**Vague 3, le dock**~~ : livrée le 16 octobre 2026 (fiche 6.1, « Vague 3 livrée ») et 1.7 avec elle ; les vraies icônes et les raccourcis du toucher long restent à voir sur le Pixel, avec la version publiée choisie comme écran d'accueil.
-5. Vagues 4 et 5 dans l'ordre de la feuille de route 6.1 ; la vague 5 (Écoute, l'arche) porte aussi la première transition de 2.4 et le masquage de la barre native.
+5. ~~**Vague 4, les feuilles**~~ : livrée le 17 octobre 2026 (fiche 6.1, « Vague 4 livrée ») : boutons en pilule, lignes de liste, feuilles sans voile, recherche givrée, réglages à plat, fond `#101119` ; le 17 octobre, les apps de la recherche et de la feuille « Écouter » ont repris leur vraie icône en couleurs, sans anneau, et le dock a perdu ses anneaux. Ce qui reste à voir sur le Pixel est listé dans la fiche.
+6. **Suivante : la vague 5, Écoute (l'arche)**, dans l'ordre de la feuille de route 6.1 ; elle porte aussi la première transition de 2.4 et le masquage de la barre native.
 
 ## 3. Décisions — verrouillées et ouvertes
 

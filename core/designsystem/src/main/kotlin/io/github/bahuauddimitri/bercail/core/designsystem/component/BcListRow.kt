@@ -49,7 +49,7 @@ sealed interface BcLeading {
     data class Time(val text: String) : BcLeading
 }
 
-/** Dimmed: in the past. Accent: what stands out (the first app found, the main media app), its ring in the accent. */
+/** Dimmed: in the past. Accent: what stands out (the next appointment, the chosen app), its ring in the accent. */
 enum class BcRowEmphasis { Normal, Dimmed, Accent }
 
 /**
