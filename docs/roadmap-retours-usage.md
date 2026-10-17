@@ -111,10 +111,17 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 
 ## Lot 2 — Gestes et transitions
 
-### 2.1 Glisser vers le bas pour fermer les « modales » — `À préciser`
+### 2.1 Glisser vers le bas pour fermer les « modales » — `Précisé`
 
 - **Piste :** ajouter le geste une fois dans `BcDrawer` et `BcPanel`, pour que toutes les feuilles en profitent. Seuil et vitesse à régler, avec un test du seuil comme pour le tiroir (24 dp).
-- **À préciser :** la liste des écrans concernés. Et les écrans avec une liste qui défile (conversation, recherche) : le geste ne doit fermer que quand la liste est en haut.
+- **Constat (17 octobre) :** les feuilles du bas (`BcSheet` : conversation, journée, « Écouter » ; `BcBandSheet` : la feuille « gens et maison ») se ferment d'un coup dès 24 dp de glissement vers le bas, mais les listes qui défilent dedans (la journée, « Écouter », la conversation) prennent le geste pour elles : il ne marche pas sur elles. La recherche plein écran n'a aucun glissement pour se fermer.
+- **Décisions (17 octobre, avec Dimitri) :**
+  - La feuille suit le doigt : le verre descend sous le doigt ; lâcher au-delà d'un seuil, ou d'un coup sec vers le bas, la ferme ; sinon elle remonte à sa place, sans rebond. Même mécanique que la transition d'Écoute (2.4), 20 images par seconde au plus, rien ne tourne au repos. Pour toutes les feuilles du bas : conversation, journée, « Écouter » et la feuille « gens et maison ». L'ouverture de la feuille « gens et maison » en glissant vers le haut sur le bandeau ne change pas.
+  - Feuilles avec une liste (journée, « Écouter ») : tant que la liste peut remonter, glisser vers le bas la fait défiler ; une fois en haut, le même geste continue en tirant la feuille vers le bas (défilement imbriqué, comme dans les apps Android).
+  - Conversation : elle ne se ferme en glissant que depuis son en-tête (la poignée, le nom de la personne et la zone d'en-tête) ; glisser sur les messages fait toujours défiler l'historique, jamais fermer.
+  - Recherche : glisser vers le bas ferme la recherche plein écran quand sa liste est en haut ou que rien ne défile, en suivant le doigt de la même façon, et le clavier s'en va avec elle. Fermer, c'est la fermeture d'aujourd'hui : champ vidé, comme la flèche. Les pages des Réglages (`BcPanel`) ne changent pas.
+- **Choix techniques par défaut (orchestrateur, 17 octobre ; à revoir si Dimitri le souhaite) :** le seuil est le tiers de la hauteur de la feuille (pour la recherche, le tiers de l'écran), ou un coup sec vers le bas plus rapide qu'environ une hauteur de feuille par seconde ; lâchée avant, elle remonte. La règle des 24 dp disparaît pour fermer (le bandeau la garde pour ouvrir). L'accessibilité ne change pas : la poignée reste un bouton « Fermer la feuille », le geste retour et le toucher au-dessus ferment toujours. Brume reste figée tant qu'une feuille est ouverte, pendant qu'on la tire aussi ; elle repart une fois la feuille fermée.
+- **Fini quand :** les tests le montrent (suit le doigt, revient lâchée trop tôt, se ferme au-delà du tiers ou d'un coup sec, la liste défile d'abord puis tire la feuille, un glissement sur les messages ne ferme jamais, 20 images par seconde au plus, plus rien ne tourne une fois posée), avec une capture d'une feuille tirée à mi-chemin, puis à l'usage sur le Pixel.
 
 ### 2.2 Double tap + glisser sur la barre verticale : rechercher une app — `À préciser`
 
