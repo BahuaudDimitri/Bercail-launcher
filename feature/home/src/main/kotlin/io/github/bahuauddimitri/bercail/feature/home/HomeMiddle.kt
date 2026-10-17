@@ -1,9 +1,5 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,20 +14,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
-import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 
 /**
- * The middle of Accueil: the music pill and the page dots. Sliding left opens Écoute, which then takes the whole
+ * The middle of Accueil: the music pill, with no page dots. Sliding left opens Écoute, which then takes the whole
  * screen. With [resting], the pill's equalizer keeps still.
  */
 @Composable
 internal fun HomeMiddle(state: HomeUiState, resting: Boolean, actions: HomeActions, modifier: Modifier = Modifier) {
-    val fade = BcTheme.motion.fadeMillis
     val onSwipeLeft by rememberUpdatedState { actions.onPageWanted(HomePage.Listen) }
     Box(
         modifier.fillMaxWidth().testTag(MIDDLE_TAG).pointerInput(Unit) {
@@ -50,25 +43,12 @@ internal fun HomeMiddle(state: HomeUiState, resting: Boolean, actions: HomeActio
             onOpenApp = actions::onOpenMediaApp,
             modifier = Modifier.align(Alignment.BottomStart).padding(start = SIDE, bottom = PILL_BOTTOM)
         )
-        // The dots only exist while there is a second screen to go to.
-        AnimatedVisibility(
-            visible = state.media.isLoaded,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = fadeIn(tween(fade)),
-            exit = fadeOut(tween(fade))
-        ) {
-            BcPageDots(
-                pages = PAGES,
-                selected = state.page.ordinal,
-                onSelect = { actions.onPageWanted(HomePage.entries[it]) }
-            )
-        }
     }
 }
 
 /**
- * With a content: its cover, "Title · Artist" and the equalizer; sliding it to the right shows the content in its
- * app. Without: "Écouter…", which opens the media apps.
+ * With a content: its cover, "Title · Artist", the equalizer and the chevron; sliding it to the right shows the
+ * content in its app. Without: "Écouter…", which opens the media apps.
  */
 @Composable
 private fun MusicPill(
@@ -96,6 +76,5 @@ private fun MusicPill(
     }
 }
 
-private val PAGES = listOf("Accueil", "Écoute")
 private val SWIPE = 40.dp
 private val PILL_BOTTOM = 40.dp

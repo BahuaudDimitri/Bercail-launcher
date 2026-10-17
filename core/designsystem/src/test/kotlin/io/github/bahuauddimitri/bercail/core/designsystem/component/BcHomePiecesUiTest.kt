@@ -4,9 +4,6 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -15,8 +12,6 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -41,7 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The small pieces the home screen is made of: summary lines, page dots, weather line, the buttons of the Listen
+ * The small pieces the home screen is made of: summary lines, music pill, weather line, the buttons of the Listen
  * screen.
  */
 @RunWith(AndroidJUnit4::class)
@@ -50,7 +45,6 @@ class BcHomePiecesUiTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private var clicks = 0
-    private var page by mutableIntStateOf(0)
 
     @Test
     fun `une ligne de résumé écrit le nombre puis les noms`() {
@@ -123,25 +117,18 @@ class BcHomePiecesUiTest {
     }
 
     @Test
-    fun `toucher un point de pagination demande son écran`() {
+    fun `la pastille musique finit par un chevron vers la droite, après le titre et l'égaliseur`() {
         compose.setContent {
-            BcTheme { BcPageDots(listOf("Accueil", "Écoute"), selected = page, onSelect = { page = it }) }
+            BcTheme {
+                BcMusicPill(title = "Looped", artist = "Kiasmos", cover = null, playing = true, onClick = {})
+            }
         }
 
-        compose.onNodeWithContentDescription("Écran Écoute").performClick()
-
-        assertThat(page).isEqualTo(1)
-        compose.onNodeWithContentDescription("Écran Écoute").assertIsSelected()
-        compose.onNodeWithContentDescription("Écran Accueil").assertIsNotSelected()
-    }
-
-    @Test
-    fun `chaque point de pagination se touche sur au moins 40 dp de haut`() {
-        compose.setContent {
-            BcTheme { BcPageDots(listOf("Accueil", "Écoute"), selected = 0, onSelect = {}) }
-        }
-
-        compose.onNodeWithContentDescription("Écran Accueil").assertHeightIsAtLeast(40.dp)
+        val chevron = compose.onNodeWithTag(MUSIC_PILL_CHEVRON_TAG, useUnmergedTree = true)
+            .assertWidthIsEqualTo(16.dp)
+            .getUnclippedBoundsInRoot()
+        val text = compose.onNodeWithText("Looped · Kiasmos", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertThat(chevron.left).isGreaterThan(text.right)
     }
 
     @Test

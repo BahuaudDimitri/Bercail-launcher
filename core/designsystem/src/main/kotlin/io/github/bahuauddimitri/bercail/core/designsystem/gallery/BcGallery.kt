@@ -57,7 +57,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcMusicPill
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPageDots
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
@@ -315,7 +314,6 @@ private fun Conversation() {
 
 @Composable
 private fun Home() {
-    var page by remember { mutableIntStateOf(0) }
     BcSwipeBlock(swipe = BcRowSwipe("Ouvrir l'agenda") {}, onClick = {}) {
         BcText("Dans 1 h 20 · 09:30", style = BcTextStyle.LabelStrong, color = BcTextColor.Muted)
         BcText("Stand-up", style = BcTextStyle.AgendaTitle)
@@ -329,7 +327,6 @@ private fun Home() {
         onClick = {}
     )
     BcSummaryRow("Salon 60 %, Volets ouverts", leading = BcSummaryLeading.Icon(BcIcons.House), onClick = {})
-    BcPageDots(listOf("Accueil", "Écoute"), selected = page, onSelect = { page = it })
 }
 
 @Composable

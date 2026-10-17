@@ -68,6 +68,9 @@ enum class BcIcons(private val draw: () -> ImageVector) {
     Search({ glyph(16f, 16f) { stroke(circle(7f, 7f, 5f) + "M11 11l3.5 3.5", width = 1.6f) } }),
     Close({ glyph(14f, 14f) { stroke("M3 3l8 8M11 3l-8 8", width = 1.8f) } }),
 
+    /** At the end of the music pill: it leads to the Listen screen. */
+    ChevronRight({ line24 { stroke("M9 6l6 6-6 6") } }),
+
     /** At the bottom of the Listen screen: sliding up goes back to the home. */
     ChevronUp({ line24 { stroke("M6 15l6-6 6 6") } }),
 

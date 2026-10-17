@@ -32,26 +32,23 @@ class BcHomePiecesScreenshotTest {
     val compose = createComposeRule()
 
     @Test
-    fun `les lignes de résumé, la météo et les points de pagination correspondent à leur capture`() =
-        compose.captureComponent("home_pieces") {
-            Column(Modifier.width(348.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
-                BcWeatherLine("11° · Ciel dégagé ce matin", BcWeather.Clear)
-                BcWeatherLine("14° · Pluie cet après-midi", BcWeather.Rain)
-                BcWeatherLine("12° · Vent ce soir", BcWeather.Wind)
-                BcWeatherLine("0° · Neige cette nuit", BcWeather.Snow)
-                BcMomentScope(BcMoment.Evening) { BcWeatherLine("12° · Nuit claire", BcWeather.Clear, night = true) }
-                BcSummaryRow(
-                    text = "Léa, Tom",
-                    strong = "2 non lus",
-                    leading = BcSummaryLeading.Dots(listOf(BcPastel.Coral, BcPastel.Blue)),
-                    onClick = {}
-                )
-                BcSummaryRow("Aucun message", leading = BcSummaryLeading.Dots(emptyList()), onClick = {})
-                BcSummaryRow("Salon 60 %, Volets ouverts", leading = BcSummaryLeading.Icon(BcIcons.House), onClick = {})
-                BcPageDots(listOf("Accueil", "Écoute"), selected = 0, onSelect = {})
-                BcPageDots(listOf("Accueil", "Écoute"), selected = 1, onSelect = {})
-            }
+    fun `les lignes de résumé et la météo correspondent à leur capture`() = compose.captureComponent("home_pieces") {
+        Column(Modifier.width(348.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
+            BcWeatherLine("11° · Ciel dégagé ce matin", BcWeather.Clear)
+            BcWeatherLine("14° · Pluie cet après-midi", BcWeather.Rain)
+            BcWeatherLine("12° · Vent ce soir", BcWeather.Wind)
+            BcWeatherLine("0° · Neige cette nuit", BcWeather.Snow)
+            BcMomentScope(BcMoment.Evening) { BcWeatherLine("12° · Nuit claire", BcWeather.Clear, night = true) }
+            BcSummaryRow(
+                text = "Léa, Tom",
+                strong = "2 non lus",
+                leading = BcSummaryLeading.Dots(listOf(BcPastel.Coral, BcPastel.Blue)),
+                onClick = {}
+            )
+            BcSummaryRow("Aucun message", leading = BcSummaryLeading.Dots(emptyList()), onClick = {})
+            BcSummaryRow("Salon 60 %, Volets ouverts", leading = BcSummaryLeading.Icon(BcIcons.House), onClick = {})
         }
+    }
 
     @Test
     fun `les boutons d'Écoute, le chevron du bas et la pastille correspondent à leur capture`() =

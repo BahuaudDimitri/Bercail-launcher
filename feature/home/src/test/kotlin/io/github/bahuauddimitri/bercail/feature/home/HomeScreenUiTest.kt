@@ -11,7 +11,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
@@ -576,22 +575,11 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `les points de pagination n'existent que si un contenu est chargé`() {
-        val world = show()
-        compose.onNodeWithContentDescription("Écran Accueil").assertIsSelected()
-
-        world.media.stop()
-
-        compose.onNodeWithContentDescription("Écran Accueil").assertDoesNotExist()
-    }
-
-    @Test
-    fun `toucher le point « Écoute » ouvre l'écran Écoute`() {
+    fun `l'accueil n'a plus de points de pagination, même avec un contenu chargé`() {
         show()
 
-        compose.onNodeWithContentDescription("Écran Écoute").performClick()
-
-        compose.onNodeWithText("Ouvrir dans Spotify").assertExists()
+        compose.onNodeWithContentDescription("Écran Accueil").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Écran Écoute").assertDoesNotExist()
     }
 
     @Test
@@ -606,7 +594,6 @@ class HomeScreenUiTest {
         compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
         compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
         compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Écran Accueil").assertDoesNotExist()
     }
 
     @Test
@@ -717,7 +704,7 @@ class HomeScreenUiTest {
     fun `la feuille retrouve son état en revenant de l'écran Écoute`() {
         show()
         compose.openSheet()
-        compose.onNodeWithContentDescription("Écran Écoute").performClick()
+        compose.onNodeWithText("Looped · Kiasmos").performClick()
         compose.waitForIdle()
 
         compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }

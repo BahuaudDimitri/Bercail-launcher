@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -41,7 +42,7 @@ import kotlin.math.sin
 
 /**
  * The music pill on the home screen: round cover, "Title · Artist" (the title alone when the artist is not
- * known) and an equalizer, frozen when paused.
+ * known), an equalizer, frozen when paused, and a chevron to the right: it leads to the Listen screen.
  * Without [cover] image, the disc is a blend of [coverColors], or a note when there are none.
  * With [still], the equalizer keeps its pose: the screen is at rest, even though the music plays.
  * With [swipe], the pill can be slid to the right, to open the app that plays; to the left, the finger is left to
@@ -117,6 +118,14 @@ private fun Pill(
             maxLines = 1
         )
         Equalizer(playing, moving = playing && !still)
+        // Says the pill leads somewhere: the Listen screen.
+        BcIcon(
+            BcIcons.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.padding(start = CHEVRON_GAP).testTag(MUSIC_PILL_CHEVRON_TAG),
+            size = CHEVRON,
+            tint = BcTextColor.Muted
+        )
     }
 }
 
@@ -157,3 +166,8 @@ private val NOTE = 14.dp
 private val EQ_WIDTH = 10.dp
 private val EQ_HEIGHT = 12.dp
 private val BAR_WIDTH = 2.dp
+private val CHEVRON = 16.dp
+
+// The chevron stands a little further from the equalizer than the other parts of the pill from each other.
+private val CHEVRON_GAP = 2.dp
+internal const val MUSIC_PILL_CHEVRON_TAG = "music-pill-chevron"

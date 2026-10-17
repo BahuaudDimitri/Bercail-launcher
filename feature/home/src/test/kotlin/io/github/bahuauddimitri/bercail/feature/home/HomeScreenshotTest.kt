@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -81,7 +82,7 @@ class HomeScreenshotTest {
     @Test
     fun `le soir, sur l'écran Écoute, correspond à sa capture`() {
         show(FakeWorld(Moment.Soir))
-        compose.onNodeWithContentDescription("Écran Écoute").performClick()
+        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { swipeLeft() }
 
         capture("home_evening_listen")
     }
@@ -187,7 +188,7 @@ class HomeScreenshotTest {
         compose.setContent {
             BcTheme { Box(Modifier.fillMaxSize().background(BcColors.nightBottom)) { HomeRoute(home) } }
         }
-        compose.onNodeWithContentDescription("Écran Écoute").performClick()
+        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { swipeLeft() }
 
         capture("home_listen_video")
     }
