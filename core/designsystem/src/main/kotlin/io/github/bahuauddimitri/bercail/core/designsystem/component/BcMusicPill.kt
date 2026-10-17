@@ -3,7 +3,7 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -47,6 +47,7 @@ import kotlin.math.sin
  * With [still], the equalizer keeps its pose: the screen is at rest, even though the music plays.
  * With [swipe], the pill can be slid to the right, to open the app that plays; to the left, the finger is left to
  * the screen behind it.
+ * A long press calls [onLongClick], offered to a screen reader under [onLongClickLabel]; without it, it does nothing.
  */
 @Composable
 fun BcMusicPill(
@@ -58,7 +59,9 @@ fun BcMusicPill(
     modifier: Modifier = Modifier,
     coverColors: Pair<Color, Color>? = null,
     still: Boolean = false,
-    swipe: BcRowSwipe? = null
+    swipe: BcRowSwipe? = null,
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null
 ) {
     val slide = rememberSlide()
     Box(
@@ -66,9 +69,16 @@ fun BcMusicPill(
         contentAlignment = Alignment.CenterStart
     ) {
         if (swipe != null) SlideHint(swipe, slide)
-        Pill(title, artist, cover, coverColors, playing, still, onClick, swipe, slide)
+        val press = Press(onClick, onLongClick, onLongClickLabel)
+        Pill(title, artist, cover, coverColors, playing, still, press, swipe, slide)
     }
 }
+
+/**
+ * What a touch on the pill does, and a long press. A long press is only noticed while the finger stays put: once it
+ * slides, to the right or to the screen behind, the press is given up.
+ */
+private class Press(val onClick: () -> Unit, val onLongClick: (() -> Unit)?, val longClickLabel: String?)
 
 @Composable
 private fun Pill(
@@ -78,7 +88,7 @@ private fun Pill(
     coverColors: Pair<Color, Color>?,
     playing: Boolean,
     still: Boolean,
-    onClick: () -> Unit,
+    press: Press,
     swipe: BcRowSwipe?,
     slide: Slide
 ) {
@@ -88,7 +98,14 @@ private fun Pill(
             .widthIn(max = MAX_WIDTH)
             .defaultMinSize(minHeight = BcSizes.minTouch)
             .background(BcColors.tile, BcShapes.pill)
-            .clickable(null, BcPressVeil.Pill, role = Role.Button, onClick = onClick)
+            .combinedClickable(
+                interactionSource = null,
+                indication = BcPressVeil.Pill,
+                role = Role.Button,
+                onLongClickLabel = press.longClickLabel,
+                onLongClick = press.onLongClick,
+                onClick = press.onClick
+            )
             .semantics {
                 stateDescription = if (playing) "En lecture" else "En pause"
                 if (swipe != null) customActions = listOf(swipe.asAction())

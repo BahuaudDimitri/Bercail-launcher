@@ -10,9 +10,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ class BcMusicPillSwipeUiTest {
 
     private var touched = 0
     private var opened = 0
+    private var longPressed = 0
 
     /** How far the screen behind the pill saw a finger slide, to the right (positive) or to the left. */
     private var behind = 0f
@@ -57,7 +60,9 @@ class BcMusicPillSwipeUiTest {
                         onClick = { touched++ },
                         modifier = Modifier.testTag("pill"),
                         still = true,
-                        swipe = BcRowSwipe("Ouvrir Spotify") { opened++ }
+                        swipe = BcRowSwipe("Ouvrir Spotify") { opened++ },
+                        onLongClick = { longPressed++ },
+                        onLongClickLabel = "Apps d'écoute"
                     )
                 }
             }
@@ -115,5 +120,60 @@ class BcMusicPillSwipeUiTest {
             "Looped · Kiasmos"
         ).fetchSemanticsNode().config[SemanticsActions.CustomActions]
         assertThat(actions.map { it.label }).containsExactly("Ouvrir Spotify")
+    }
+
+    @Test
+    fun `un appui long sur la pastille musique demande les apps d'écoute, sans compter un toucher`() {
+        show()
+
+        pill.performTouchInput { longClick() }
+
+        assertThat(longPressed).isEqualTo(1)
+        assertThat(touched).isEqualTo(0)
+        assertThat(opened).isEqualTo(0)
+    }
+
+    @Test
+    fun `glisser lentement la pastille vers la droite ouvre l'app qui joue, sans compter un appui long`() {
+        show()
+
+        pill.performTouchInput {
+            swipe(start = Offset(20f, centerY), end = Offset(20f + 140.dp.toPx(), centerY), durationMillis = SLOW)
+        }
+
+        assertThat(opened).isEqualTo(1)
+        assertThat(longPressed).isEqualTo(0)
+    }
+
+    @Test
+    fun `glisser lentement vers la gauche depuis la pastille reste l'affaire de l'écran derrière, sans appui long`() {
+        show()
+
+        pill.performTouchInput {
+            swipe(
+                start = Offset(centerX, centerY),
+                end = Offset(centerX - 120.dp.toPx(), centerY),
+                durationMillis = SLOW
+            )
+        }
+
+        assertThat(behind).isLessThan(-40.dp.value)
+        assertThat(longPressed).isEqualTo(0)
+        assertThat(touched).isEqualTo(0)
+    }
+
+    @Test
+    fun `un lecteur d'écran trouve l'action « Apps d'écoute » sur la pastille musique`() {
+        show()
+
+        val pillText = compose.onNodeWithText("Looped · Kiasmos")
+        assertThat(pillText.fetchSemanticsNode().config[SemanticsActions.OnLongClick].label).isEqualTo("Apps d'écoute")
+        pillText.performSemanticsAction(SemanticsActions.OnLongClick)
+        assertThat(longPressed).isEqualTo(1)
+    }
+
+    private companion object {
+        /** A slide that lasts longer than a long press takes to be noticed. */
+        const val SLOW = 1_500L
     }
 }
