@@ -383,6 +383,14 @@ private fun Navigation() {
             onOpenDay = {}
         )
     }
+    // Without an alarm in the next 24 hours: the same ring, in grey, which still opens the alarms.
+    BcTimeline(
+        now = NOW,
+        marks = emptyList(),
+        modifier = Modifier.height(TALL).width(TIMELINE_WIDTH),
+        end = BcTimelineEnd("", "Aucun réveil", "Aucun réveil", set = false),
+        onOpenDay = {}
+    )
     // The same line at each moment of the day, in its accent.
     Row(horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl)) {
         BcMoment.entries.forEach { moment ->

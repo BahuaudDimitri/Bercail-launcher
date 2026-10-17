@@ -46,8 +46,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -82,9 +84,10 @@ data class BcTimelineMark(
 
 /**
  * What ends the line, just under midnight: the alarm of the phone, its time over its [caption] ("réveil · 9°"), and
- * what a screen reader says of it ([description]).
+ * what a screen reader says of it ([description]). Without an alarm ([set] false), the ring is grey and only the
+ * [caption] is written ("Aucun réveil"): it still opens the alarms.
  */
-data class BcTimelineEnd(val time: String, val caption: String, val description: String)
+data class BcTimelineEnd(val time: String, val caption: String, val description: String, val set: Boolean = true)
 
 /**
  * The day from 7 am to midnight, along the right edge, in the accent of the moment: the past as a thick line with
@@ -92,8 +95,8 @@ data class BcTimelineEnd(val time: String, val caption: String, val description:
  * the past ones in the accent and the next one circled. [headroom] is left free above 7 am (for the status bar): the
  * line still rises through it to the edge. Above [titlesBelow] (the top of the screen, where its own title stands),
  * appointments only write their time. Midnight keeps its place, with room under it for the [end] of the line: the
- * alarm, a hollow ring in the accent; touching it, or lifting the finger on it, calls [onOpenEnd]. Marks outside
- * the day are not drawn.
+ * alarm, a hollow ring in the accent (in grey, "Aucun réveil", when none is set); touching it, or lifting the finger
+ * on it, calls [onOpenEnd]. Marks outside the day are not drawn.
  *
  * With [onOpenDay], the line answers to the finger like the alphabet of the search. A touch without sliding calls
  * [onOpenDay] with the appointment closest to the finger (or nothing on a day without any). While the finger slides
@@ -134,7 +137,7 @@ fun BcTimeline(
         Canvas(Modifier.matchParentSize()) {
             val day = dayScale(headroom, size.height)
             drawLine(now.coerceIn(0f, 1f), visible, day, moment, bent = swell.value > 0f) { lean(it) }
-            if (end != null) drawEnd(day, moment, bent = swell.value > 0f) { lean(it) }
+            if (end != null) drawEnd(day, moment, end.set, bent = swell.value > 0f) { lean(it) }
         }
         val scale = with(LocalDensity.current) { dayScale(headroom, maxHeight.toPx()) }
         val titlesFrom = with(LocalDensity.current) { (titlesBelow + TITLE_CLEARANCE).toPx() }
@@ -167,10 +170,13 @@ private fun Modifier.daySemantics(description: String?, onOpenDay: ((BcTimelineM
     }
 }
 
-/** What the bubble says of what the finger reached: an appointment, or the alarm one place after the last one. */
+/**
+ * What the bubble says of what the finger reached: an appointment, or the alarm one place after the last one
+ * ("07:15 · Réveil", or "Aucun réveil").
+ */
 private fun spokenAt(reached: Int, marks: List<BcTimelineMark>, end: BcTimelineEnd?): String =
     if (reached == marks.size) {
-        end?.let { "${it.time} · $ALARM" }.orEmpty()
+        end?.let { if (it.set) "${it.time} · $ALARM" else it.caption }.orEmpty()
     } else {
         marks.getOrNull(reached)?.spoken.orEmpty()
     }
@@ -358,8 +364,12 @@ private fun BoxScope.EndOfLine(end: BcTimelineEnd, onOpen: () -> Unit, lean: Den
         },
         horizontalAlignment = Alignment.End
     ) {
-        BcText(end.time, style = BcTextStyle.BodySmall, color = BcTextColor.Primary, maxLines = 1)
-        BcText(end.caption, style = BcTextStyle.Micro, color = BcTextColor.Muted, maxLines = 1)
+        if (end.set) {
+            BcText(end.time, style = BcTextStyle.BodySmall, color = BcTextColor.Primary, maxLines = 1)
+            BcText(end.caption, style = BcTextStyle.Micro, color = BcTextColor.Muted, maxLines = 1)
+        } else {
+            BcText(end.caption, style = BcTextStyle.BodySmall, color = BcTextColor.Muted, maxLines = 1)
+        }
     }
     Box(
         Modifier
@@ -368,6 +378,7 @@ private fun BoxScope.EndOfLine(end: BcTimelineEnd, onOpen: () -> Unit, lean: Den
             .size(ALARM_TARGET)
             .semantics {
                 contentDescription = end.description
+                role = Role.Button
                 onClick(label = OPEN_ALARMS) {
                     onOpen()
                     true

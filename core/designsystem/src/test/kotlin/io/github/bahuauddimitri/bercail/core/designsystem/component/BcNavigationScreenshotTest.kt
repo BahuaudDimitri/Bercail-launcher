@@ -112,6 +112,23 @@ class BcNavigationScreenshotTest {
         }
 
     @Test
+    fun `le fil du soir sans réveil, qui finit sur un anneau gris Aucun réveil, correspond à sa capture`() =
+        compose.captureComponent("timeline_no_alarm") {
+            BcMomentScope(BcMoment.Evening) {
+                BcTimeline(
+                    now = 0.8f,
+                    marks = listOf(
+                        BcTimelineMark(0.676f, "18:30", title = "Courses"),
+                        BcTimelineMark(0.824f, "21:00", next = true, title = "Ciné à la maison")
+                    ),
+                    headroom = 24.dp,
+                    end = BcTimelineEnd("", "Aucun réveil", "Aucun réveil", set = false),
+                    modifier = Modifier.height(420.dp).width(240.dp)
+                )
+            }
+        }
+
+    @Test
     fun `l'alphabet touché, avec sa vague et sa bulle, correspond à sa capture`() = compose.captureComponent(
         name = "alphabet_wave",
         before = { onNodeWithTag("az").performTouchInput { down(Offset(centerX, height * 0.55f)) } }

@@ -106,14 +106,20 @@ private fun DrawScope.drawGlow(path: Path, moment: BcMoment) = drawIntoCanvas { 
     canvas.drawPath(path, paint)
 }
 
-/** The ring of the alarm, hollow, in the accent, with a soft glow. */
-internal fun DrawScope.drawEnd(day: DayScale, moment: BcMoment, bent: Boolean, lean: (Float) -> Float) {
+/**
+ * The ring of the alarm, hollow, in the accent, with a soft glow. Without an alarm ([set] false), the same ring in
+ * grey, without its glow.
+ */
+internal fun DrawScope.drawEnd(day: DayScale, moment: BcMoment, set: Boolean, bent: Boolean, lean: (Float) -> Float) {
     val y = day.alarm
     val center = Offset(size.width - LINE_INSET.toPx() - (if (bent) lean(y) else 0f), y)
-    val glow = ALARM_GLOW.toPx()
-    drawCircle(Brush.radialGradient(listOf(moment.halo, moment.halo.copy(alpha = 0f)), center, glow), glow, center)
+    if (set) {
+        val glow = ALARM_GLOW.toPx()
+        drawCircle(Brush.radialGradient(listOf(moment.halo, moment.halo.copy(alpha = 0f)), center, glow), glow, center)
+    }
     drawCircle(BcColors.nightTop, ALARM_RADIUS.toPx(), center)
-    drawCircle(moment.accent, ALARM_RADIUS.toPx() - RING_WIDTH.toPx() / 2, center, style = Stroke(RING_WIDTH.toPx()))
+    val ring = if (set) moment.accent else BcColors.textMuted
+    drawCircle(ring, ALARM_RADIUS.toPx() - RING_WIDTH.toPx() / 2, center, style = Stroke(RING_WIDTH.toPx()))
 }
 
 /** The ring of now: dark inside, circled in the accent, with its glow. */
