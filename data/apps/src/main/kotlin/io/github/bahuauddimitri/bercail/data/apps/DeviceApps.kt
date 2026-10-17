@@ -86,7 +86,7 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         } catch (_: PackageManager.NameNotFoundException) {
             return@withContext null
         }
-        val glyph = drawable.glyph(context)
+        val glyph = drawable.glyph(context, DOCK_GLYPH_DP)
         glyphs.put(appId, Drawn(updated, glyph))
         glyph
     }
@@ -95,7 +95,7 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
     private class Drawn(val updated: Long, val glyph: Picture?)
 
     /**
-     * The glyphs drawn lately: only the [GLYPHS_KEPT] apps seen last, about 3 MB, so that a long list of apps does
+     * The glyphs drawn lately: only the [GLYPHS_KEPT] apps seen last, about 5.5 MB, so that a long list of apps does
      * not fill the memory. An app let go is drawn again when it shows.
      */
     private val glyphs = LruCache<String, Drawn>(GLYPHS_KEPT)
@@ -114,7 +114,7 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
     override suspend fun shortcuts(appId: String): List<AppShortcut> = withContext(background) { shortcuts.of(appId) }
 
     override suspend fun shortcutGlyph(shortcut: AppShortcut): Picture? =
-        withContext(background) { shortcuts.iconOf(shortcut)?.glyph(context) }
+        withContext(background) { shortcuts.iconOf(shortcut)?.glyph(context, SHORTCUT_GLYPH_DP) }
 
     override fun openShortcut(shortcut: AppShortcut) = shortcuts.open(shortcut)
 
@@ -142,11 +142,11 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
 }
 
 /**
- * The drawable in one colour, at the size of the ring of the dock: the monochrome layer of an adaptive icon, framed
- * as the icon is; without it, the whole icon in one colour.
+ * The drawable in one colour, [frameDp] square: the monochrome layer of an adaptive icon, framed as the icon is;
+ * without it, the whole icon in one colour.
  */
-internal fun Drawable.glyph(context: Context): Picture? {
-    val size = (GLYPH_DP * context.resources.displayMetrics.density).roundToInt()
+internal fun Drawable.glyph(context: Context, frameDp: Int): Picture? {
+    val size = (frameDp * context.resources.displayMetrics.density).roundToInt()
     val monochrome = (this as? AdaptiveIconDrawable)?.monochrome
     return if (monochrome != null) {
         monochromeGlyph(monochrome.drawn(size, asLayer = true))
@@ -155,8 +155,14 @@ internal fun Drawable.glyph(context: Context): Picture? {
     }
 }
 
-/** Glyphs are drawn at the size of the ring of the dock, as the icon would fill it. */
-private const val GLYPH_DP = 44
+/**
+ * The glyph of an app is drawn at the size the dock shows it: a 56 dp frame (`BcDock`), its drawing, the middle
+ * half, at about 28 dp. Drawn smaller, it would be enlarged on screen, and blur.
+ */
+private const val DOCK_GLYPH_DP = 56
+
+/** The glyph of a shortcut stands in a 32 dp ring of the menu: drawn a little larger, it is only made smaller. */
+private const val SHORTCUT_GLYPH_DP = 44
 
 /**
  * The drawable as plain pixels, [size] square. A layer of an adaptive icon is half as large again as the icon,

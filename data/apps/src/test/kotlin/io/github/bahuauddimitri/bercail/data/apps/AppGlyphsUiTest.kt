@@ -24,6 +24,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** The icons of the apps as one-colour glyphs, for the dock: the monochrome layer, or the real icon in one colour. */
@@ -111,6 +112,18 @@ class AppGlyphsUiTest {
     }
 
     @Test
+    @Config(qualifiers = "xxhdpi")
+    fun `le dessin est rendu à la taille où le dock le montre, un cadre de 56 dp, sans être agrandi`() = runBlocking {
+        iconOfChrome(AdaptiveIconDrawable(ColorDrawable(Color.BLUE), null, middle(Color.BLACK, 0.3f)))
+
+        val glyph = apps.glyph(id)!!
+
+        // 56 dp at 3 pixels per dp: the dock frames the glyph on 56 dp, its drawing at about 28 dp.
+        assertThat(glyph.width).isEqualTo(DOCK_FRAME_PX)
+        assertThat(glyph.height).isEqualTo(DOCK_FRAME_PX)
+    }
+
+    @Test
     fun `une icône unie, où rien ne se détache, ne donne pas de dessin`() = runBlocking {
         iconOfChrome(ColorDrawable(Color.GREEN))
 
@@ -164,5 +177,6 @@ class AppGlyphsUiTest {
     private companion object {
         const val ALPHA_SHIFT = 24
         const val KEPT = 64
+        const val DOCK_FRAME_PX = 168
     }
 }
