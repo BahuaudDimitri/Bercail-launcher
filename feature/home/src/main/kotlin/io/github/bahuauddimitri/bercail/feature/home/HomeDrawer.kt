@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,44 +26,30 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBand
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButtonVariant
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
-import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
-import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
-import io.github.bahuauddimitri.bercail.core.domain.media.asTrackTime
-import io.github.bahuauddimitri.bercail.core.domain.media.progress
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
-import kotlin.time.Duration
-import kotlinx.coroutines.flow.StateFlow
 
 /** What the band holds above the search bar. */
-private enum class BandContent { Summary, Remote, Search }
+private enum class BandContent { Summary, Search }
 
 /**
- * The bottom of the home: the flat band (the summary line and the search bar; the remote on the Listen screen; the
- * search list when the bar is touched), and the sheet of people and house that rises over it and covers it, search
- * bar included. The search bar never moves.
+ * The bottom of Accueil: the flat band (the summary line and the search bar; the search list when the bar is
+ * touched), and the sheet of people and house that rises over it and covers it, search bar included. The search bar
+ * never moves. The sheet goes down as Écoute opens, and comes back with Accueil.
  */
 @Composable
 internal fun HomeDrawer(
     state: HomeUiState,
-    position: StateFlow<Duration>,
     actions: HomeActions,
     links: HomeLinks,
     search: HomeSearch?,
@@ -86,15 +70,11 @@ internal fun HomeDrawer(
             exit = fadeOut(tween(fade))
         ) {
             BcBand(
-                onOpen = if (listening) null else ({ actions.onDrawerExpandedChange(true) }),
+                onOpen = { actions.onDrawerExpandedChange(true) },
                 searching = searching,
                 frost = frost
             ) {
-                val content = when {
-                    searching -> BandContent.Search
-                    listening -> BandContent.Remote
-                    else -> BandContent.Summary
-                }
+                val content = if (searching) BandContent.Search else BandContent.Summary
                 AnimatedContent(
                     targetState = content,
                     modifier = if (searching) Modifier.weight(1f) else Modifier,
@@ -104,7 +84,6 @@ internal fun HomeDrawer(
                 ) { shown ->
                     when (shown) {
                         BandContent.Summary -> Summary(state, actions, links)
-                        BandContent.Remote -> Remote(state.media, position, actions)
                         BandContent.Search -> search?.list?.invoke()
                     }
                 }
@@ -171,68 +150,8 @@ private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLink
     }
 }
 
-/**
- * The band as a remote: where the content is (touch to move), previous, play or pause, next. Only the buttons
- * the app accepts are there: YouTube, for one, has no "previous".
- */
-@Composable
-private fun Remote(media: MediaState, position: StateFlow<Duration>, actions: HomeActions) {
-    val loaded = media as? MediaState.Loaded ?: return
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BcSpacing.m)) {
-        // A live stream has no end: nothing to measure the progress against.
-        if (loaded.content.duration > Duration.ZERO) Progress(loaded, position, actions)
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = BcSpacing.s),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val quiet = BcIconButtonVariant.Ghost
-            // A missing button leaves its room empty: play and pause stay in the middle.
-            Box(Modifier.size(SIDE_BUTTON)) {
-                if (MediaAction.Previous in loaded.actions) {
-                    BcIconButton(
-                        BcIcons.Previous,
-                        "Précédent",
-                        actions::onPrevious,
-                        variant = quiet,
-                        size = SIDE_BUTTON
-                    )
-                }
-            }
-            BcIconButton(
-                icon = if (loaded.playing) BcIcons.Pause else BcIcons.Play,
-                contentDescription = if (loaded.playing) "Pause" else "Lecture",
-                onClick = actions::onPlayPause,
-                variant = BcIconButtonVariant.Light,
-                size = MAIN_BUTTON
-            )
-            Box(Modifier.size(SIDE_BUTTON)) {
-                if (MediaAction.Next in loaded.actions) {
-                    BcIconButton(BcIcons.Next, "Suivant", actions::onNext, variant = quiet, size = SIDE_BUTTON)
-                }
-            }
-        }
-    }
-}
-
-/** Where the content is. Touching the bar moves in the content, if its app lets the remote do it. */
-@Composable
-private fun Progress(loaded: MediaState.Loaded, position: StateFlow<Duration>, actions: HomeActions) {
-    // Followed here only: the position costs nothing while the remote is not on screen.
-    val now by position.collectAsStateWithLifecycle()
-    val seek: ((Float) -> Unit)? = if (MediaAction.Seek in loaded.actions) actions::onSeek else null
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TIME_GAP)) {
-        BcText(now.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
-        BcProgress(progress(now, loaded.content.duration), onSeek = seek, modifier = Modifier.weight(1f))
-        BcText(loaded.content.duration.asTrackTime(), style = BcTextStyle.LabelSmall, color = BcTextColor.Muted)
-    }
-}
-
 private const val OPEN_SHEET = "Ouvrir la feuille"
 private val ROW_GAP = 14.dp
-private val TIME_GAP = 10.dp
-private val SIDE_BUTTON = 52.dp
-private val MAIN_BUTTON = 66.dp
 
 /**
  * The search bar, which is the field itself: touching it opens the search. Focus alone does not, because Android

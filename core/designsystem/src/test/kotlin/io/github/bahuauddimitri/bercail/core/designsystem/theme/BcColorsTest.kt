@@ -7,6 +7,7 @@ import assertk.assertions.isCloseTo
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThan
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import org.junit.Test
 
 class BcColorsTest {
@@ -89,6 +90,12 @@ class BcColorsTest {
     fun `les filets entre les réglages sont blancs à 10 %, le bord d'un sélecteur blanc à 12 %`() {
         assertThat(BcColors.hairline).isEqualTo(BcColors.text.copy(alpha = 0.1f))
         assertThat(BcColors.segmentEdge).isEqualTo(Color.White.copy(alpha = 0.12f))
+    }
+
+    @Test
+    fun `le chevron du bas d'Écoute est du texte à 45 %, plus pâle que le texte discret`() {
+        assertThat(BcColors.textFaint).isEqualTo(BcColors.text.copy(alpha = 0.45f))
+        assertThat(BcTextColor.Faint.color).isEqualTo(BcColors.textFaint)
     }
 
     @Test

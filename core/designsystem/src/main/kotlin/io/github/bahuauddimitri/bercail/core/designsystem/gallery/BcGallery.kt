@@ -44,7 +44,6 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBandSheet
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcBubble
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButtonVariant
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcCover
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayEntry
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayList
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayMark
@@ -343,28 +342,6 @@ private fun Music() {
     BcMusicPill("Looped", "Kiasmos", cover = null, playing = playing, onClick = {
         playing = !playing
     }, coverColors = colors)
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = BcSpacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(COVER_GAP)
-    ) {
-        BcCover(image = null, colors = colors, contentDescription = "Pochette de Looped")
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(BcSpacing.xl),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BcIconButton(BcIcons.Previous, "Précédent", onClick = {
-            }, variant = BcIconButtonVariant.Ghost, size = REMOTE)
-            BcIconButton(
-                icon = if (playing) BcIcons.Pause else BcIcons.Play,
-                contentDescription = if (playing) "Pause" else "Lecture",
-                onClick = { playing = !playing },
-                variant = BcIconButtonVariant.Light,
-                size = REMOTE_MAIN
-            )
-            BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = BcIconButtonVariant.Ghost, size = REMOTE)
-        }
-    }
 }
 
 @Composable
@@ -393,6 +370,31 @@ private fun ColumnScope.Listen() {
         onSeek = null,
         live = true,
         modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+    // Under the arc: previous, play or pause filled light, next; the way to the app; the chevron that says « up ».
+    var playing by remember { mutableStateOf(true) }
+    Row(
+        Modifier.align(Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(REMOTE_GAP),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, size = REMOTE)
+        BcIconButton(
+            icon = if (playing) BcIcons.Pause else BcIcons.Play,
+            contentDescription = if (playing) "Pause" else "Lecture",
+            onClick = { playing = !playing },
+            variant = BcIconButtonVariant.Light,
+            size = REMOTE_MAIN
+        )
+        BcIconButton(BcIcons.Next, "Suivant", onClick = {}, size = REMOTE)
+    }
+    BcButton("Ouvrir dans Spotify", onClick = {}, modifier = Modifier.align(Alignment.CenterHorizontally))
+    BcIcon(
+        BcIcons.ChevronUp,
+        contentDescription = null,
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+        size = CHEVRON,
+        tint = BcTextColor.Faint
     )
 }
 
@@ -500,9 +502,10 @@ private val DAY_LIST_HEIGHT = 200.dp
 private val TIMELINE_WIDTH = 200.dp
 private val MOMENT_WIDTH = 64.dp
 private val BRUME_HEIGHT = 420.dp
-private val COVER_GAP = 48.dp
-private val REMOTE = 52.dp
-private val REMOTE_MAIN = 66.dp
+private val REMOTE_GAP = 30.dp
+private val CHEVRON = 28.dp
+private val REMOTE = 48.dp
+private val REMOTE_MAIN = 76.dp
 
 /** The settings panel with sample rows: a choice, a link, a button on the right, a section title. */
 @Composable

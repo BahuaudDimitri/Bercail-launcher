@@ -68,6 +68,9 @@ enum class BcIcons(private val draw: () -> ImageVector) {
     Search({ glyph(16f, 16f) { stroke(circle(7f, 7f, 5f) + "M11 11l3.5 3.5", width = 1.6f) } }),
     Close({ glyph(14f, 14f) { stroke("M3 3l8 8M11 3l-8 8", width = 1.8f) } }),
 
+    /** At the bottom of the Listen screen: sliding up goes back to the home. */
+    ChevronUp({ line24 { stroke("M6 15l6-6 6 6") } }),
+
     // The sky of the weather line, from the Cadran reference.
     Sun({ line24 { stroke(circle(12f, 12f, 4f) + SUN_RAYS) } }),
     Moon({ line24 { stroke("M19 14.5A7.5 7.5 0 1 1 9.5 5a6 6 0 0 0 9.5 9.5z") } }),

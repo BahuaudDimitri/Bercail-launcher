@@ -54,25 +54,24 @@ class BcHomePiecesScreenshotTest {
         }
 
     @Test
-    fun `la grande pochette et la télécommande correspondent à leur capture`() =
-        compose.captureComponent("cover_remote") {
+    fun `les boutons d'Écoute, le chevron du bas et la pastille correspondent à leur capture`() =
+        compose.captureComponent("listen_remote") {
             Column(
                 Modifier.width(348.dp).padding(vertical = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(60.dp),
+                verticalArrangement = Arrangement.spacedBy(40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                BcCover(image = null, colors = CORAL to LAVENDER, contentDescription = null)
                 Row(
-                    Modifier.width(300.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(30.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val ghost = BcIconButtonVariant.Ghost
-                    BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, variant = ghost, size = 52.dp)
+                    BcIconButton(BcIcons.Previous, "Précédent", onClick = {}, size = 48.dp)
                     BcIconButton(BcIcons.Pause, "Pause", onClick = {
-                    }, variant = BcIconButtonVariant.Light, size = 66.dp)
-                    BcIconButton(BcIcons.Next, "Suivant", onClick = {}, variant = ghost, size = 52.dp)
+                    }, variant = BcIconButtonVariant.Light, size = 76.dp)
+                    BcIconButton(BcIcons.Next, "Suivant", onClick = {}, size = 48.dp)
                 }
+                BcButton("Ouvrir dans Spotify", onClick = {})
+                BcIcon(BcIcons.ChevronUp, contentDescription = null, size = 28.dp, tint = BcTextColor.Faint)
                 BcMusicPill(
                     title = "Looped",
                     artist = "Kiasmos",

@@ -44,9 +44,9 @@ enum class BcButtonVariant {
 }
 
 /**
- * The looks of a round button holding an icon: [Bordered] and [Accent] as for a button with a label; [Light], filled
- * light, only for play and pause on Écoute; [Ghost], a bare icon (back arrow, clearing the search, the remote's
- * previous and next).
+ * The looks of a round button holding an icon: [Bordered] and [Accent] as for a button with a label (bordered:
+ * previous and next on Écoute); [Light], filled light, only for play and pause on Écoute; [Ghost], a bare icon
+ * (back arrow, clearing the search).
  */
 enum class BcIconButtonVariant {
     Bordered,
@@ -99,7 +99,8 @@ fun BcButton(
 
 /**
  * A round button holding a single icon, announced by [contentDescription].
- * A larger [size] (the remote's buttons, Send) also gets a larger icon.
+ * A larger [size] gets a larger icon: 22 dp past 44 dp (Send, previous and next on the Listen screen), 30 dp from
+ * 72 dp (play and pause on the Listen screen).
  */
 @Composable
 fun BcIconButton(
@@ -125,7 +126,11 @@ fun BcIconButton(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(LocalBcContentColor provides look.content) {
-            val iconSize = if (size > BcSizes.iconButton) LARGE_ICON else SMALL_ICON
+            val iconSize = when {
+                size >= HUGE_BUTTON -> HUGE_ICON
+                size > BcSizes.iconButton -> LARGE_ICON
+                else -> SMALL_ICON
+            }
             BcIcon(icon, contentDescription = contentDescription, size = iconSize)
         }
     }
@@ -144,6 +149,10 @@ internal val BUTTON_HEIGHT = 36.dp
 internal const val BUTTON_SURFACE_TAG = "button-surface"
 private val SMALL_ICON = 18.dp
 private val LARGE_ICON = 22.dp
+
+// Play and pause on the Listen screen, 76 dp, hold a 30 dp icon.
+private val HUGE_BUTTON = 72.dp
+private val HUGE_ICON = 30.dp
 
 /** The fill of a button: the accent follows the moment of the screen. */
 @Composable

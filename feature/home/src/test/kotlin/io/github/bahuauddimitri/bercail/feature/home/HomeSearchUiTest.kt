@@ -162,15 +162,4 @@ class HomeSearchUiTest {
         assertThat(compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()).isEqualTo(before)
         compose.onHeaderTitle("Stand-up").assertExists()
     }
-
-    @Test
-    fun `la recherche s'ouvre aussi depuis l'écran Écoute`() {
-        show()
-        compose.onNodeWithText("Looped · Kiasmos").performClick()
-
-        compose.onNodeWithContentDescription("Chercher").performClick()
-
-        assertThat(drawerHeight()).isEqualTo(screenHeight())
-        compose.onNodeWithContentDescription("Pause").assertDoesNotExist()
-    }
 }

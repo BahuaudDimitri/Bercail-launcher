@@ -166,7 +166,7 @@ class HomeScreenshotTest {
     }
 
     @Test
-    fun `l'écran Écoute d'une vidéo, avec sa vignette et sans bouton Précédent, correspond à sa capture`() {
+    fun `l'écran Écoute d'une vidéo, sa vignette, un titre de deux lignes, sans Précédent, correspond à sa capture`() {
         // A thumbnail as a video app gives it: wider than high, here two bands of color.
         val thumbnail = Picture(
             THUMBNAIL_WIDTH,
@@ -175,7 +175,11 @@ class HomeScreenshotTest {
                 if (it / THUMBNAIL_WIDTH < THUMBNAIL_HEIGHT / 2) APRICOT else CORAL
             }
         )
-        val video = Samples.youtube.first().copy(cover = thumbnail)
+        // A title too long for one line: it takes two, and nothing under it moves.
+        val video = Samples.youtube.first().copy(
+            cover = thumbnail,
+            title = "Ramen maison en 20 minutes, le bouillon pas à pas"
+        )
         val world = FakeWorld(Moment.Soir)
         val home = world.homeViewModel(
             FakeMediaSource(listOf(video), playing = true, actions = setOf(MediaAction.Next, MediaAction.Seek))

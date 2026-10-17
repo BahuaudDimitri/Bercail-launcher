@@ -29,7 +29,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
@@ -300,9 +299,6 @@ class HomeScreenUiTest {
 
         compose.onNodeWithContentDescription("Fermer la feuille").performClick()
         assertThat(searchBarBottom()).isEqualTo(folded)
-
-        compose.onNodeWithText("Looped · Kiasmos").performClick()
-        assertThat(searchBarBottom()).isEqualTo(folded)
     }
 
     @Test
@@ -552,7 +548,7 @@ class HomeScreenUiTest {
 
         compose.onNodeWithContentDescription("Pochette de Looped").assertExists()
         compose.onNodeWithText("Looped").assertExists()
-        compose.onNodeWithText("Kiasmos").assertExists()
+        compose.onNodeWithText("Kiasmos · Blurred EP").assertExists()
         compose.onNodeWithText("Ouvrir dans Spotify").assertExists()
         compose.onNodeWithText("1:12").assertExists()
         compose.onNodeWithText("4:05").assertExists()
@@ -560,15 +556,13 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `glisser vers la gauche au milieu ouvre l'écran Écoute, vers la droite revient à l'Accueil`() {
+    fun `glisser vers la gauche au milieu ouvre l'écran Écoute`() {
         show()
 
         compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { swipeLeft() }
-        compose.onNodeWithContentDescription("Pause").assertExists()
 
-        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { swipeRight() }
-        compose.onNodeWithText("Looped · Kiasmos").assertExists()
-        compose.onNodeWithContentDescription("Pause").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Pause").assertExists()
+        compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
     }
 
     @Test
@@ -597,19 +591,36 @@ class HomeScreenUiTest {
 
         compose.onNodeWithContentDescription("Écran Écoute").performClick()
 
-        compose.onNodeWithContentDescription("Écran Écoute").assertIsSelected()
         compose.onNodeWithText("Ouvrir dans Spotify").assertExists()
     }
 
     @Test
-    fun `sur l'écran Écoute, le bandeau devient la télécommande et la ligne du temps s'efface`() {
+    fun `sur l'écran Écoute, le lecteur est seul, sans en-tête, ni ligne du temps, ni bandeau, ni pastille`() {
         show()
 
         compose.onNodeWithText("Looped · Kiasmos").performClick()
 
+        compose.onNodeWithText("Stand-up").assertDoesNotExist()
+        compose.onNodeWithTag(TIMELINE_TAG).assertDoesNotExist()
         compose.onNode(OPENS_THE_SHEET).assertDoesNotExist()
         compose.onNodeWithText("2 non lus · Léa, Tom").assertDoesNotExist()
-        compose.onNodeWithTag(TIMELINE_TAG).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Chercher").assertDoesNotExist()
+        compose.onNodeWithText("Looped · Kiasmos").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Écran Accueil").assertDoesNotExist()
+    }
+
+    @Test
+    fun `le geste retour sur l'écran Écoute revient à l'Accueil`() {
+        show()
+        compose.onNodeWithText("Looped · Kiasmos").performClick()
+        compose.waitForIdle()
+
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Looped · Kiasmos").assertExists()
+        compose.onHeaderTitle("Stand-up").assertExists()
+        compose.onNodeWithContentDescription("Pause").assertDoesNotExist()
     }
 
     @Test
@@ -630,7 +641,7 @@ class HomeScreenUiTest {
         compose.onNodeWithContentDescription("Suivant").performClick()
 
         compose.onNodeWithText("Says").assertExists()
-        compose.onNodeWithText("Nils Frahm").assertExists()
+        compose.onNodeWithText("Nils Frahm · Spaces").assertExists()
         compose.onNodeWithText("8:48").assertExists()
     }
 
@@ -671,11 +682,12 @@ class HomeScreenUiTest {
     }
 
     @Test
-    fun `un direct n'a pas de fin, sa télécommande n'a pas de barre de progression`() {
+    fun `un direct n'a pas de fin, sa télécommande dit « En direct » au lieu des temps`() {
         val live = MediaContent("Le 7/9", "France Inter", "Radio France", duration = Duration.ZERO)
         show(media = FakeMediaSource(listOf(live), playing = true))
         compose.onNodeWithText("Le 7/9 · France Inter").performClick()
 
+        compose.onNodeWithText("En direct").assertExists()
         compose.onNodeWithText("0:00").assertDoesNotExist()
         compose.onNodeWithContentDescription("Pause").assertExists()
     }
@@ -706,8 +718,10 @@ class HomeScreenUiTest {
         show()
         compose.openSheet()
         compose.onNodeWithContentDescription("Écran Écoute").performClick()
+        compose.waitForIdle()
 
-        compose.onNodeWithContentDescription("Écran Accueil").performClick()
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
 
         compose.onNodeWithContentDescription("Fermer la feuille").assertExists()
         compose.onNodeWithContentDescription("Léa, 1 non lu").assertExists()

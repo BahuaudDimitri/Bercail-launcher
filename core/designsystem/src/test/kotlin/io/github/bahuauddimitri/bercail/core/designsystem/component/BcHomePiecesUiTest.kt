@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions.OnClick
 import androidx.compose.ui.test.SemanticsMatcher
@@ -41,7 +40,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The small pieces the home screen is made of: summary lines, page dots, cover, weather line. */
+/**
+ * The small pieces the home screen is made of: summary lines, page dots, weather line, the buttons of the Listen
+ * screen.
+ */
 @RunWith(AndroidJUnit4::class)
 class BcHomePiecesUiTest {
     @get:Rule
@@ -143,19 +145,6 @@ class BcHomePiecesUiTest {
     }
 
     @Test
-    fun `la grande pochette fait 200 dp et s'annonce par son titre`() {
-        compose.setContent {
-            BcTheme {
-                BcCover(image = null, colors = Color.Red to Color.Blue, contentDescription = "Pochette de Looped")
-            }
-        }
-
-        compose.onNodeWithContentDescription(
-            "Pochette de Looped"
-        ).assertWidthIsEqualTo(200.dp).assertHeightIsEqualTo(200.dp)
-    }
-
-    @Test
     fun `la ligne météo écrit la température et la phrase`() {
         compose.setContent { BcTheme { BcWeatherLine("11° · Ciel dégagé ce matin", BcWeather.Clear) } }
 
@@ -172,13 +161,15 @@ class BcHomePiecesUiTest {
     }
 
     @Test
-    fun `un bouton rond peut être agrandi pour la télécommande`() {
+    fun `le bouton lecture-pause d'Écoute est un rond de 76 dp, son icône de 30 dp`() {
         compose.setContent {
-            BcTheme { BcIconButton(BcIcons.Pause, "Pause", onClick = {}, size = 66.dp) }
+            BcTheme { BcIconButton(BcIcons.Pause, "Pause", onClick = {}, size = 76.dp) }
         }
 
-        compose.onNodeWithContentDescription("Pause").assertExists()
-        compose.onRoot().assertWidthIsEqualTo(66.dp).assertHeightIsEqualTo(66.dp)
+        compose.onRoot().assertWidthIsEqualTo(76.dp).assertHeightIsEqualTo(76.dp)
+        compose.onNodeWithContentDescription("Pause", useUnmergedTree = true)
+            .assertWidthIsEqualTo(30.dp)
+            .assertHeightIsEqualTo(30.dp)
     }
 
     @Test

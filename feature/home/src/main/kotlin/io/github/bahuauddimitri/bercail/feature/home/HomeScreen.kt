@@ -1,9 +1,12 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.node.Ref
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -24,10 +28,12 @@ import androidx.compose.ui.unit.Constraints
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.rememberBcBrumeState
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.wakesBrume
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.rememberBcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMomentScope
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.media.MediaState
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomeBackground
 import io.github.bahuauddimitri.bercail.core.domain.screen.HomePage
 import kotlin.time.Duration
@@ -121,7 +127,6 @@ fun HomeScreen(
     val frost = rememberBcFrost()
     // The sheets frost Brume only: the user's wallpaper is drawn by the system, out of reach. A sheet freezes Brume.
     val sheetFrost = frost.takeIf { state.background is HomeBackground.Brume && !brume.isAnimating }
-    var headerHeight by remember { mutableIntStateOf(0) }
     // A sheet is tinted glass: what it covers fades away, so that nothing shows through it.
     val covered = state.dayOpen || state.listenOpen || state.talk != null
     val uncovered by animateFloatAsState(
@@ -136,30 +141,12 @@ fun HomeScreen(
                 HomeBackdrop(state, brume, frost, searching = search?.open == true)
                 // Under a sheet, a screen reader must not read the screen either.
                 Box(if (covered) Modifier.clearAndSetSemantics {} else Modifier) {
-                    DrawerOverScreen(
-                        searching = search?.open == true,
-                        screen = {
-                            Box(Modifier.fillMaxSize()) {
-                                Column(Modifier.fillMaxSize()) {
-                                    HomeHeader(
-                                        state = state,
-                                        onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                        onOpenCalendar = actions::onOpenCalendar,
-                                        modifier = Modifier.onSizeChanged { headerHeight = it.height }
-                                    )
-                                    HomeMiddle(state, !brume.isAnimating, actions, Modifier.weight(1f).then(fading))
-                                }
-                                VerticalTimeline(
-                                    state = state,
-                                    onOpenDay = { actions.onDayOpenChange(true, focus = it) },
-                                    onOpenEvent = actions::onOpenEvent,
-                                    onOpenAlarms = actions::onOpenAlarms,
-                                    modifier = Modifier.align(Alignment.TopEnd).then(fading),
-                                    titlesBelow = with(LocalDensity.current) { headerHeight.toDp() }
-                                )
-                            }
+                    HomeOrPlayer(
+                        state = state,
+                        home = {
+                            Accueil(state, actions, links, search, still = !brume.isAnimating, sheetFrost, fading)
                         },
-                        drawer = { Box(fading) { HomeDrawer(state, position, actions, links, search, sheetFrost) } }
+                        player = { loaded -> Player(loaded, position, state.dayPart.brume, actions, fading) }
                     )
                 }
                 DaySheet(state, actions, links, sheetFrost)
@@ -168,6 +155,67 @@ fun HomeScreen(
             }
         }
     }
+}
+
+/**
+ * Accueil or Écoute, never both: the hero, the line, the music pill and the band make way for the player alone, and
+ * come back when it leaves. For now the two fade into one another.
+ */
+@Composable
+private fun HomeOrPlayer(
+    state: HomeUiState,
+    home: @Composable () -> Unit,
+    player: @Composable (MediaState.Loaded) -> Unit
+) {
+    val fade = BcTheme.motion.fadeMillis
+    // While the player fades out, it keeps the content it showed, even once nothing is loaded any more.
+    val shown = remember { Ref<MediaState.Loaded>() }
+    (state.media as? MediaState.Loaded)?.let { shown.value = it }
+    AnimatedVisibility(state.page == HomePage.Home, enter = fadeIn(tween(fade)), exit = fadeOut(tween(fade))) {
+        home()
+    }
+    AnimatedVisibility(state.page == HomePage.Listen, enter = fadeIn(tween(fade)), exit = fadeOut(tween(fade))) {
+        shown.value?.let { player(it) }
+    }
+}
+
+/** Accueil: the hero, the line of the day, the music pill, and the band with its sheet at the bottom. */
+@Composable
+private fun Accueil(
+    state: HomeUiState,
+    actions: HomeActions,
+    links: HomeLinks,
+    search: HomeSearch?,
+    still: Boolean,
+    sheetFrost: BcFrost?,
+    fading: Modifier
+) {
+    var headerHeight by remember { mutableIntStateOf(0) }
+    DrawerOverScreen(
+        searching = search?.open == true,
+        screen = {
+            Box(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize()) {
+                    HomeHeader(
+                        state = state,
+                        onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                        onOpenCalendar = actions::onOpenCalendar,
+                        modifier = Modifier.onSizeChanged { headerHeight = it.height }
+                    )
+                    HomeMiddle(state, still, actions, Modifier.weight(1f).then(fading))
+                }
+                VerticalTimeline(
+                    state = state,
+                    onOpenDay = { actions.onDayOpenChange(true, focus = it) },
+                    onOpenEvent = actions::onOpenEvent,
+                    onOpenAlarms = actions::onOpenAlarms,
+                    modifier = Modifier.align(Alignment.TopEnd).then(fading),
+                    titlesBelow = with(LocalDensity.current) { headerHeight.toDp() }
+                )
+            }
+        },
+        drawer = { Box(fading) { HomeDrawer(state, actions, links, search, sheetFrost) } }
+    )
 }
 
 /**

@@ -42,6 +42,7 @@ enum class BcTextStyle(internal val style: TextStyle) {
 enum class BcTextColor(internal val color: Color) {
     Primary(BcColors.text),
     Muted(BcColors.textMuted),
+    Faint(BcColors.textFaint),
     OnPastel(BcColors.onPastel),
     OnLight(BcColors.onLight)
 }

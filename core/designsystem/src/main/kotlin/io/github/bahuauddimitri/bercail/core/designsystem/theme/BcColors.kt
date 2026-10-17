@@ -17,6 +17,9 @@ object BcColors {
     val text = Color(0xFFECEBF4)
     val textMuted = Color(0xFFB2B0C4)
 
+    /** Paler than muted: the up chevron at the bottom of the Listen screen. */
+    val textFaint = text.copy(alpha = 0.45f)
+
     /**
      * Bluish black glass of the sheets: tinted at 62 % where nothing can be frosted behind it (the user's
      * wallpaper, Brume on the move), 46 % once frosted over a still Brume, and 80 % for the search, which covers the
