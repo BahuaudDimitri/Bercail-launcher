@@ -65,6 +65,18 @@ class MediaRulesTest {
     }
 
     @Test
+    fun `sous le titre d'Écoute, l'artiste puis l'album, séparés par un point`() {
+        assertThat(looped.copy(album = "Blurred EP").credits).isEqualTo("Kiasmos · Blurred EP")
+    }
+
+    @Test
+    fun `sans album connu, l'artiste seul, et sans artiste, l'album seul`() {
+        assertThat(looped.credits).isEqualTo("Kiasmos")
+        assertThat(looped.copy(artist = "", album = "Blurred EP").credits).isEqualTo("Blurred EP")
+        assertThat(looped.copy(artist = "").credits).isEqualTo("")
+    }
+
+    @Test
     fun `toucher la barre de progression donne une position dans le morceau`() {
         assertThat(positionAt(fraction = 0.5f, duration = 244.seconds)).isEqualTo(122.seconds)
         assertThat(positionAt(fraction = 1.4f, duration = 244.seconds)).isEqualTo(244.seconds)

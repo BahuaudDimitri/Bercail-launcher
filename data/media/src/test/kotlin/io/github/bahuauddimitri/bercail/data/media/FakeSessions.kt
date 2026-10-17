@@ -42,11 +42,12 @@ internal class FakeSessions(private val phone: Application) {
         title: String? = "Looped",
         artist: String? = "Kiasmos",
         state: Int = PlaybackState.STATE_PLAYING,
-        cover: Bitmap? = null
+        cover: Bitmap? = null,
+        album: String? = null
     ): MediaController {
         val session = MediaController(phone, MediaSession(phone, app).sessionToken)
         shadowOf(session).setPackageName(app)
-        shadowOf(session).setMetadata(metadata(title, artist, cover = cover))
+        shadowOf(session).setMetadata(metadata(title, artist, cover = cover, album = album))
         shadowOf(session).setPlaybackState(playback(state))
         open.add(0, session)
         told()
@@ -129,13 +130,19 @@ internal class FakeSessions(private val phone: Application) {
             PlaybackState.ACTION_SKIP_TO_NEXT or
             PlaybackState.ACTION_SEEK_TO
 
-        fun metadata(title: String?, artist: String?, seconds: Long = 245, cover: Bitmap? = null): MediaMetadata =
-            MediaMetadata.Builder().apply {
-                if (title != null) putString(MediaMetadata.METADATA_KEY_TITLE, title)
-                if (artist != null) putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
-                putLong(MediaMetadata.METADATA_KEY_DURATION, seconds * MILLIS)
-                if (cover != null) putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, cover)
-            }.build()
+        fun metadata(
+            title: String?,
+            artist: String?,
+            seconds: Long = 245,
+            cover: Bitmap? = null,
+            album: String? = null
+        ): MediaMetadata = MediaMetadata.Builder().apply {
+            if (title != null) putString(MediaMetadata.METADATA_KEY_TITLE, title)
+            if (artist != null) putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+            if (album != null) putString(MediaMetadata.METADATA_KEY_ALBUM, album)
+            putLong(MediaMetadata.METADATA_KEY_DURATION, seconds * MILLIS)
+            if (cover != null) putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, cover)
+        }.build()
 
         fun playback(state: Int, positionSeconds: Long = 0, at: Long = 0, actions: Long = EVERY_BUTTON): PlaybackState =
             PlaybackState.Builder()

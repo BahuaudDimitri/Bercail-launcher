@@ -20,8 +20,14 @@ data class MediaContent(
     val colors: CoverColors? = null,
     val cover: Picture? = null,
     /** The app that holds it, named as the installed apps are; empty when it cannot be opened from a launcher. */
-    val appId: String = ""
+    val appId: String = "",
+    /** The album it comes from; empty when the app does not say (a video, a radio). */
+    val album: String = ""
 )
+
+/** What stands under the title on the Listen screen: « Artiste · Album », or whichever of the two is known. */
+val MediaContent.credits: String
+    get() = listOf(artist, album).filter { it.isNotEmpty() }.joinToString(" · ")
 
 /** What a media app accepts from a remote, besides play and pause. YouTube, for one, has no "previous". */
 enum class MediaAction { Previous, Next, Seek }

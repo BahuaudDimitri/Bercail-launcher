@@ -131,7 +131,8 @@ internal class SessionReader(private val context: Context) {
                 duration = metadata.duration,
                 colors = cover?.colors,
                 cover = cover?.picture,
-                appId = ids.getOrPut(app) { idOf(app) }
+                appId = ids.getOrPut(app) { idOf(app) },
+                album = metadata.text(MediaMetadata.METADATA_KEY_ALBUM).orEmpty()
             )
         }
     }

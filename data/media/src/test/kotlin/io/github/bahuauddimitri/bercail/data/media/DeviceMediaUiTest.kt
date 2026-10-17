@@ -170,6 +170,20 @@ class DeviceMediaUiTest {
     }
 
     @Test
+    fun `une session donne aussi l'album d'où vient le morceau`() = runTest(dispatcher) {
+        apps.open(SPOTIFY, "Looped", "Kiasmos", album = "Blurred EP")
+
+        assertThat(watch().content.album).isEqualTo("Blurred EP")
+    }
+
+    @Test
+    fun `sans album donné par l'app, l'album reste vide`() = runTest(dispatcher) {
+        apps.open(YOUTUBE, "Tiny Desk Concert", artist = "NPR Music")
+
+        assertThat(watch().content.album).isEqualTo("")
+    }
+
+    @Test
     fun `ce que Spotify ajoute après l'artiste n'est pas affiché`() = runTest(dispatcher) {
         apps.open(SPOTIFY, "Looped", artist = "Kiasmos, Ólafur Arnalds • À partir de la lecture aléatoire intelligente")
 

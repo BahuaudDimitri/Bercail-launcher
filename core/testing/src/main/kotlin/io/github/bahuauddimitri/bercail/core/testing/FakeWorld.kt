@@ -97,9 +97,33 @@ object Samples {
     val mediaApps: List<App> = apps.filter { it.name in setOf("Netflix", "Pocket Casts", "Spotify", "YouTube") }
 
     val spotify = listOf(
-        MediaContent("Looped", "Kiasmos", "Spotify", 245.seconds, CoverColors(CORAL, LAVENDER), appId = "spotify"),
-        MediaContent("Says", "Nils Frahm", "Spotify", 528.seconds, CoverColors(BLUE, INDIGO), appId = "spotify"),
-        MediaContent("Avril 14th", "Aphex Twin", "Spotify", 125.seconds, CoverColors(MINT, APRICOT), appId = "spotify")
+        MediaContent(
+            "Looped",
+            "Kiasmos",
+            "Spotify",
+            245.seconds,
+            CoverColors(CORAL, LAVENDER),
+            appId = "spotify",
+            album = "Blurred EP"
+        ),
+        MediaContent(
+            "Says",
+            "Nils Frahm",
+            "Spotify",
+            528.seconds,
+            CoverColors(BLUE, INDIGO),
+            appId = "spotify",
+            album = "Spaces"
+        ),
+        MediaContent(
+            "Avril 14th",
+            "Aphex Twin",
+            "Spotify",
+            125.seconds,
+            CoverColors(MINT, APRICOT),
+            appId = "spotify",
+            album = "Drukqs"
+        )
     )
 
     val youtube = listOf(
