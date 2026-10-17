@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,10 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,10 +67,14 @@ internal fun Player(
     modifier: Modifier = Modifier
 ) {
     val content = loaded.content
-    // The system back gesture goes back to the home.
-    BackHandler { actions.onPageWanted(HomePage.Home) }
+    // Sliding up, the system back gesture and a screen reader's action all go back to the home.
+    val leave by rememberUpdatedState { actions.onPageWanted(HomePage.Home) }
+    BackHandler { leave() }
     val below = Modifier.fillMaxWidth().padding(horizontal = TEXT_SIDE)
-    Box(modifier.fillMaxSize().testTag(PLAYER_TAG), contentAlignment = Alignment.TopCenter) {
+    Box(
+        modifier.fillMaxSize().testTag(PLAYER_TAG).pointerInput(Unit) { leavesUpwards { leave() } },
+        contentAlignment = Alignment.TopCenter
+    ) {
         BcArchCover(
             image = content.cover.asImage(),
             colors = content.colors?.pair ?: (fallback.first to fallback.second),
@@ -81,11 +91,32 @@ internal fun Player(
         BcIcon(
             BcIcons.ChevronUp,
             contentDescription = null,
-            modifier = Modifier.padding(top = CHEVRON_TOP).semantics { contentDescription = BACK_HOME_HINT },
+            modifier = Modifier.padding(top = CHEVRON_TOP).semantics {
+                contentDescription = BACK_HOME_HINT
+                // A screen reader cannot slide: the chevron offers the way back as an action.
+                customActions = listOf(
+                    CustomAccessibilityAction(BACK_HOME) {
+                        leave()
+                        true
+                    }
+                )
+            },
             size = CHEVRON,
             tint = BcTextColor.Faint
         )
     }
+}
+
+/**
+ * Calls [onLeave] when a finger slides up far enough. A finger put down on the arc is taken by the arc, to move in
+ * the content; sideways, nothing happens.
+ */
+private suspend fun PointerInputScope.leavesUpwards(onLeave: () -> Unit) {
+    var travel = 0f
+    detectVerticalDragGestures(
+        onDragStart = { travel = 0f },
+        onDragEnd = { if (travel <= -LEAVE_SWIPE.toPx()) onLeave() }
+    ) { _, amount -> travel += amount }
 }
 
 /**
@@ -166,6 +197,10 @@ private fun Remote(loaded: MediaState.Loaded, actions: HomeActions, modifier: Mo
 }
 
 private const val BACK_HOME_HINT = "Glisser vers le haut pour revenir à l'accueil"
+private const val BACK_HOME = "Revenir à l'accueil"
+
+/** How far a finger must slide up to leave the Listen screen: as far as a slide to the left to open it. */
+private val LEAVE_SWIPE = 40.dp
 
 // Distances from the top edge of the screen, as on the reference (a 390 × 844 phone, the arch at the top).
 private val ARC_TOP = BcArchCoverCurveCentre - BcArcProgressCurveCentre

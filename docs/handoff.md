@@ -59,7 +59,7 @@ Chaque règle ci-dessous est vérifiable et doit devenir au moins un test.
 **Bandeau et feuille** (révisé le 16 octobre, vague 2 de la direction « Cadran »)
 
 - Ouvrir la feuille : toucher la ligne résumé, ou glisser de plus de 24 dp vers le haut n'importe où sur le bandeau. La fermer : toucher sa poignée, glisser de plus de 24 dp vers le bas sur elle, ou le geste retour ; toucher à côté ne la ferme pas. Le glissement continue de compter si le doigt sort du bandeau ou de la feuille. Un glissement n'active aucun bouton.
-- Passage Accueil ↔ Écoute : hauteur du bandeau animée (\~400 ms), contenus en fondu ; rien ne « saute ». Sur Écoute, le bandeau porte la télécommande, à plat, jusqu'à la vague 5.
+- Passage Accueil ↔ Écoute : sur Écoute, ni bandeau ni télécommande à plat, le lecteur est seul (vague 5) ; le bandeau descend quand Écoute s'ouvre et revient avec l'Accueil, dans la transition qui suit le doigt (ligne « Écran Écoute ») ; rien ne « saute ».
 - L'état fermé/ouvert de la feuille est conservé quand on revient sur l'Accueil ; le réglage « Feuille » choisit son état au démarrage.
 - La barre « Chercher » ne change jamais de position, quel que soit l'état ; la feuille ouverte la couvre.
 

@@ -1,6 +1,7 @@
 package io.github.bahuauddimitri.bercail.feature.home
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -11,14 +12,21 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.isBetween
 import assertk.assertions.isCloseTo
 import assertk.assertions.isEqualTo
@@ -177,6 +185,59 @@ class HomePlayerUiTest {
         listen(FakeMediaSource(Samples.spotify, playing = true, actions = setOf(MediaAction.Next)))
 
         compose.onAllNodes(seekable).assertCountEquals(0)
+    }
+
+    // ---------- leaving ----------
+
+    private fun backHome() {
+        compose.onNodeWithText("Looped · Kiasmos").assertExists()
+        compose.onNodeWithContentDescription("Pause").assertDoesNotExist()
+    }
+
+    @Test
+    fun `glisser vers le haut sur Écoute revient à l'Accueil`() {
+        listen()
+
+        compose.onNodeWithTag(PLAYER_TAG).performTouchInput { swipeUp() }
+
+        backHome()
+    }
+
+    @Test
+    fun `glisser vers le haut en partant de l'arc déplace dans le morceau, sans quitter Écoute`() {
+        listen()
+
+        compose.onNodeWithTag(PLAYER_TAG).performTouchInput {
+            // The bottom of the arc: 164 dp under the centre of the arch's curve, itself 290 dp under the top edge.
+            val bottomOfArc = Offset(centerX, (290 + 164).dp.toPx())
+            swipe(start = bottomOfArc, end = bottomOfArc - Offset(0f, 150.dp.toPx()))
+        }
+
+        compose.onNodeWithContentDescription("Pause").assertExists()
+        compose.onNodeWithText("1:12").assertDoesNotExist()
+    }
+
+    @Test
+    fun `aucun glissement vers la gauche ou la droite ne fait rien sur Écoute`() {
+        listen()
+
+        compose.onNodeWithTag(PLAYER_TAG).performTouchInput { swipeLeft() }
+        compose.onNodeWithTag(PLAYER_TAG).performTouchInput { swipeRight() }
+
+        compose.onNodeWithContentDescription("Pause").assertExists()
+        compose.onNodeWithText("1:12").assertExists()
+    }
+
+    @Test
+    fun `un lecteur d'écran revient à l'Accueil par l'action « Revenir à l'accueil » du chevron`() {
+        listen()
+        val chevron = compose.onNodeWithContentDescription(CHEVRON)
+        val actions = chevron.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertThat(actions.map { it.label }).containsExactly("Revenir à l'accueil")
+
+        compose.runOnUiThread { actions.single().action() }
+
+        backHome()
     }
 
     private fun DpRect.isOnScreen(): Boolean =
