@@ -120,13 +120,18 @@ fun SettingsScreen(
         BcSectionLabel("Bandeau")
         BcSettingRow("Dock", subtitle = state.dockNames, onClick = onPickDock)
         BcSectionLabel("Feuille")
-        BcSettingRow("Gens et maison", subtitle = "État de départ de la feuille") {
-            BcSegmented(
-                options = listOf("Fermée", "Ouverte"),
-                selected = if (settings.drawerExpandedAtStart) 1 else 0,
-                onSelect = { actions.onDrawerExpandedAtStart(it == 1) }
-            )
-        }
+        // A short choice stands on the right of its row.
+        BcSettingRow(
+            "Gens et maison",
+            subtitle = "État de départ de la feuille",
+            trailing = {
+                BcSegmented(
+                    options = listOf("Fermée", "Ouverte"),
+                    selected = if (settings.drawerExpandedAtStart) 1 else 0,
+                    onSelect = { actions.onDrawerExpandedAtStart(it == 1) }
+                )
+            }
+        )
         BcSectionLabel("Mise à jour")
         BcSettingRow(
             title = state.update.title,

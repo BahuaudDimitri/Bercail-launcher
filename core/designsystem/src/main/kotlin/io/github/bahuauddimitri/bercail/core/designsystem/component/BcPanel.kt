@@ -2,7 +2,6 @@ package io.github.bahuauddimitri.bercail.core.designsystem.component
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,13 +14,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -79,24 +80,30 @@ fun BcPanel(
             .padding(horizontal = PANEL_SIDE)
     ) {
         BcPanelHeader(title, onBack, backDescription)
-        Column(
-            Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = BcSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(BcSpacing.s),
-            content = content
-        )
+        // Rows lie flat one under the other, each with its hairline; section titles keep their own room.
+        CompositionLocalProvider(LocalInPanel provides true) {
+            Column(
+                Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = BcSpacing.xl),
+                content = content
+            )
+        }
     }
 }
 
 /**
  * The small title above a group of rows: "Dock", "A", "Agenda". Drawn in spaced capitals; a screen reader reads it
- * as it is written, not letter by letter.
+ * as it is written, not letter by letter. Inside a panel, where rows lie flat, it keeps 18 dp above and 6 dp below.
  */
 @Composable
 fun BcSectionLabel(text: String, modifier: Modifier = Modifier) {
+    val inPanel = LocalInPanel.current
     BcText(
         text.inCapitals(),
         modifier = modifier
-            .padding(top = LABEL_TOP, bottom = BcSpacing.xxs)
+            .padding(
+                top = if (inPanel) PANEL_LABEL_TOP else LABEL_TOP,
+                bottom = if (inPanel) PANEL_LABEL_BOTTOM else BcSpacing.xxs
+            )
             .clearAndSetSemantics { this.text = AnnotatedString(text) },
         style = BcTextStyle.SectionLabel,
         color = BcTextColor.Muted,
@@ -108,8 +115,9 @@ fun BcSectionLabel(text: String, modifier: Modifier = Modifier) {
 internal fun String.inCapitals(): String = uppercase(Locale.FRENCH)
 
 /**
- * One setting on its tile: title, explanation, and its [control] underneath (a segmented choice, a button).
- * With [onClick], the whole tile is a link, at least 40 dp high.
+ * One setting, flat, with a hairline under it: title, explanation, and on the right its [trailing] control (a
+ * switch, a button, a word saying where it stands). A long choice goes in [control], underneath. With [onClick], the
+ * whole row is a link, at least 40 dp high.
  */
 @Composable
 fun BcSettingRow(
@@ -117,6 +125,7 @@ fun BcSettingRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
     control: (@Composable () -> Unit)? = null
 ) {
     val link = if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier
@@ -124,28 +133,44 @@ fun BcSettingRow(
         modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = BcSizes.minTouch)
-            .clip(ROW_SHAPE)
-            .background(BcColors.tile)
-            .border(1.dp, BcColors.tileEdge, ROW_SHAPE)
             .then(link)
-            .padding(horizontal = ROW_SIDE, vertical = ROW_VERTICAL),
-        verticalArrangement = Arrangement.spacedBy(ROW_GAP)
+            .drawBehind {
+                val y = size.height - HAIRLINE.toPx() / 2
+                drawLine(BcColors.hairline, Offset(0f, y), Offset(size.width, y), HAIRLINE.toPx())
+            }
+            .padding(vertical = ROW_VERTICAL),
+        verticalArrangement = Arrangement.spacedBy(CONTROL_GAP)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TEXT_GAP)) {
-            BcText(title, style = BcTextStyle.Message, maxLines = 1)
-            if (subtitle != null) BcText(subtitle, style = BcTextStyle.Caption, color = BcTextColor.Muted, maxLines = 2)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TRAILING_GAP)
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TEXT_GAP)) {
+                BcText(title, style = BcTextStyle.Title, maxLines = 1)
+                if (subtitle !=
+                    null
+                ) {
+                    BcText(subtitle, style = BcTextStyle.Label, color = BcTextColor.Muted, maxLines = 2)
+                }
+            }
+            trailing?.invoke()
         }
         control?.invoke()
     }
 }
 
+/** Whether a section title stands among the flat rows of a panel. */
+private val LocalInPanel = staticCompositionLocalOf { false }
+
 private val PANEL_SIDE = 20.dp
 private val LABEL_TOP = 14.dp
+private val PANEL_LABEL_TOP = 18.dp
+private val PANEL_LABEL_BOTTOM = 6.dp
 
 // A long hint (the settings explain their lists this way) goes on to a second line rather than being cut.
 private const val LABEL_LINES = 2
-private val ROW_SHAPE = RoundedCornerShape(18.dp)
-private val ROW_SIDE = 14.dp
-private val ROW_VERTICAL = 13.dp
-private val ROW_GAP = 10.dp
-private val TEXT_GAP = 2.dp
+private val ROW_VERTICAL = 12.dp
+private val HAIRLINE = 1.dp
+private val CONTROL_GAP = 10.dp
+private val TRAILING_GAP = 12.dp
+private val TEXT_GAP = 1.dp

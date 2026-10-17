@@ -87,7 +87,7 @@ class BcHomePiecesScreenshotTest {
     @Test
     fun `l'en-tête de liste, les titres de section et les lignes de réglage correspondent à leur capture`() =
         compose.captureComponent("panel_rows") {
-            Column(Modifier.width(348.dp), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
+            Column(Modifier.width(348.dp)) {
                 BcPanelHeader("Toutes les apps", onBack = {}, backDescription = "Fermer la recherche")
                 BcSectionLabel("Apps favorites")
                 BcListRow("Spotify", onClick = {}, leading = BcLeading.Initials("S", BcPastel.Mint))
@@ -96,6 +96,19 @@ class BcHomePiecesScreenshotTest {
                     BcSegmented(listOf("Horizontale", "Verticale"), selected = 1, onSelect = {})
                 }
                 BcSettingRow("Apps favorites", subtitle = "Spotify, Beeper", onClick = {})
+                BcSettingRow(
+                    "Musique en cours",
+                    subtitle = "Bercail voit ce qui joue",
+                    trailing = { BcButton("Autoriser", onClick = {}) }
+                )
+                BcSettingRow(
+                    "Gens et maison",
+                    trailing = { BcSegmented(listOf("Fermée", "Ouverte"), selected = 0, onSelect = {}) }
+                )
+                BcSettingRow(
+                    "Écoute automatique",
+                    trailing = { BcSwitch(checked = true, onCheckedChange = {}, contentDescription = null) }
+                )
             }
         }
 

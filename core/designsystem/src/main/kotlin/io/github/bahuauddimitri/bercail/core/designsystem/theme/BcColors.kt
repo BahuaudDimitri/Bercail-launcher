@@ -73,12 +73,18 @@ object BcColors {
     val appTile = Color(0xFFD9D4E6)
 
     /**
-     * Strokes: everything drawn as a line. The future of the line of the day and the hairlines, the rings of the
+     * Strokes: everything drawn as a line. The future of the line of the day, the rings of the
      * lists, the edge of the buttons.
      */
     val stroke = text.copy(alpha = 0.22f)
     val strokeRing = text.copy(alpha = 0.35f)
     val strokeButton = text.copy(alpha = 0.2f)
+
+    /** The hairline under each row of the settings. */
+    val hairline = text.copy(alpha = 0.1f)
+
+    /** The edge of a segmented choice. */
+    val segmentEdge = Color.White.copy(alpha = 0.12f)
 
     /** The faint fill of a bordered button. */
     val buttonFill = text.copy(alpha = 0.06f)

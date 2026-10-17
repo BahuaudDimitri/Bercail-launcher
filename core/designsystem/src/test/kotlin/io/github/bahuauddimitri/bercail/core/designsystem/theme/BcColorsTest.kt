@@ -81,6 +81,12 @@ class BcColorsTest {
     }
 
     @Test
+    fun `les filets entre les réglages sont blancs à 10 %, le bord d'un sélecteur blanc à 12 %`() {
+        assertThat(BcColors.hairline).isEqualTo(BcColors.text.copy(alpha = 0.1f))
+        assertThat(BcColors.segmentEdge).isEqualTo(Color.White.copy(alpha = 0.12f))
+    }
+
+    @Test
     fun `le fond d'un bouton bordé est blanc à 6 %`() {
         assertThat(BcColors.buttonFill).isEqualTo(BcColors.text.copy(alpha = 0.06f))
     }

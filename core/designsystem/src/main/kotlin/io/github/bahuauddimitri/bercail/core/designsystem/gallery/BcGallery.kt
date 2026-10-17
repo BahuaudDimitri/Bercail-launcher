@@ -460,7 +460,7 @@ private val COVER_GAP = 48.dp
 private val REMOTE = 52.dp
 private val REMOTE_MAIN = 66.dp
 
-/** The settings panel with sample rows: a choice, a link, a section title. */
+/** The settings panel with sample rows: a choice, a link, a button on the right, a section title. */
 @Composable
 private fun SamplePanel(onBack: () -> Unit) {
     var choice by remember { mutableIntStateOf(1) }
@@ -471,5 +471,10 @@ private fun SamplePanel(onBack: () -> Unit) {
             BcSegmented(listOf("Horizontale", "Verticale"), selected = choice, onSelect = { choice = it })
         }
         BcSettingRow("Apps favorites", subtitle = "Spotify, Beeper", onClick = {})
+        BcSettingRow(
+            "Musique en cours",
+            subtitle = "Bercail voit ce qui joue",
+            trailing = { BcButton("Autoriser", onClick = {}) }
+        )
     }
 }

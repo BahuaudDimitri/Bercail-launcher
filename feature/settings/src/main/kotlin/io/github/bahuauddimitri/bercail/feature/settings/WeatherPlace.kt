@@ -1,5 +1,8 @@
 package io.github.bahuauddimitri.bercail.feature.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
@@ -11,6 +14,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSettingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcText
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextColor
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcTextStyle
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSpacing
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
 import io.github.bahuauddimitri.bercail.core.domain.weather.CitySearch
@@ -120,19 +124,22 @@ fun PlaceScreen(
         )
         BcSectionLabel("Ou une ville")
         if (city != null) BcSettingRow(city.name, subtitle = "${city.region} · utilisée")
-        BcSearchField(
-            value = place.query,
-            onValueChange = actions::onCityQuery,
-            placeholder = "Nom de la ville",
-            onSearch = actions::onSearchCity
-        )
-        BcButton("Chercher cette ville", onClick = actions::onSearchCity, enabled = place.query.isNotBlank())
-        CityResultsList(place.results, actions::onChooseCity)
-        BcText(
-            "Prévisions et recherche de ville : Open-Meteo.com",
-            style = BcTextStyle.Label,
-            color = BcTextColor.Muted
-        )
+        // Unlike the flat rows, the field, its button and what they find need room between them.
+        Column(Modifier.padding(top = BcSpacing.s), verticalArrangement = Arrangement.spacedBy(BcSpacing.s)) {
+            BcSearchField(
+                value = place.query,
+                onValueChange = actions::onCityQuery,
+                placeholder = "Nom de la ville",
+                onSearch = actions::onSearchCity
+            )
+            BcButton("Chercher cette ville", onClick = actions::onSearchCity, enabled = place.query.isNotBlank())
+            CityResultsList(place.results, actions::onChooseCity)
+            BcText(
+                "Prévisions et recherche de ville : Open-Meteo.com",
+                style = BcTextStyle.Label,
+                color = BcTextColor.Muted
+            )
+        }
     }
 }
 

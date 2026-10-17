@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -83,16 +83,16 @@ fun BcProgress(progress: Float, onSeek: ((Float) -> Unit)?, modifier: Modifier =
     }
 }
 
-/** A choice between a few options, as a sunken pill with the selected option lit. */
+/** A choice between a few options: a sunken pill with a fine edge, the selected option lit inside it. */
 @Composable
 fun BcSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(BcShapes.pill)
             .background(BcColors.inset)
+            .border(1.dp, BcColors.segmentEdge, BcShapes.pill)
             .padding(SEGMENT_INSET)
-            .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(SEGMENT_INSET)
+            .selectableGroup()
     ) {
         options.forEachIndexed { index, label ->
             val isSelected = index == selected
@@ -107,7 +107,7 @@ fun BcSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, m
             ) {
                 BcText(
                     text = label,
-                    style = BcTextStyle.Label,
+                    style = BcTextStyle.Button,
                     color = if (isSelected) BcTextColor.OnLight else BcTextColor.Muted,
                     maxLines = 1
                 )
@@ -116,7 +116,10 @@ fun BcSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, m
     }
 }
 
-/** An on/off switch, mint when on. Its touch area is at least 48 × 40 dp. */
+/**
+ * An on/off switch drawn as a line: a 40 × 22 dp outline and its knob, grey when off, in the accent of the moment
+ * when on. Its touch area is at least 48 × 40 dp.
+ */
 @Composable
 fun BcSwitch(
     checked: Boolean,
@@ -130,6 +133,7 @@ fun BcSwitch(
         animationSpec = tween(BcTheme.motion.fadeMillis, easing = BcTheme.motion.easing),
         label = "switch knob"
     )
+    val ink = if (checked) BcTheme.moment.accent else BcColors.off
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = SWITCH_TOUCH_WIDTH, minHeight = BcSizes.minTouch)
@@ -137,32 +141,37 @@ fun BcSwitch(
             .semantics { if (contentDescription != null) this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center
     ) {
-        val track = Modifier.size(TRACK_WIDTH, TRACK_HEIGHT_SWITCH).clip(BcShapes.pill)
         Box(
-            if (checked) {
-                track.background(BcColors.pastelMint)
-            } else {
-                track.background(BcColors.inset).border(1.dp, BcColors.tileEdge, BcShapes.pill)
-            }
+            Modifier
+                .size(TRACK_WIDTH, TRACK_HEIGHT_SWITCH)
+                .border(SWITCH_STROKE, ink, BcShapes.pill)
+                .testTag(SWITCH_TRACK_TAG + contentDescription.orEmpty()),
+            contentAlignment = Alignment.CenterStart
         ) {
             Box(
                 Modifier
-                    .padding(KNOB_INSET)
+                    .padding(start = KNOB_INSET)
                     .offset { IntOffset(knobOffset.roundToPx(), 0) }
                     .size(KNOB_SIZE)
-                    .background(if (checked) BcColors.onLight else BcColors.textMuted, BcShapes.pill)
+                    .background(ink, BcShapes.pill)
             )
         }
     }
 }
 
+/** Tags the drawn outline of a switch, after its description: for the tests. */
+internal const val SWITCH_TRACK_TAG = "switch-"
+
 private const val FILL_ALPHA = 0.8f
 private val TRACK_HEIGHT = 4.dp
-private val SEGMENT_INSET = 4.dp
-private val SEGMENT_PADDING = 12.dp
+private val SEGMENT_INSET = 3.dp
+private val SEGMENT_PADDING = 14.dp
 private val SWITCH_TOUCH_WIDTH = 48.dp
-private val TRACK_WIDTH = 46.dp
-private val TRACK_HEIGHT_SWITCH = 28.dp
-private val KNOB_INSET = 4.dp
-private val KNOB_SIZE = 20.dp
-private val KNOB_TRAVEL = 18.dp
+private val TRACK_WIDTH = 40.dp
+private val TRACK_HEIGHT_SWITCH = 22.dp
+private val SWITCH_STROKE = 1.5.dp
+
+// From the outer edge: the 1.5 dp line, then 3 dp of room around the knob.
+private val KNOB_INSET = 4.5.dp
+private val KNOB_SIZE = 13.dp
+private val KNOB_TRAVEL = TRACK_WIDTH - KNOB_INSET * 2 - KNOB_SIZE
