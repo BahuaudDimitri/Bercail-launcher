@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.data.apps
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -54,7 +55,11 @@ internal interface IconPackFiles {
     fun drawing(pack: String, name: String): Drawable?
 }
 
-/** The files of the packs installed on the phone, read from their resources. */
+/**
+ * The files of the packs installed on the phone, read from their resources. Those of another app can only be found
+ * by their name, as the `appfilter` gives them: hence the lookups by name lint discourages.
+ */
+@SuppressLint("DiscouragedApi")
 internal class InstalledIconPackFiles(private val packages: PackageManager) : IconPackFiles {
     override fun appFilter(pack: String): Map<ComponentName, String>? = resourcesOf(pack)?.let { resources ->
         val compiled = resources.getIdentifier(APP_FILTER, "xml", pack).takeIf { it != 0 }?.let(resources::getXml)
