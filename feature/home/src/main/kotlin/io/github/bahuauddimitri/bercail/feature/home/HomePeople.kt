@@ -10,6 +10,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSummaryLeading
@@ -62,7 +63,7 @@ internal fun PeopleRow(state: HomeUiState, actions: HomeActions, links: HomeLink
         return
     }
     val favoriteIds = state.favorites.map { it.id }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    BcRingRow {
         state.favorites.forEach { person ->
             BcRing(
                 label = person.name,

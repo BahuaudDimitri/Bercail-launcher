@@ -108,7 +108,9 @@ private const val TIMELINE_DESCRIPTION = "Ligne du temps de la journée"
 private const val OPEN_CALENDAR = "Ouvrir l'agenda"
 internal val SIDE = 22.dp
 private val TOP = 18.dp
-private val TIMELINE_ROOM = 96.dp
+
+/** Room kept along the right edge for the line of the day and what it writes beside it. */
+internal val TIMELINE_ROOM = 96.dp
 private val LINE_GAP = 3.dp
 private val WEATHER_GAP = 6.dp
 

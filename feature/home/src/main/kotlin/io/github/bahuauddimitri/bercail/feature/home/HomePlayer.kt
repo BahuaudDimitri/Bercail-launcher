@@ -7,14 +7,18 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,14 +30,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bahuauddimitri.bercail.core.designsystem.brume.BcBrumeColors
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgress
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArcProgressCurveCentre
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCover
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCoverCurveCentre
-import io.github.bahuauddimitri.bercail.core.designsystem.component.BcArchCoverHeight
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
@@ -64,6 +67,8 @@ internal const val PLAYER_TAG = "home-player"
  * as they arrive. Sliding up rolls the arch back up under the finger: past half way, or with a flick, the home comes
  * back. The system back gesture goes back to the home too.
  * A content without cover takes the colors Brume has at that moment ([fallback]).
+ * On a screen smaller than the Pixel 9's, the arch gets shorter or narrower and the gaps tighten ([listenLayout]):
+ * every control stays whole on the screen, above the navigation bar.
  */
 @Composable
 internal fun Player(
@@ -74,6 +79,27 @@ internal fun Player(
     transition: BcHeldTransition,
     modifier: Modifier = Modifier
 ) {
+    // The screen keeps the Pixel 9's layout, or as close to it as a smaller one allows.
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val bar = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
+        val layout = remember(maxWidth, maxHeight, bar, density.fontScale) {
+            listenLayout(maxWidth, maxHeight, bar, density.fontScale)
+        }
+        PlayerContent(loaded, position, fallback, actions, transition, layout)
+    }
+}
+
+/** The player of [Player], each thing where [layout] puts it. */
+@Composable
+private fun PlayerContent(
+    loaded: MediaState.Loaded,
+    position: StateFlow<Duration>,
+    fallback: BcBrumeColors,
+    actions: HomeActions,
+    transition: BcHeldTransition,
+    layout: ListenLayout
+) {
     val content = loaded.content
     // Sliding up, the system back gesture and a screen reader's action all go back to the home.
     val leave by rememberUpdatedState { actions.onPageWanted(HomePage.Home) }
@@ -82,30 +108,40 @@ internal fun Player(
     val arrival = { transition.progress }
     val appearing = Modifier.appears(arrival)
     // Sliding up rolls the arch back up under the finger: the whole way is the height of the arch.
-    val travel = with(LocalDensity.current) { BcArchCoverHeight.toPx() }
+    val travel = with(LocalDensity.current) { layout.archHeight.toPx() }
     val slide = rememberDraggableState { delta -> transition.drag(delta / travel) }
+    val lowered = Modifier.lowered(travel, arrival)
     Box(
-        modifier.fillMaxSize().testTag(PLAYER_TAG).leavesUpwards(slide, travel, transition) { leave() },
+        Modifier.fillMaxSize().testTag(PLAYER_TAG).leavesUpwards(slide, travel, transition) { leave() },
         contentAlignment = Alignment.TopCenter
     ) {
         BcArchCover(
             image = content.cover.asImage(),
             colors = content.colors?.pair ?: (fallback.first to fallback.second),
             contentDescription = "Pochette de ${content.title}",
-            modifier = Modifier.lowered(arrival)
+            modifier = lowered,
+            width = layout.archWidth,
+            height = layout.archHeight
         )
-        ArcProgress(loaded, position, actions, Modifier.padding(top = ARC_TOP).lowered(arrival).then(appearing))
-        Titles(content, below.padding(top = TITLES_TOP).then(appearing))
-        Remote(loaded, actions, Modifier.padding(top = REMOTE_TOP).then(appearing))
+        val arcTop = layout.curveCentre - BcArcProgressCurveCentre
+        ArcProgress(
+            loaded,
+            position,
+            actions,
+            layout.arcRadius,
+            Modifier.padding(top = arcTop).then(lowered).then(appearing)
+        )
+        Titles(content, below.padding(top = layout.titlesTop).then(appearing))
+        Remote(loaded, actions, Modifier.padding(top = layout.remoteTop).then(appearing))
         BcButton(
             "Ouvrir dans ${content.app}",
             onClick = actions::onOpenMediaApp,
-            modifier = Modifier.padding(top = OPEN_TOP).then(appearing)
+            modifier = Modifier.padding(top = layout.openTop).then(appearing)
         )
         BcIcon(
             BcIcons.ChevronUp,
             contentDescription = null,
-            modifier = Modifier.padding(top = CHEVRON_TOP).then(appearing).semantics {
+            modifier = Modifier.padding(top = layout.chevronTop).then(appearing).semantics {
                 contentDescription = BACK_HOME_HINT
                 // A screen reader cannot slide: the chevron offers the way back as an action.
                 customActions = listOf(
@@ -137,9 +173,9 @@ private fun Modifier.leavesUpwards(
     onDragStopped = { velocity -> if (transition.release(velocity / travel) == 0f) onLeave() }
 )
 
-/** Comes down from above the top edge, by the height of the arch, to its place at the end of [arrival]. */
-private fun Modifier.lowered(arrival: () -> Float) = graphicsLayer {
-    translationY = -(1f - arrival()) * BcArchCoverHeight.toPx()
+/** Comes down from above the top edge, by the height of the arch ([travel]), to its place at the end of [arrival]. */
+private fun Modifier.lowered(travel: Float, arrival: () -> Float) = graphicsLayer {
+    translationY = -(1f - arrival()) * travel
 }
 
 /** Shows only as the arch arrives: from half way of [arrival], fully at its end. */
@@ -156,6 +192,7 @@ private fun ArcProgress(
     loaded: MediaState.Loaded,
     position: StateFlow<Duration>,
     actions: HomeActions,
+    radius: Dp,
     modifier: Modifier
 ) {
     // Followed here only: the position costs nothing while the player is not on screen.
@@ -167,7 +204,8 @@ private fun ArcProgress(
         duration = duration.asTrackTime(),
         onSeek = if (MediaAction.Seek in loaded.actions) actions::onSeek else null,
         modifier = modifier,
-        live = duration <= Duration.ZERO
+        live = duration <= Duration.ZERO,
+        radius = radius
     )
 }
 
@@ -230,20 +268,9 @@ private const val BACK_HOME = "Revenir à l'accueil"
 /** From where along [BcHeldTransition] the texts and controls of the player start to show. */
 private const val APPEARS_FROM = 0.5f
 
-// Distances from the top edge of the screen, as on the reference (a 390 × 844 phone, the arch at the top), each kept
-// under the bottom of the arch: a taller arch takes everything under it down with it. With the arch of 484 dp, the
-// title starts at 550 dp, the remote at 648 dp, the button at 746 dp and the chevron at 820 dp.
-private val ARC_TOP = BcArchCoverCurveCentre - BcArcProgressCurveCentre
-private val TITLES_TOP = BcArchCoverHeight + 66.dp
-private val REMOTE_TOP = BcArchCoverHeight + 164.dp
-
-// The pill of the button is drawn 2 dp lower, centred in its 40 dp touch target.
-private val OPEN_TOP = BcArchCoverHeight + 262.dp
-private val CHEVRON_TOP = BcArchCoverHeight + 336.dp
-
 private val TEXT_SIDE = 24.dp
 private val CREDITS_GAP = 5.dp
 private val REMOTE_GAP = 30.dp
 private val SIDE_BUTTON = 48.dp
 private val MAIN_BUTTON = 76.dp
-private val CHEVRON = 28.dp
+private val CHEVRON = CHEVRON_SIZE

@@ -261,7 +261,38 @@ class HomeScreenshotTest {
 
         capture("home_timeline_touched")
     }
+
+    // ---------- a small phone, 360 × 640 ----------
+
+    @Test
+    @Config(qualifiers = SMALL_PHONE)
+    fun `sur un petit téléphone, l'accueil du matin correspond à sa capture`() {
+        show(FakeWorld(Moment.Matin))
+
+        capture("home_small_morning")
+    }
+
+    @Test
+    @Config(qualifiers = SMALL_PHONE)
+    fun `sur un petit téléphone, la feuille ouverte correspond à sa capture`() {
+        show(FakeWorld(Moment.Matin))
+        compose.openSheet()
+
+        capture("home_small_sheet_open")
+    }
+
+    @Test
+    @Config(qualifiers = SMALL_PHONE)
+    fun `sur un petit téléphone, l'écran Écoute correspond à sa capture`() {
+        show(FakeWorld(Moment.Soir))
+        compose.onNodeWithTag(MIDDLE_TAG).performTouchInput { swipeLeft() }
+
+        capture("home_small_listen")
+    }
 }
+
+/** A small phone: 360 × 640 dp. */
+private const val SMALL_PHONE = "w360dp-h640dp-420dpi"
 
 private const val THUMBNAIL_WIDTH = 320
 private const val THUMBNAIL_HEIGHT = 180

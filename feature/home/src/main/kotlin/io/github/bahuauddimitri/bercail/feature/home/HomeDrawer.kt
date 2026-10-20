@@ -13,7 +13,6 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +31,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcFrost
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSearchField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
@@ -136,7 +136,7 @@ private fun Essentials(state: HomeUiState, actions: HomeActions, links: HomeLink
         BcSectionLabel("Gens")
         PeopleRow(state, actions, links)
         BcSectionLabel("Maison")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        BcRingRow {
             state.controls.forEach { control ->
                 BcRing(
                     name = control.name,

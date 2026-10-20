@@ -64,7 +64,9 @@ internal fun HomeMiddle(
                 onOpenListen = { actions.onPageWanted(HomePage.Listen) },
                 onOpenMediaApps = { actions.onListenOpenChange(true) },
                 onOpenApp = actions::onOpenMediaApp,
-                modifier = Modifier.align(Alignment.BottomStart).padding(start = SIDE, bottom = PILL_BOTTOM)
+                // It stops before the line of the day, whose alarm ring stands at its height.
+                modifier = Modifier.align(Alignment.BottomStart)
+                    .padding(start = SIDE, end = TIMELINE_ROOM, bottom = PILL_BOTTOM)
             )
         }
     }
