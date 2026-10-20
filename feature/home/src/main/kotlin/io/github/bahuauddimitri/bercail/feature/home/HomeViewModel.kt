@@ -89,6 +89,9 @@ data class HomeUiState(
     /** The apps of the dock, in the band above the search bar: five at most, in the order chosen. */
     val dock: List<App> = emptyList(),
 
+    /** The icon pack the dock draws its apps with, by its package; nothing for their own glyphs. */
+    val dockIconPack: String? = null,
+
     /** The shortcuts of an app of the dock, open above its icon after a long press. */
     val dockMenu: DockMenu? = null,
     val homeSummary: String = "",
@@ -293,6 +296,7 @@ class HomeViewModel private constructor(
             otherUnread = unreadOutsideFavorites(drawer.conversations, favorites.map { it.id }),
             controls = drawer.controls,
             dock = drawer.dock,
+            dockIconPack = drawer.settings.iconPack,
             homeSummary = homeSummary(drawer.controls),
             media = media,
             mediaAllowed = listening.allowed,

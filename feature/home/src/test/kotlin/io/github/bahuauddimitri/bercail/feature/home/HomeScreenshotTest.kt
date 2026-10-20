@@ -23,6 +23,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.agenda.AgendaEvent
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAction
 import io.github.bahuauddimitri.bercail.core.testing.FakeMediaSource
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -62,6 +63,23 @@ class HomeScreenshotTest {
         show(FakeWorld(Moment.Matin))
 
         capture("home_morning_folded")
+    }
+
+    @Test
+    fun `le dock dessiné par un pack d'icônes, sauf les apps qu'il ne dessine pas, correspond à sa capture`() {
+        val pack = IconPack("com.natewren.linesfree", "Lines Free")
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(pack)
+            settings.change { it.copy(iconPack = pack.id) }
+            // The pack draws discs; the camera keeps its own square; the calendar has nothing and shows its initial.
+            listOf("chrome", "téléphone", "beeper").forEach {
+                apps.paintGlyph(it, GLYPH_PX, framed = true, iconPack = pack.id)
+            }
+            apps.paintGlyph("appareil photo", GLYPH_PX, framed = true)
+        }
+        show(world)
+
+        capture("home_dock_icon_pack")
     }
 
     @Test
@@ -251,6 +269,9 @@ private const val APRICOT = 0xFFFFC48A.toInt()
 private const val CORAL = 0xFFFF9A8A.toInt()
 private const val SPOTIFY_GREEN = 0xFF1ED760.toInt()
 private const val ICON_PX = 96
+
+/** The glyphs of the dock, painted in a frame as large as the one the dock draws them in. */
+private const val GLYPH_PX = 147
 
 /** Full screens are kept at half size: the pictures stay readable and four times lighter in the repository. */
 private val HALF_SIZE = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(resizeScale = 0.5))

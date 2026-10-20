@@ -27,8 +27,11 @@ data class DockMenu(val appId: String, val shortcuts: List<AppShortcut>)
 
 /** What the home screen does with the dock: its icons, and the shortcuts a long press shows. */
 interface DockActions {
-    /** The icon of an app of the dock in one colour, drawn when the dock first shows it; nothing for its initial. */
-    suspend fun glyphOf(appId: String): Picture?
+    /**
+     * The icon of an app of the dock in one colour, drawn when the dock first shows it, or the drawing the chosen
+     * [iconPack] gives it; nothing for its initial.
+     */
+    suspend fun glyphOf(appId: String, iconPack: String?): Picture?
 
     /** A long press on an app of the dock: its shortcuts are read now, and stand above it if it has any. */
     fun onDockLongPress(appId: String)
@@ -57,7 +60,7 @@ internal class HomeDock(private val apps: AppsSource) :
     /** The menu of shortcuts that is open, if any. */
     val menu: StateFlow<DockMenu?> = open
 
-    override suspend fun glyphOf(appId: String): Picture? = apps.glyph(appId)
+    override suspend fun glyphOf(appId: String, iconPack: String?): Picture? = apps.glyph(appId, iconPack)
 
     override fun onDockLongPress(appId: String) {
         reading?.cancel()
@@ -83,14 +86,21 @@ internal class HomeDock(private val apps: AppsSource) :
 }
 
 /**
- * The apps of the dock, each drawn in one colour once it first shows; until then, and without one, its initial.
+ * The apps of the dock, each drawn in one colour once it first shows, by the chosen [iconPack] if it draws it;
+ * until then, and without one, its initial.
  * A long press asks for the shortcuts of the app; while [menu] is open, they stand above its icon.
  */
 @Composable
-internal fun Dock(apps: List<App>, menu: DockMenu?, actions: DockActions, onOpenApp: (String) -> Unit) {
+internal fun Dock(
+    apps: List<App>,
+    iconPack: String?,
+    menu: DockMenu?,
+    actions: DockActions,
+    onOpenApp: (String) -> Unit
+) {
     val dock = apps.map { app ->
         key(app.id) {
-            val glyph by produceState<Picture?>(null, app.id) { value = actions.glyphOf(app.id) }
+            val glyph by produceState<Picture?>(null, app.id, iconPack) { value = actions.glyphOf(app.id, iconPack) }
             BcDockApp(app.name, glyph.asImage(), onLongClick = { actions.onDockLongPress(app.id) }) {
                 onOpenApp(app.id)
             }

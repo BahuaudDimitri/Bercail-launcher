@@ -57,7 +57,8 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
         fun inside(at: Int) = at >= edge && at < size - edge
         fun inDisc(x: Int, y: Int): Boolean {
             val middle = (size - 1) / 2f
-            return (x - middle) * (x - middle) + (y - middle) * (y - middle) <= middle * middle
+            val radius = (size - 2 * edge) / 2f
+            return (x - middle) * (x - middle) + (y - middle) * (y - middle) <= radius * radius
         }
         fun painted(x: Int, y: Int) = inside(x) && inside(y) && (iconPack == null || inDisc(x, y))
         val pixels = IntArray(size * size) { if (painted(it % size, it / size)) OPAQUE_WHITE else CLEAR }

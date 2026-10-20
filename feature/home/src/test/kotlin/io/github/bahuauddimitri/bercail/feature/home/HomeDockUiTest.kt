@@ -17,10 +17,13 @@ import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.containsOnly
 import assertk.assertions.isEmpty
 import assertk.assertions.isLessThan
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import org.junit.Rule
@@ -38,6 +41,7 @@ class HomeDockUiTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val dockNames = listOf("Chrome", "Téléphone", "Beeper", "Appareil photo", "Agenda")
+    private val dockIds = arrayOf("chrome", "téléphone", "beeper", "appareil photo", "agenda")
 
     private fun show(world: FakeWorld = FakeWorld(Moment.Matin)): FakeWorld {
         val home = world.homeViewModel()
@@ -93,6 +97,45 @@ class HomeDockUiTest {
 
         compose.onAllNodesWithText("C", useUnmergedTree = true).assertCountEquals(0)
         compose.onNodeWithText("T", useUnmergedTree = true).assertExists()
+    }
+
+    private val lines = IconPack("com.natewren.linesfree", "Lines Free")
+    private val whicons = IconPack("com.whicons.iconpack", "Whicons")
+
+    @Test
+    fun `avec « Aucun », le dock garde le dessin de chaque app`() {
+        val world = show()
+
+        compose.waitForIdle()
+
+        assertThat(world.apps.glyphRequests).containsExactlyInAnyOrder(*dockIds)
+        assertThat(world.apps.glyphPacks.toSet()).containsOnly(null)
+    }
+
+    @Test
+    fun `avec un pack d'icônes choisi, le dock dessine chaque app par ce pack`() {
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(lines)
+            settings.change { it.copy(iconPack = lines.id) }
+        }
+        show(world)
+
+        compose.waitForIdle()
+
+        assertThat(world.apps.glyphRequests).containsExactlyInAnyOrder(*dockIds)
+        assertThat(world.apps.glyphPacks.toSet()).containsOnly(lines.id)
+    }
+
+    @Test
+    fun `choisir un autre pack d'icônes redessine le dock`() {
+        val world = show()
+        compose.waitForIdle()
+        world.apps.glyphPacks.clear()
+
+        world.settings.change { it.copy(iconPack = whicons.id) }
+        compose.waitForIdle()
+
+        assertThat(world.apps.glyphPacks).containsExactly(*Array(dockIds.size) { whicons.id })
     }
 
     @Test
