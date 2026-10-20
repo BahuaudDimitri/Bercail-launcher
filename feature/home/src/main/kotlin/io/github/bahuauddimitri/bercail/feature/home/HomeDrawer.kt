@@ -125,7 +125,9 @@ private fun Summary(state: HomeUiState, actions: HomeActions, links: HomeLinks) 
             onClickLabel = OPEN_SHEET,
             onOpenApp = links::onOpenMessagesApp
         )
-        if (state.dock.isNotEmpty()) Dock(state.dock, state.dockIconPack, state.dockMenu, actions, actions::onOpenApp)
+        if (state.dock.isNotEmpty()) {
+            Dock(state.dock, state.dockIconPack, state.dockIcons, state.dockMenu, actions, actions::onOpenApp)
+        }
     }
 }
 

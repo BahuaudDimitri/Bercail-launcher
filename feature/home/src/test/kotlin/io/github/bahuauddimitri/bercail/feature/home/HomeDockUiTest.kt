@@ -20,10 +20,15 @@ import assertk.assertions.containsExactly
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.containsOnly
 import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import assertk.assertions.isLessThan
+import assertk.assertions.isNull
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
+import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
 import io.github.bahuauddimitri.bercail.core.testing.Moment
 import org.junit.Rule
@@ -147,6 +152,76 @@ class HomeDockUiTest {
         compose.waitForIdle()
 
         assertThat(world.apps.glyphPacks).containsExactly(*Array(dockIds.size) { whicons.id })
+    }
+
+    @Test
+    fun `une icône choisie pour une app du dock la dessine aussitôt, les autres gardent l'icône du pack`() {
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(lines)
+            settings.change { it.copy(iconPack = lines.id) }
+        }
+        show(world)
+        compose.waitForIdle()
+        world.apps.glyphRequests.clear()
+        world.apps.glyphDrawings.clear()
+        val maps = PackIcon(lines.id, "google_maps")
+
+        world.settings.change { it.withDockIcon("chrome", DockIcon.Drawing(maps)) }
+        compose.waitForIdle()
+
+        // Only Chrome is drawn again, with its drawing and the dock's pack to fall back on.
+        assertThat(world.apps.glyphRequests).containsExactly("chrome")
+        assertThat(world.apps.glyphDrawings).containsExactly(maps)
+        assertThat(world.apps.glyphPacks.last()).isEqualTo(lines.id)
+    }
+
+    @Test
+    fun `avec « Dessin d'origine », le dock dessine l'app sans le pack choisi`() {
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(lines)
+            settings.change { it.copy(iconPack = lines.id).withDockIcon("chrome", DockIcon.Origin) }
+        }
+        show(world)
+
+        compose.waitForIdle()
+
+        val chrome = world.apps.glyphRequests.indexOf("chrome")
+        assertThat(world.apps.glyphPacks[chrome]).isNull()
+        assertThat(world.apps.glyphDrawings[chrome]).isNull()
+    }
+
+    @Test
+    fun `une icône choisie dont le pack est désinstallé laisse l'app au dessin du pack du dock`() {
+        val maps = PackIcon(whicons.id, "google_maps")
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(lines)
+            apps.paintGlyph("chrome", iconPack = lines.id)
+            apps.packIcons[maps] = Picture(1, 1, intArrayOf(-1))
+            settings.change { it.copy(iconPack = lines.id).withDockIcon("chrome", DockIcon.Drawing(maps)) }
+        }
+        show(world)
+
+        compose.waitForIdle()
+
+        // Chrome is asked with its drawing and the dock's pack: the source falls back on the pack's glyph.
+        val chrome = world.apps.glyphRequests.indexOf("chrome")
+        assertThat(world.apps.glyphDrawings[chrome]).isEqualTo(maps)
+        assertThat(world.apps.glyphPacks[chrome]).isEqualTo(lines.id)
+        assertThat(world.settings.settings.value.dockIconOf("chrome")).isEqualTo(DockIcon.Drawing(maps))
+    }
+
+    @Test
+    fun `l'accueil ne lit jamais les icônes des packs, même avec une icône choisie`() {
+        val world = FakeWorld(Moment.Matin).apply {
+            apps.iconPacks.value = listOf(lines)
+            settings.change { it.withDockIcon("chrome", DockIcon.Drawing(PackIcon(lines.id, "google_maps"))) }
+        }
+        show(world)
+
+        compose.waitForIdle()
+
+        assertThat(world.apps.catalogRequests).isEmpty()
+        assertThat(world.apps.packIconRequests).isEmpty()
     }
 
     @Test

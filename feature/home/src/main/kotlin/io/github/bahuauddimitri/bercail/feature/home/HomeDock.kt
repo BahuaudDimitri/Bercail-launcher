@@ -12,6 +12,9 @@ import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
+import io.github.bahuauddimitri.bercail.core.domain.apps.drawing
+import io.github.bahuauddimitri.bercail.core.domain.apps.packFor
 import io.github.bahuauddimitri.bercail.core.domain.apps.shortcutsShown
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,9 +32,9 @@ data class DockMenu(val appId: String, val shortcuts: List<AppShortcut>)
 interface DockActions {
     /**
      * The icon of an app of the dock in one colour, drawn when the dock first shows it, or the drawing the chosen
-     * [iconPack] gives it; nothing for its initial.
+     * [iconPack] gives it, or the [icon] chosen for it in the settings; nothing for its initial.
      */
-    suspend fun glyphOf(appId: String, iconPack: String?): Picture?
+    suspend fun glyphOf(appId: String, iconPack: String?, icon: DockIcon = DockIcon.FromPack): Picture?
 
     /** A long press on an app of the dock: its shortcuts are read now, and stand above it if it has any. */
     fun onDockLongPress(appId: String)
@@ -60,7 +63,9 @@ internal class HomeDock(private val apps: AppsSource) :
     /** The menu of shortcuts that is open, if any. */
     val menu: StateFlow<DockMenu?> = open
 
-    override suspend fun glyphOf(appId: String, iconPack: String?): Picture? = apps.glyph(appId, iconPack)
+    /** « Dessin d'origine » asks for no pack; a chosen drawing comes with the dock's pack, to fall back on. */
+    override suspend fun glyphOf(appId: String, iconPack: String?, icon: DockIcon): Picture? =
+        apps.glyph(appId, icon.packFor(iconPack), icon.drawing)
 
     override fun onDockLongPress(appId: String) {
         reading?.cancel()
@@ -86,7 +91,8 @@ internal class HomeDock(private val apps: AppsSource) :
 }
 
 /**
- * The apps of the dock, each drawn in one colour once it first shows, by the chosen [iconPack] if it draws it;
+ * The apps of the dock, each drawn in one colour once it first shows: by the icon chosen for it in [icons], or by
+ * the chosen [iconPack] if it draws it;
  * until then, and without one, its initial.
  * A long press asks for the shortcuts of the app; while [menu] is open, they stand above its icon.
  */
@@ -94,13 +100,17 @@ internal class HomeDock(private val apps: AppsSource) :
 internal fun Dock(
     apps: List<App>,
     iconPack: String?,
+    icons: Map<String, DockIcon>,
     menu: DockMenu?,
     actions: DockActions,
     onOpenApp: (String) -> Unit
 ) {
     val dock = apps.map { app ->
         key(app.id) {
-            val glyph by produceState<Picture?>(null, app.id, iconPack) { value = actions.glyphOf(app.id, iconPack) }
+            val icon = icons[app.id] ?: DockIcon.FromPack
+            val glyph by produceState<Picture?>(null, app.id, iconPack, icon) {
+                value = actions.glyphOf(app.id, iconPack, icon)
+            }
             BcDockApp(app.name, glyph.asImage(), onLongClick = { actions.onDockLongPress(app.id) }) {
                 onOpenApp(app.id)
             }

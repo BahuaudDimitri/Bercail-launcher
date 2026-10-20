@@ -15,6 +15,7 @@ import io.github.bahuauddimitri.bercail.core.domain.agenda.dayRowsAt
 import io.github.bahuauddimitri.bercail.core.domain.agenda.glanceAt
 import io.github.bahuauddimitri.bercail.core.domain.agenda.inWords
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeControl
 import io.github.bahuauddimitri.bercail.core.domain.home.HomeSource
@@ -91,6 +92,9 @@ data class HomeUiState(
 
     /** The icon pack the dock draws its apps with, by its package; nothing for their own glyphs. */
     val dockIconPack: String? = null,
+
+    /** The icon chosen for some apps of the dock, by their id; the others keep « Icône du pack ». */
+    val dockIcons: Map<String, DockIcon> = emptyMap(),
 
     /** The shortcuts of an app of the dock, open above its icon after a long press. */
     val dockMenu: DockMenu? = null,
@@ -297,6 +301,7 @@ class HomeViewModel private constructor(
             controls = drawer.controls,
             dock = drawer.dock,
             dockIconPack = drawer.settings.iconPack,
+            dockIcons = drawer.settings.dockIcons,
             homeSummary = homeSummary(drawer.controls),
             media = media,
             mediaAllowed = listening.allowed,
