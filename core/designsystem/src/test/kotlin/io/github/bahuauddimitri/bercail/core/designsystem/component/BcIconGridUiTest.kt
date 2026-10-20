@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -76,6 +77,22 @@ class BcIconGridUiTest {
         compose.onNodeWithText("En tête").assertExists()
         compose.onNodeWithText("Proposées").assertExists()
         compose.onNodeWithText("Whicons").assertExists()
+    }
+
+    @Test
+    fun `les parties de l'en-tête se rangent l'une sous l'autre`() {
+        compose.setContent {
+            BcTheme {
+                BcIconGrid(emptyList(), image = { null }, modifier = Modifier.height(GRID_HEIGHT)) {
+                    BcListRow("Icône du pack", onClick = {})
+                    BcListRow("Dessin d'origine", onClick = {})
+                }
+            }
+        }
+
+        val first = compose.onNodeWithText("Icône du pack").getUnclippedBoundsInRoot()
+        val second = compose.onNodeWithText("Dessin d'origine").getUnclippedBoundsInRoot()
+        assertThat(second.top >= first.bottom).isTrue()
     }
 
     @Test

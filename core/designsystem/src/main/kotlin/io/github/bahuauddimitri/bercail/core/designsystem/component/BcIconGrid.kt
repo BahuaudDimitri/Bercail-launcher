@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
@@ -44,10 +45,11 @@ data class BcGridIcon(val key: String, val name: String, val chosen: Boolean = f
 data class BcIconSection(val title: String, val icons: List<BcGridIcon>)
 
 /**
- * A grid of icons that scrolls by itself, in sections, under an optional [header] as wide as the grid. Each icon
- * stands in a round 56 dp cell, its drawing in white as the dock draws it: asked from [image] by its key only once
- * its cell shows, and let go when it scrolls away. The chosen icon wears a ring and a drawing in the accent. It needs
- * a bounded height: inside a panel, one that does not scroll (`BcPanel(scrolls = false)`).
+ * A grid of icons that scrolls by itself, in sections, under an optional [header] as wide as the grid, its parts one
+ * under the other. Each icon stands in a round 56 dp cell, its drawing in white as the dock draws it: asked from
+ * [image] by its key only once its cell shows, and let go when it scrolls away. The chosen icon wears a ring and a
+ * drawing in the accent. It needs a bounded height: inside a panel, one that does not scroll
+ * (`BcPanel(scrolls = false)`).
  */
 @Composable
 fun BcIconGrid(
@@ -61,7 +63,7 @@ fun BcIconGrid(
         modifier = modifier,
         contentPadding = PaddingValues(bottom = BcSpacing.xl)
     ) {
-        if (header != null) item(key = HEADER, span = { GridItemSpan(maxLineSpan) }) { header() }
+        if (header != null) item(key = HEADER, span = { GridItemSpan(maxLineSpan) }) { Column { header() } }
         sections.forEachIndexed { index, section ->
             item(key = "$index$TITLE", span = { GridItemSpan(maxLineSpan) }) { BcSectionLabel(section.title) }
             // The same drawing may stand in two sections (proposed, then in its pack): keys carry the section.
