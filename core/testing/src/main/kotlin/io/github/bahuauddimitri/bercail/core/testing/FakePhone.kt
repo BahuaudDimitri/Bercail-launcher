@@ -4,6 +4,7 @@ import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -33,20 +34,35 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
     val glyphRequests = mutableListOf<String>()
     private val glyphs = mutableMapOf<String, Picture>()
 
-    override suspend fun glyph(appId: String): Picture? {
+    /** The icon packs installed; none unless the tests install some. */
+    override val iconPacks = MutableStateFlow<List<IconPack>>(emptyList())
+
+    /** The packs the glyphs were asked with so far, in order: nothing for the app's own glyph. */
+    val glyphPacks = mutableListOf<String?>()
+
+    /** The glyph the installed [iconPack] paints for the app ([paintGlyph]), or else its own. */
+    override suspend fun glyph(appId: String, iconPack: String?): Picture? {
         glyphRequests += appId
-        return glyphs[appId]
+        glyphPacks += iconPack
+        val installed = iconPacks.value.any { it.id == iconPack }
+        return glyphs["$iconPack$PACK_SEPARATOR$appId"]?.takeIf { installed } ?: glyphs[appId]
     }
 
     /**
      * Gives an app a glyph: a white square filling the picture or, [framed] as a real icon is, filling only its
-     * middle third.
+     * middle third. With an [iconPack], the glyph that pack draws for it, a white disc to tell them apart.
      */
-    fun paintGlyph(appId: String, size: Int = 4, framed: Boolean = false) {
+    fun paintGlyph(appId: String, size: Int = 4, framed: Boolean = false, iconPack: String? = null) {
         val edge = if (framed) size / FRAME_PARTS else 0
         fun inside(at: Int) = at >= edge && at < size - edge
-        val pixels = IntArray(size * size) { if (inside(it % size) && inside(it / size)) OPAQUE_WHITE else CLEAR }
-        glyphs[appId] = Picture(size, size, pixels)
+        fun inDisc(x: Int, y: Int): Boolean {
+            val middle = (size - 1) / 2f
+            return (x - middle) * (x - middle) + (y - middle) * (y - middle) <= middle * middle
+        }
+        fun painted(x: Int, y: Int) = inside(x) && inside(y) && (iconPack == null || inDisc(x, y))
+        val pixels = IntArray(size * size) { if (painted(it % size, it / size)) OPAQUE_WHITE else CLEAR }
+        val key = if (iconPack == null) appId else "$iconPack$PACK_SEPARATOR$appId"
+        glyphs[key] = Picture(size, size, pixels)
     }
 
     override fun open(appId: String) {
@@ -81,6 +97,9 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
 
 private const val OPAQUE_WHITE = -0x1
 private const val CLEAR = 0
+
+/** Glyphs painted by an icon pack are kept under the pack, then the app. */
+private const val PACK_SEPARATOR = "|"
 
 /** A framed glyph leaves a third of its width clear on each side. */
 private const val FRAME_PARTS = 3

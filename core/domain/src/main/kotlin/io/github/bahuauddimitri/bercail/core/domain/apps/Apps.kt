@@ -13,11 +13,15 @@ interface AppsSource {
     /** The icon of an app, or nothing if it has none or is gone. */
     suspend fun icon(appId: String): Picture?
 
+    /** The icon packs installed, from A to Z, emitted again when one is installed or removed. */
+    val iconPacks: Flow<List<IconPack>>
+
     /**
      * The icon of an app as a white glyph whose shape is in the alpha ([monochromeGlyph], [iconGlyph]), or
-     * nothing when it has none that reads, or is gone: its initial then stands in for it.
+     * nothing when it has none that reads, or is gone: its initial then stands in for it. With an [iconPack] that
+     * draws the app, its drawing instead ([packGlyph]); a pack that does not draw it, or is gone, changes nothing.
      */
-    suspend fun glyph(appId: String): Picture?
+    suspend fun glyph(appId: String, iconPack: String? = null): Picture?
 
     fun open(appId: String)
 

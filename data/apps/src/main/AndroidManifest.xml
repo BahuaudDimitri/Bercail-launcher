@@ -7,5 +7,9 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
+        <!-- The icon packs for the dock, as every launcher finds them (the ADW/Nova standard). -->
+        <intent>
+            <action android:name="org.adw.launcher.THEMES" />
+        </intent>
     </queries>
 </manifest>

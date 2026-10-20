@@ -18,8 +18,10 @@ import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.apps.iconGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.monochromeGlyph
+import io.github.bahuauddimitri.bercail.core.domain.apps.packGlyph
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -36,11 +38,19 @@ import kotlinx.coroutines.withContext
  * an app is installed, removed or changed; nothing stays registered once nobody listens. Reading names and
  * drawing icons happens away from the main thread.
  */
-class DeviceApps(context: Context, private val background: CoroutineDispatcher = Dispatchers.IO) : AppsSource {
+class DeviceApps internal constructor(
+    context: Context,
+    private val background: CoroutineDispatcher,
+    packFiles: IconPackFiles?
+) : AppsSource {
+    constructor(context: Context, background: CoroutineDispatcher = Dispatchers.IO) : this(context, background, null)
+
     private val context = context.applicationContext
     private val packages = this.context.packageManager
+    private val packs = IconPacks(packages, packFiles ?: InstalledIconPackFiles(packages), this.context.packageName)
 
-    override val apps: Flow<List<App>> = callbackFlow {
+    /** A signal each time a package is installed, removed or changed, and once at first; only while listened to. */
+    private val changes: Flow<Unit> = callbackFlow {
         val launcher = checkNotNull(this@DeviceApps.context.getSystemService(LauncherApps::class.java))
         val changes = object : LauncherApps.Callback() {
             override fun onPackageAdded(packageName: String, user: UserHandle) = changed()
@@ -56,7 +66,13 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
         launcher.registerCallback(changes, Handler(Looper.getMainLooper()))
         trySend(Unit)
         awaitClose { launcher.unregisterCallback(changes) }
-    }.conflate().map { withContext(background) { installed() } }.distinctUntilChanged()
+    }.conflate()
+
+    override val apps: Flow<List<App>> = changes.map { withContext(background) { installed() } }.distinctUntilChanged()
+
+    /** The icon packs, looked for only while someone listens: the settings. */
+    override val iconPacks: Flow<List<IconPack>> =
+        changes.map { withContext(background) { packs.installed() } }.distinctUntilChanged()
 
     override suspend fun icon(appId: String): Picture? = withContext(background) {
         val component = ComponentName.unflattenFromString(appId) ?: return@withContext null
@@ -70,29 +86,43 @@ class DeviceApps(context: Context, private val background: CoroutineDispatcher =
     }
 
     /**
-     * The monochrome layer Android 13 asks apps for, framed as the icon is; without it, the real icon in one
-     * colour. Drawn once per version of the app: an update may bring a new icon.
+     * The drawing the chosen icon pack gives the app; without one, the monochrome layer Android 13 asks apps for,
+     * framed as the icon is; without it, the real icon in one colour. Drawn once per version of the app and of the
+     * pack: an update may bring a new icon.
      */
-    override suspend fun glyph(appId: String): Picture? = withContext(background) {
-        val component = ComponentName.unflattenFromString(appId) ?: return@withContext null
-        val updated = try {
-            packages.getPackageInfo(component.packageName, PackageManager.PackageInfoFlags.of(0)).lastUpdateTime
-        } catch (_: PackageManager.NameNotFoundException) {
-            NEVER_UPDATED
-        }
-        glyphs.get(appId)?.takeIf { it.updated == updated }?.let { return@withContext it.glyph }
-        val drawable = try {
-            packages.getActivityIcon(component)
-        } catch (_: PackageManager.NameNotFoundException) {
-            return@withContext null
-        }
-        val glyph = drawable.glyph(context, DOCK_GLYPH_DP)
-        glyphs.put(appId, Drawn(updated, glyph))
-        glyph
+    override suspend fun glyph(appId: String, iconPack: String?): Picture? = withContext(background) {
+        ComponentName.unflattenFromString(appId)?.let { glyphOf(appId, it, iconPack) }
     }
 
+    private fun glyphOf(appId: String, component: ComponentName, iconPack: String?): Picture? {
+        // A pack that is gone draws nothing: the app keeps its own glyph.
+        val packUpdated = iconPack?.let(packs::updated)
+        val pack = iconPack?.takeIf { packUpdated != null }
+        val stamp = Stamp(updatedOf(component.packageName), pack, packUpdated)
+        glyphs.get(appId)?.takeIf { it.stamp == stamp }?.let { return it.glyph }
+        val fromPack = if (pack != null && packUpdated != null) packs.drawingOf(pack, packUpdated, component) else null
+        val glyph = fromPack?.packGlyph(context, DOCK_GLYPH_DP) ?: ownIcon(component)?.glyph(context, DOCK_GLYPH_DP)
+        glyphs.put(appId, Drawn(stamp, glyph))
+        return glyph
+    }
+
+    private fun updatedOf(packageName: String): Long = try {
+        packages.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).lastUpdateTime
+    } catch (_: PackageManager.NameNotFoundException) {
+        NEVER_UPDATED
+    }
+
+    private fun ownIcon(component: ComponentName): Drawable? = try {
+        packages.getActivityIcon(component)
+    } catch (_: PackageManager.NameNotFoundException) {
+        null
+    }
+
+    /** The versions a glyph was drawn for: the app's, and the pack's that drew it, if one did. */
+    private data class Stamp(val app: Long, val pack: String?, val packUpdated: Long?)
+
     /** A glyph drawn for one version of an app; nothing when it has none that reads. */
-    private class Drawn(val updated: Long, val glyph: Picture?)
+    private class Drawn(val stamp: Stamp, val glyph: Picture?)
 
     /**
      * The glyphs drawn lately: only the [GLYPHS_KEPT] apps seen last, about 5.5 MB, so that a long list of apps does
@@ -156,6 +186,19 @@ internal fun Drawable.glyph(context: Context, frameDp: Int): Picture? {
 }
 
 /**
+ * A drawing of an icon pack as a white glyph, [frameDp] square, framed as the dock's own glyphs: drawn over the
+ * middle three quarters of the frame, a pack's drawing, which leaves its own margin, comes out at about the size of
+ * a monochrome layer's (about 28 dp in the dock's 56 dp frame).
+ */
+internal fun Drawable.packGlyph(context: Context, frameDp: Int): Picture? {
+    val size = (frameDp * context.resources.displayMetrics.density).roundToInt()
+    return packGlyph(drawn(size, asLayer = false, margin = size / PACK_MARGIN_PARTS))
+}
+
+/** A pack's drawing leaves an eighth of the frame empty on each side. */
+private const val PACK_MARGIN_PARTS = 8
+
+/**
  * The glyph of an app is drawn at the size the dock shows it: a 56 dp frame (`BcDock`), its drawing, the middle
  * half, at about 28 dp. Drawn smaller, it would be enlarged on screen, and blur.
  */
@@ -168,10 +211,11 @@ private const val SHORTCUT_GLYPH_DP = 44
  * The drawable as plain pixels, [size] square. A layer of an adaptive icon is half as large again as the icon,
  * whose edges only show its middle: [asLayer] frames it the same way.
  */
-private fun Drawable.drawn(size: Int, asLayer: Boolean): Picture {
+private fun Drawable.drawn(size: Int, asLayer: Boolean, margin: Int = 0): Picture {
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val bleed = if (asLayer) size / LAYER_BLEED else 0
-    setBounds(-bleed, -bleed, size + bleed, size + bleed)
+    val edge = margin - bleed
+    setBounds(edge, edge, size - edge, size - edge)
     draw(Canvas(bitmap))
     val pixels = IntArray(size * size)
     bitmap.getPixels(pixels, 0, size, 0, 0, size, size)
