@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.settings.SettingsSource
@@ -42,6 +44,7 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
             saved.keep(wanted.weatherCity)
             wanted.mainMediaApp?.let { saved[MAIN_MEDIA_APP] = it } ?: saved.remove(MAIN_MEDIA_APP)
             wanted.iconPack?.let { saved[ICON_PACK] = it } ?: saved.remove(ICON_PACK)
+            saved[DOCK_ICONS] = wanted.dockIcons.entries.joinToString(SEPARATOR) { (app, icon) -> line(app, icon) }
         }
     }
 
@@ -56,8 +59,27 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
                 ?: defaults.idleBackground,
             weatherCity = city(),
             mainMediaApp = this[MAIN_MEDIA_APP],
-            iconPack = this[ICON_PACK]
+            iconPack = this[ICON_PACK],
+            dockIcons = this[DOCK_ICONS]?.toList().orEmpty().mapNotNull(::dockIcon).toMap()
         )
+    }
+
+    /** One app and its icon on a line: `app`, then `origin`, or the pack and the name of the drawing. */
+    private fun line(app: String, icon: DockIcon): String = when (icon) {
+        DockIcon.Origin -> listOf(app, ORIGIN)
+        is DockIcon.Drawing -> listOf(app, icon.icon.pack, icon.icon.name)
+        DockIcon.FromPack -> listOf(app)
+    }.joinToString(FIELD)
+
+    /** An app and its icon read back; a line that is not understood is no choice. */
+    private fun dockIcon(line: String): Pair<String, DockIcon>? {
+        val fields = line.split(FIELD)
+        val icon = when {
+            fields.size == ORIGIN_FIELDS && fields[1] == ORIGIN -> DockIcon.Origin
+            fields.size == DRAWING_FIELDS -> DockIcon.Drawing(PackIcon(fields[1], fields[2]))
+            else -> null
+        }
+        return icon?.let { fields[0] to it }
     }
 
     private fun String.toList(): List<String> = split(SEPARATOR).filter { it.isNotEmpty() }
@@ -95,6 +117,13 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
         val CITY_LONGITUDE = doublePreferencesKey("weather_city_longitude")
         val MAIN_MEDIA_APP = stringPreferencesKey("main_media_app")
         val ICON_PACK = stringPreferencesKey("icon_pack")
+        val DOCK_ICONS = stringPreferencesKey("dock_icons")
+
+        /** Between an app and its icon on their line: no id nor drawable name holds a tab. */
+        const val FIELD = "\t"
+        const val ORIGIN = "origin"
+        const val ORIGIN_FIELDS = 2
+        const val DRAWING_FIELDS = 3
 
         /** Kept as one ordered line per id: a set would lose the order of the favorites. */
         const val SEPARATOR = "\n"

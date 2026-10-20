@@ -17,10 +17,10 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 
 /**
  * The apps of the dock first, each with its place and a handle, then every other app from A to Z, each with a
- * switch. Touching an app of the dock takes it out; touching another one puts it at the end of the dock. Five at
- * most: that is the room the band has. Dragging an app of the dock by its handle puts it at another place; screen
- * readers move it with « Monter » and « Descendre ». The other apps have no handle, only its room: every switch
- * stands in the same column.
+ * switch. Touching an app of the dock opens the choice of its icon ([onPickIcon]), its switch takes it out; touching
+ * another app puts it at the end of the dock. Five at most: that is the room the band has. Dragging an app of the
+ * dock by its handle puts it at another place; screen readers move it with « Monter » and « Descendre ». The other
+ * apps have no handle, only its room: every switch stands in the same column.
  */
 @Composable
 fun DockScreen(
@@ -28,7 +28,8 @@ fun DockScreen(
     onToggle: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onMove: (from: Int, to: Int) -> Unit = { _, _ -> }
+    onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
+    onPickIcon: (String) -> Unit = {}
 ) {
     val dock = state.dock
     val full = dock.size >= MAX_DOCK_APPS
@@ -36,7 +37,9 @@ fun DockScreen(
         BcSectionLabel(if (full) FULL else "Cinq au plus · glisse une poignée pour changer l'ordre")
         BcReorderList(
             rows = dock.mapIndexed { index, app ->
-                BcReorderRow(app.id) { AppRow(app, onToggle, place = index + 1, enabled = true, modifier = it) }
+                BcReorderRow(app.id) {
+                    AppRow(app, onToggle, place = index + 1, enabled = true, modifier = it) { onPickIcon(app.id) }
+                }
             },
             onMove = onMove
         )
@@ -49,12 +52,19 @@ fun DockScreen(
     }
 }
 
-/** An app with its switch; in the dock, its place there. */
+/** An app with its switch; in the dock, its place there. Touching the row calls [onClick], or else toggles the app. */
 @Composable
-private fun AppRow(app: App, onToggle: (String) -> Unit, place: Int?, enabled: Boolean, modifier: Modifier = Modifier) {
+private fun AppRow(
+    app: App,
+    onToggle: (String) -> Unit,
+    place: Int?,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
     BcListRow(
         title = app.name,
-        onClick = { if (enabled) onToggle(app.id) },
+        onClick = onClick ?: { if (enabled) onToggle(app.id) },
         modifier = modifier,
         subtitle = place?.let { "Place $it" },
         leading = BcLeading.Initials(app.name.take(1).uppercase()),

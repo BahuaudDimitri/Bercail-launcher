@@ -25,8 +25,8 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
 
 /**
- * « Réglages de Bercail » plugged into the stored settings, with the lists it opens: the dock, its icon pack and the
- * place of the weather.
+ * « Réglages de Bercail » plugged into the stored settings, with the lists it opens: the dock and the icon of each of
+ * its apps, its icon pack and the place of the weather.
  */
 @Composable
 fun SettingsRoute(
@@ -42,7 +42,7 @@ fun SettingsRoute(
     var shown by rememberSaveable { mutableStateOf(Shown.Settings) }
     val backToSettings = { shown = Shown.Settings }
     when (shown) {
-        Shown.Dock -> DockScreen(state, viewModel::onToggleDockApp, backToSettings, modifier, viewModel::onMoveDockApp)
+        Shown.Dock -> DockPages(state, viewModel, backToSettings, modifier)
 
         Shown.People -> FavoritePeopleScreen(state, viewModel::onToggleFavoritePerson, backToSettings, modifier)
 
@@ -88,6 +88,26 @@ fun SettingsRoute(
             onPickPeople = { shown = Shown.People },
             onPickIconPack = { shown = Shown.IconPack }
         )
+    }
+}
+
+/**
+ * The list of the dock, or the choice of the icon of one of its apps, which goes back to the list once chosen.
+ */
+@Composable
+private fun DockPages(
+    state: SettingsUiState,
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var iconOf by rememberSaveable { mutableStateOf<String?>(null) }
+    val app = iconOf
+    val backToDock = { iconOf = null }
+    if (app == null) {
+        DockScreen(state, viewModel::onToggleDockApp, onBack, modifier, viewModel::onMoveDockApp) { iconOf = it }
+    } else {
+        DockIconRoute(app, state, viewModel.icons, backToDock, backToDock, modifier)
     }
 }
 

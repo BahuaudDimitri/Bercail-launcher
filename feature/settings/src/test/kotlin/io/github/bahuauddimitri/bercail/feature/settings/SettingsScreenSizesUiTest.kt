@@ -17,6 +17,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackCatalog
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -43,6 +44,10 @@ class SettingsScreenSizesUiTest(size: ScreenSize) {
         refused.forEach(world.access::refuse)
         world.apps.iconPacks.value =
             listOf(IconPack("com.arcticons.dark", "Arcticons"), IconPack("com.natewren.linesfree", "Lines Free"))
+        world.apps.iconPacks.value.forEach { pack ->
+            val names = List(ICONS) { "icone_$it" } + "chrome_alt"
+            world.apps.catalogs[pack.id] = PackCatalog(pack, names, mapOf("chrome" to "chrome_alt"))
+        }
         val settings = SettingsViewModel(
             world.settings,
             world.apps,
@@ -95,6 +100,15 @@ class SettingsScreenSizesUiTest(size: ScreenSize) {
     }
 
     @Test
+    fun `la page du choix de l'icône d'une app du dock tient`() {
+        show()
+        open("Dock")
+        compose.onNodeWithText("Chrome").performClick()
+
+        assertPage("Icône · Chrome", "Retour au dock")
+    }
+
+    @Test
     fun `la page des personnes favorites tient`() {
         show()
         open("Personnes favorites")
@@ -116,5 +130,8 @@ class SettingsScreenSizesUiTest(size: ScreenSize) {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun sizes() = SCREEN_SIZES.map { arrayOf<Any>(it) }
+
+        /** Enough drawings in each pack to fill the screen. */
+        private const val ICONS = 60
     }
 }

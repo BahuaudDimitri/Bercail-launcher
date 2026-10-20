@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -525,11 +526,11 @@ class SettingsUiTest {
     }
 
     @Test
-    fun `toucher une app du dock l'en retire, toucher une autre app la met au bout`() {
+    fun `l'interrupteur d'une app du dock l'en retire, toucher une autre app la met au bout`() {
         show()
         compose.onNodeWithText("Dock").performScrollTo().performClick()
 
-        compose.onNodeWithText("Beeper").performScrollTo().performClick()
+        compose.onNode(isToggleable() and hasAnySibling(hasText("Beeper")), useUnmergedTree = true).performClick()
         compose.onNodeWithText("Spotify").performScrollTo().performClick()
 
         assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "appareil photo", "agenda", "spotify")

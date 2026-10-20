@@ -127,6 +127,9 @@ class SettingsViewModel(
     /** The choice of the place of the weather, with its search for a city. */
     val place = PlacePicker(settings, cities, viewModelScope)
 
+    /** The choice of the icon of an app of the dock, which reads the icon packs only while it is open. */
+    val icons = IconPicker(settings, apps, viewModelScope)
+
     val state: StateFlow<SettingsUiState> =
         combine(
             settings.settings,

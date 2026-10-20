@@ -7,6 +7,8 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
@@ -109,6 +111,23 @@ class StoredSettingsTest {
         withSettings { it.update { current -> current.copy(iconPack = null) } }
 
         assertThat(withSettings { it.settings.first() }.iconPack).isNull()
+    }
+
+    @Test
+    fun `l'icône choisie pour chaque app du dock est gardée, « Icône du pack » n'en garde aucune`() {
+        val drawing = DockIcon.Drawing(PackIcon("com.natewren.linesfree", "google_maps"))
+        withSettings {
+            it.update { current -> current.withDockIcon("maps", drawing).withDockIcon("chrome", DockIcon.Origin) }
+        }
+
+        val kept = withSettings { it.settings.first() }
+        assertThat(kept.dockIconOf("maps")).isEqualTo(drawing)
+        assertThat(kept.dockIconOf("chrome")).isEqualTo(DockIcon.Origin)
+        assertThat(kept.dockIconOf("agenda")).isEqualTo(DockIcon.FromPack)
+
+        withSettings { it.update { current -> current.withDockIcon("maps", DockIcon.FromPack) } }
+
+        assertThat(withSettings { it.settings.first() }.dockIcons).isEqualTo(mapOf("chrome" to DockIcon.Origin))
     }
 
     @Test
