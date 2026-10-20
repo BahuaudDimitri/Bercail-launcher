@@ -104,6 +104,9 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
+          # The default device is 320 × 640 dp: Listen, laid out for the Pixel 9 (412 × 923 dp), puts its remote below
+          # the bottom edge there. A Pixel 7 (411 × 914 dp; the runner's avdmanager 12.0 predates the Pixel 9) fits.
+          profile: pixel_7
           arch: x86_64
           disable-animations: true
           # Android 17 images boot slowly on GitHub runners.
@@ -133,6 +136,9 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
+          # The default device is 320 × 640 dp: Listen, laid out for the Pixel 9 (412 × 923 dp), puts its remote below
+          # the bottom edge there. A Pixel 7 (411 × 914 dp; the runner's avdmanager 12.0 predates the Pixel 9) fits.
+          profile: pixel_7
           arch: x86_64
           disable-animations: true
           cores: 4
