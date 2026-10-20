@@ -50,9 +50,12 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDayMark
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDock
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockApp
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcDockMenu
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcGridIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcon
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButton
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconButtonVariant
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconGrid
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIconSection
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcIcons
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
@@ -280,6 +283,22 @@ private fun Lists() {
         modifier = Modifier.height(DAY_LIST_HEIGHT)
     )
     ReorderList()
+    IconGrid()
+}
+
+/** Icons to choose from, in sections; the chosen one in the accent. Without drawings: they come from the packs. */
+@Composable
+private fun IconGrid() {
+    var chosen by remember { mutableStateOf("mail") }
+    val icons = listOf("mail", "musique", "chat", "agenda").map { name ->
+        BcGridIcon(name, name, chosen = name == chosen) { chosen = name }
+    }
+    BcIconGrid(
+        sections = listOf(BcIconSection("Lines Free", icons)),
+        image = { null },
+        // The grid scrolls by itself: within the scrolling gallery, it needs a height.
+        modifier = Modifier.height(DAY_LIST_HEIGHT)
+    )
 }
 
 /** The dock's apps put in order by hand: drag a handle, or use « Monter » and « Descendre ». */

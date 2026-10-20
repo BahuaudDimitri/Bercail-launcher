@@ -53,6 +53,8 @@ fun BcPanelHeader(title: String, onBack: () -> Unit, backDescription: String, mo
  * A full-screen panel over everything (the settings): header with a back arrow, then a scrolling column. It is
  * opaque, so that nothing shows through, and it takes the keyboard down when it opens.
  * The system back gesture closes it; touches do not reach what is underneath.
+ * With [scrolls] false, its column does not scroll but takes the height left: for a list that scrolls by itself
+ * (`BcIconGrid`).
  */
 @Composable
 fun BcPanel(
@@ -60,6 +62,7 @@ fun BcPanel(
     onBack: () -> Unit,
     backDescription: String,
     modifier: Modifier = Modifier,
+    scrolls: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -82,8 +85,9 @@ fun BcPanel(
         BcPanelHeader(title, onBack, backDescription)
         // Rows lie flat one under the other, each with its hairline; section titles keep their own room.
         CompositionLocalProvider(LocalInPanel provides true) {
+            val rest = Modifier.fillMaxWidth().weight(1f)
             Column(
-                Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = BcSpacing.xl),
+                if (scrolls) rest.verticalScroll(rememberScrollState()).padding(bottom = BcSpacing.xl) else rest,
                 content = content
             )
         }
