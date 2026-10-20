@@ -35,7 +35,44 @@ class ListenLayoutTest {
     }
 
     @Test
-    fun `sur un écran moins haut, l'arche perd d'abord sa partie droite et garde son bas en demi-cercle`() {
+    fun `sur un écran un peu moins haut, seuls les écarts se resserrent et l'arche garde ses 300 × 484 dp`() {
+        val reference = listenLayout(width = 411.dp, height = 923.dp)
+        val layout = listenLayout(width = 411.dp, height = 850.dp)
+
+        assertThat(layout.archWidth).isEqualTo(300.dp)
+        layout.archHeight.near(484.dp)
+        layout.arcRadius.near(164.dp)
+        assertThat(layout.chevronTop - layout.titlesTop).isLessThan(reference.chevronTop - reference.titlesTop)
+        assertThat(layout.chevronBottom).isLessThanOrEqualTo(850.dp - MIN_ROOM)
+    }
+
+    @Test
+    fun `l'arche ne perd sa partie droite qu'une fois chaque écart à son minimum`() {
+        val layout = listenLayout(width = 411.dp, height = 780.dp)
+
+        assertThat(layout.archWidth).isEqualTo(300.dp)
+        assertThat(layout.archHeight).isLessThan(484.dp)
+        val timesTop = layout.curveCentre + layout.arcRadius + 16.dp
+        (layout.titlesTop - timesTop).near(MIN_TIMES)
+        (layout.remoteTop - layout.titlesTop).near(MIN_TITLES)
+        (layout.openTop - layout.remoteTop).near(MIN_REMOTE)
+        (layout.chevronTop - layout.openTop).near(MIN_OPEN)
+        // Everything the gaps could not give comes out of the straight part: 92 dp too many, 57 from the gaps.
+        layout.archHeight.near(484.dp - 35.dp)
+    }
+
+    @Test
+    fun `l'arche entière ne rétrécit qu'une fois sa partie droite perdue`() {
+        val layout = listenLayout(width = 411.dp, height = 400.dp)
+
+        assertThat(layout.archWidth).isLessThan(300.dp)
+        layout.curveCentre.near(0.dp)
+        layout.archHeight.near(layout.archWidth / 2)
+        assertThat(layout.chevronBottom).isLessThanOrEqualTo(400.dp - MIN_ROOM)
+    }
+
+    @Test
+    fun `sur un écran bien moins haut, l'arche perd sa partie droite et garde son bas en demi-cercle`() {
         val layout = listenLayout(width = 411.dp, height = 780.dp)
 
         assertThat(layout.archWidth).isEqualTo(300.dp)

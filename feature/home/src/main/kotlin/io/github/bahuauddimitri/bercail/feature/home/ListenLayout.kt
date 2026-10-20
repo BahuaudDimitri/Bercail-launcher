@@ -31,9 +31,9 @@ internal data class ListenLayout(
  * enlarged by [fontScale]. The Pixel 9 (411 × 923 dp) is the reference, and anything as large keeps it exactly.
  *
  * Narrower, the arch and its arc shrink together, keeping their proportions, so that the arc fits with 16 dp on each
- * side. Shorter, the arch gives up its straight part and the gaps between the times, the titles, the remote, the
- * button and the chevron tighten, both by the same share, the 150 dp curve kept; only once the straight part is gone
- * and every gap is at its least does the whole arch shrink further. The controls never shrink.
+ * side. Shorter, the arch stays as tall as it can: first the gaps between the times, the titles, the remote, the
+ * button and the chevron tighten down to their least; only then does the arch give up its straight part, the 150 dp
+ * curve kept; only once the straight part is gone does the whole arch shrink. The controls never shrink.
  */
 internal fun listenLayout(width: Dp, height: Dp, bottomInset: Dp = 0.dp, fontScale: Float = 1f): ListenLayout {
     val least = listOf(TIMES_LEAST * fontScale, TITLES_LEAST * fontScale, REMOTE_LEAST, OPEN_LEAST)
@@ -43,12 +43,13 @@ internal fun listenLayout(width: Dp, height: Dp, bottomInset: Dp = 0.dp, fontSca
     var scale = ((width / 2 - ARC_SIDE - BAND_HALF) / ARC_RADIUS).coerceAtMost(1f)
     // From the top edge to the top of the times: the straight part, the arc under the curve, then 16 dp.
     val underCurve = { s: Float -> ARC_RADIUS * s + TIMES_UNDER }
-    val wanted = STRAIGHT * scale + underCurve(scale) + gaps.sum() + CHEVRON_SIZE + bottom
-    val pool = STRAIGHT * scale + gaps.zip(least) { gap, floor -> gap - floor }.sum()
-    val squeeze = ((wanted - height) / pool).coerceIn(0f, 1f)
-    val straight = STRAIGHT * scale * (1 - squeeze)
+    val excess = STRAIGHT * scale + underCurve(scale) + gaps.sum() + CHEVRON_SIZE + bottom - height
+    // First the gaps tighten, each by the same share of what it can give; then the straight part goes.
+    val slack = gaps.zip(least) { gap, floor -> gap - floor }.sum()
+    val squeeze = if (slack > 0.dp) (excess / slack).coerceIn(0f, 1f) else 0f
     val tightened = gaps.zip(least) { gap, floor -> gap - (gap - floor) * squeeze }
-    if (wanted - height > pool) {
+    val straight = (STRAIGHT * scale - (excess - slack)).coerceIn(0.dp, STRAIGHT * scale)
+    if (excess - slack > STRAIGHT * scale) {
         // Not enough even then: the whole arch shrinks, down to a quarter of its size at most.
         val room = height - TIMES_UNDER - least.sum() - CHEVRON_SIZE - bottom
         scale = (room / ARC_RADIUS).coerceIn(LEAST_SCALE, scale)
