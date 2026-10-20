@@ -5,6 +5,7 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
 import android.os.SystemClock
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -77,7 +78,9 @@ class MediaDeviceTest {
                 compose.onNodeWithText("3:00").assertExists()
                 // This app accepts neither "previous" nor "next": the remote does not offer them.
                 compose.onNodeWithContentDescription("Précédent").assertDoesNotExist()
-                compose.onNodeWithContentDescription("Pause").performClick()
+                // Listen is laid out for a phone of the Pixel's height: on a shorter screen, the remote is below
+                // the bottom edge and a touch on it would land outside the window.
+                compose.onNodeWithContentDescription("Pause").assertIsDisplayed().performClick()
 
                 assertThat(paused.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue()
                 awaitDescription("Lecture")
