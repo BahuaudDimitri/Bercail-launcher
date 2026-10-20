@@ -5,11 +5,14 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackCatalog
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 /** The apps of a phone the tests fill by hand. It remembers which apps were opened; no icon unless painted. */
+@Suppress("TooManyFunctions") // One override per question of the source, and the tests' helpers to fill it.
 class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
     override val apps = MutableStateFlow(apps)
 
@@ -40,12 +43,43 @@ class FakeAppsSource(apps: List<App> = emptyList()) : AppsSource {
     /** The packs the glyphs were asked with so far, in order: nothing for the app's own glyph. */
     val glyphPacks = mutableListOf<String?>()
 
-    /** The glyph the installed [iconPack] paints for the app ([paintGlyph]), or else its own. */
-    override suspend fun glyph(appId: String, iconPack: String?): Picture? {
+    /** The drawings chosen for the glyphs asked so far, in order: nothing when none was. */
+    val glyphDrawings = mutableListOf<PackIcon?>()
+
+    /**
+     * The [drawing] chosen for the app while its pack is installed and paints it ([packIcons]); otherwise the glyph
+     * the installed [iconPack] paints for the app ([paintGlyph]), or else its own.
+     */
+    override suspend fun glyph(appId: String, iconPack: String?, drawing: PackIcon?): Picture? {
         glyphRequests += appId
         glyphPacks += iconPack
+        glyphDrawings += drawing
+        val chosen = drawing?.takeIf { icon -> iconPacks.value.any { it.id == icon.pack } }?.let(packIcons::get)
         val installed = iconPacks.value.any { it.id == iconPack }
-        return glyphs["$iconPack$PACK_SEPARATOR$appId"]?.takeIf { installed } ?: glyphs[appId]
+        return chosen ?: glyphs["$iconPack$PACK_SEPARATOR$appId"]?.takeIf { installed } ?: glyphs[appId]
+    }
+
+    /** What each pack holds, by its package, as the tests give it; an empty catalog for the others. */
+    val catalogs = mutableMapOf<String, PackCatalog>()
+
+    /** The packs whose catalog was read so far, in order. */
+    val catalogRequests = mutableListOf<String>()
+
+    override suspend fun iconCatalog(pack: IconPack): PackCatalog {
+        catalogRequests += pack.id
+        return catalogs[pack.id] ?: PackCatalog(pack, emptyList(), emptyMap())
+    }
+
+    /** The glyph of each drawing of a pack, as the tests paint it; none for the others. */
+    val packIcons = mutableMapOf<PackIcon, Picture>()
+
+    /** The drawings whose glyph was asked so far, in order. */
+    val packIconRequests = mutableListOf<PackIcon>()
+
+    /** The glyph painted for the drawing while its pack is installed. */
+    override suspend fun packIconGlyph(icon: PackIcon): Picture? {
+        packIconRequests += icon
+        return packIcons[icon]?.takeIf { iconPacks.value.any { it.id == icon.pack } }
     }
 
     /**

@@ -9,6 +9,8 @@ import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.util.Xml
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackCatalog
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import java.io.IOException
 import java.io.InputStream
 import org.xmlpull.v1.XmlPullParser
@@ -46,10 +48,36 @@ private fun XmlPullParser.items(): Map<ComponentName, String> {
 private fun componentOf(entry: String): ComponentName? =
     ComponentName.unflattenFromString(entry.trim().removePrefix("ComponentInfo{").removeSuffix("}"))
 
+/**
+ * Every drawing a pack offers, from its `drawable.xml`: [compiled] among its resources (`res/xml/drawable`) or as a
+ * plain [file] in its assets, the compiled one first. Each `<item drawable="…"/>` once, in the order of the file;
+ * the categories that group them are left.
+ */
+internal fun readDrawableList(compiled: XmlPullParser?, file: () -> InputStream?): List<String> = try {
+    compiled?.drawables() ?: file()?.use { Xml.newPullParser().apply { setInput(it, null) }.drawables() }.orEmpty()
+} catch (_: XmlPullParserException) {
+    emptyList()
+} catch (_: IOException) {
+    emptyList()
+}
+
+private fun XmlPullParser.drawables(): List<String> {
+    val found = LinkedHashSet<String>()
+    while (next() != XmlPullParser.END_DOCUMENT) {
+        if (eventType == XmlPullParser.START_TAG && name == "item") {
+            getAttributeValue(null, "drawable")?.takeIf { it.isNotBlank() }?.let(found::add)
+        }
+    }
+    return found.toList()
+}
+
 /** What an installed icon pack holds: which drawing each app gets, and the drawings. */
 internal interface IconPackFiles {
     /** Which drawing each app gets in the [pack] ([readAppFilter]); nothing when the pack is gone. */
     fun appFilter(pack: String): Map<ComponentName, String>?
+
+    /** Every drawing the [pack] lists in its `drawable.xml` ([readDrawableList]); nothing when the pack is gone. */
+    fun drawables(pack: String): List<String>?
 
     /** The drawable of the [pack] by its [name]; nothing when it has none by that name. */
     fun drawing(pack: String, name: String): Drawable?
@@ -64,6 +92,11 @@ internal class InstalledIconPackFiles(private val packages: PackageManager) : Ic
     override fun appFilter(pack: String): Map<ComponentName, String>? = resourcesOf(pack)?.let { resources ->
         val compiled = resources.getIdentifier(APP_FILTER, "xml", pack).takeIf { it != 0 }?.let(resources::getXml)
         readAppFilter(compiled) { resources.assets.openOrNull("$APP_FILTER.xml") }
+    }
+
+    override fun drawables(pack: String): List<String>? = resourcesOf(pack)?.let { resources ->
+        val compiled = resources.getIdentifier(DRAWABLE, "xml", pack).takeIf { it != 0 }?.let(resources::getXml)
+        readDrawableList(compiled) { resources.assets.openOrNull("$DRAWABLE.xml") }
     }
 
     override fun drawing(pack: String, name: String): Drawable? = resourcesOf(pack)?.let { resources ->
@@ -89,6 +122,7 @@ internal class InstalledIconPackFiles(private val packages: PackageManager) : Ic
 
     private companion object {
         const val APP_FILTER = "appfilter"
+        const val DRAWABLE = "drawable"
     }
 }
 
@@ -122,6 +156,19 @@ internal class IconPacks(
     /** The drawing the [pack], at the version [updated], gives the app opened by [component]; nothing if none. */
     fun drawingOf(pack: String, updated: Long, component: ComponentName): Drawable? =
         filterOf(pack, updated)[component]?.let { files.drawing(pack, it) }
+
+    /** One drawing of a pack, by its name; nothing when the pack is gone or has no drawing by that name. */
+    fun drawing(icon: PackIcon): Drawable? = files.drawing(icon.pack, icon.name)
+
+    /**
+     * Every drawing the [pack] offers, from its `drawable.xml`, or else those its `appfilter` names, and the one it
+     * gives each app. Read each time it is asked: only the icon picker asks, when it opens.
+     */
+    fun catalog(pack: IconPack): PackCatalog {
+        val filter = files.appFilter(pack.id).orEmpty()
+        val listed = files.drawables(pack.id).orEmpty().ifEmpty { filter.values.toList() }
+        return PackCatalog(pack, listed.distinct(), filter.mapKeys { it.key.flattenToShortString() })
+    }
 
     @Synchronized
     private fun filterOf(pack: String, updated: Long): Map<ComponentName, String> {

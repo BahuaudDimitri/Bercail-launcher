@@ -13,12 +13,13 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
-import android.util.LruCache
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppShortcut
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackCatalog
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.iconGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.monochromeGlyph
 import io.github.bahuauddimitri.bercail.core.domain.apps.packGlyph
@@ -85,50 +86,20 @@ class DeviceApps internal constructor(
         drawable.drawn(size, asLayer = false)
     }
 
-    /**
-     * The drawing the chosen icon pack gives the app; without one, the monochrome layer Android 13 asks apps for,
-     * framed as the icon is; without it, the real icon in one colour. Drawn once per version of the app and of the
-     * pack: an update may bring a new icon.
-     */
-    override suspend fun glyph(appId: String, iconPack: String?): Picture? = withContext(background) {
-        ComponentName.unflattenFromString(appId)?.let { glyphOf(appId, it, iconPack) }
-    }
-
-    private fun glyphOf(appId: String, component: ComponentName, iconPack: String?): Picture? {
-        // A pack that is gone draws nothing: the app keeps its own glyph.
-        val packUpdated = iconPack?.let(packs::updated)
-        val pack = iconPack?.takeIf { packUpdated != null }
-        val stamp = Stamp(updatedOf(component.packageName), pack, packUpdated)
-        glyphs.get(appId)?.takeIf { it.stamp == stamp }?.let { return it.glyph }
-        val fromPack = if (pack != null && packUpdated != null) packs.drawingOf(pack, packUpdated, component) else null
-        val glyph = fromPack?.packGlyph(context, DOCK_GLYPH_DP) ?: ownIcon(component)?.glyph(context, DOCK_GLYPH_DP)
-        glyphs.put(appId, Drawn(stamp, glyph))
-        return glyph
-    }
-
-    private fun updatedOf(packageName: String): Long = try {
-        packages.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).lastUpdateTime
-    } catch (_: PackageManager.NameNotFoundException) {
-        NEVER_UPDATED
-    }
-
-    private fun ownIcon(component: ComponentName): Drawable? = try {
-        packages.getActivityIcon(component)
-    } catch (_: PackageManager.NameNotFoundException) {
-        null
-    }
-
-    /** The versions a glyph was drawn for: the app's, and the pack's that drew it, if one did. */
-    private data class Stamp(val app: Long, val pack: String?, val packUpdated: Long?)
-
-    /** A glyph drawn for one version of an app; nothing when it has none that reads. */
-    private class Drawn(val stamp: Stamp, val glyph: Picture?)
+    private val glyphs = Glyphs(this.context, packs)
 
     /**
-     * The glyphs drawn lately: only the [GLYPHS_KEPT] apps seen last, about 5.5 MB, so that a long list of apps does
-     * not fill the memory. An app let go is drawn again when it shows.
+     * The drawing chosen for the app, or the one the chosen icon pack gives it; without one, its own glyph
+     * ([Glyphs.of]). Drawn once per version of the app and of the pack: an update may bring a new icon.
      */
-    private val glyphs = LruCache<String, Drawn>(GLYPHS_KEPT)
+    override suspend fun glyph(appId: String, iconPack: String?, drawing: PackIcon?): Picture? =
+        withContext(background) {
+            ComponentName.unflattenFromString(appId)?.let { glyphs.of(appId, it, iconPack, drawing) }
+        }
+
+    override suspend fun iconCatalog(pack: IconPack): PackCatalog = withContext(background) { packs.catalog(pack) }
+
+    override suspend fun packIconGlyph(icon: PackIcon): Picture? = withContext(background) { glyphs.ofPackIcon(icon) }
 
     override fun open(appId: String) {
         val component = ComponentName.unflattenFromString(appId) ?: return
@@ -162,12 +133,6 @@ class DeviceApps internal constructor(
 
         /** Icons are drawn once, a little larger than the 34 dp they are shown at. */
         const val ICON_DP = 40
-
-        /** A package Android tells nothing about: its glyph is drawn once and kept. */
-        const val NEVER_UPDATED = -1L
-
-        /** How many glyphs are kept: enough for the dock, the media sheet and a screen of the search. */
-        const val GLYPHS_KEPT = 64
     }
 }
 
@@ -197,12 +162,6 @@ internal fun Drawable.packGlyph(context: Context, frameDp: Int): Picture? {
 
 /** A pack's drawing leaves an eighth of the frame empty on each side. */
 private const val PACK_MARGIN_PARTS = 8
-
-/**
- * The glyph of an app is drawn at the size the dock shows it: a 56 dp frame (`BcDock`), its drawing, the middle
- * half, at about 28 dp. Drawn smaller, it would be enlarged on screen, and blur.
- */
-private const val DOCK_GLYPH_DP = 56
 
 /** The glyph of a shortcut stands in a 32 dp ring of the menu: drawn a little larger, it is only made smaller. */
 private const val SHORTCUT_GLYPH_DP = 44

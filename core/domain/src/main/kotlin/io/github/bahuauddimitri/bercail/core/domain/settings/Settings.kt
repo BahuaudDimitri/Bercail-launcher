@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.core.domain.settings
 
+import io.github.bahuauddimitri.bercail.core.domain.apps.DockIcon
 import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 import io.github.bahuauddimitri.bercail.core.domain.messages.MAX_FAVORITE_PEOPLE
 import io.github.bahuauddimitri.bercail.core.domain.weather.City
@@ -20,8 +21,17 @@ data class Settings(
     /** The media app shown first in the « Écouter » sheet; without a choice, Spotify if it is there. */
     val mainMediaApp: String? = null,
     /** The icon pack the dock draws its apps with, by its package; nothing for « Aucun », the dock's own glyphs. */
-    val iconPack: String? = null
+    val iconPack: String? = null,
+    /** The icon chosen for some apps of the dock, by their id; the others keep « Icône du pack ». */
+    val dockIcons: Map<String, DockIcon> = emptyMap()
 ) {
+    /** The icon the app is drawn with in the dock: the one chosen, or « Icône du pack ». */
+    fun dockIconOf(appId: String): DockIcon = dockIcons[appId] ?: DockIcon.FromPack
+
+    /** Chooses the icon of an app of the dock; « Icône du pack », the default, is kept as no choice. */
+    fun withDockIcon(appId: String, icon: DockIcon): Settings =
+        copy(dockIcons = if (icon == DockIcon.FromPack) dockIcons - appId else dockIcons + (appId to icon))
+
     /**
      * Adds the app at the end of the dock, unless it is full, or takes it out if it is in. Apps no longer
      * [installed] leave the dock first: they keep no place.

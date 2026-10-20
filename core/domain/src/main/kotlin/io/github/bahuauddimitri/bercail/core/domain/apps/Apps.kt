@@ -20,8 +20,18 @@ interface AppsSource {
      * The icon of an app as a white glyph whose shape is in the alpha ([monochromeGlyph], [iconGlyph]), or
      * nothing when it has none that reads, or is gone: its initial then stands in for it. With an [iconPack] that
      * draws the app, its drawing instead ([packGlyph]); a pack that does not draw it, or is gone, changes nothing.
+     * With a [drawing] chosen for the app, that drawing before all, as long as its pack still has it.
      */
-    suspend fun glyph(appId: String, iconPack: String? = null): Picture?
+    suspend fun glyph(appId: String, iconPack: String? = null, drawing: PackIcon? = null): Picture?
+
+    /**
+     * Every drawing an installed icon [pack] offers, and which one its `appfilter` gives each app: read when the icon
+     * picker asks, never for the home. Empty when the pack is gone.
+     */
+    suspend fun iconCatalog(pack: IconPack): PackCatalog
+
+    /** One drawing of a pack as a small white glyph, as the dock would draw it; nothing when it is gone or empty. */
+    suspend fun packIconGlyph(icon: PackIcon): Picture?
 
     fun open(appId: String)
 

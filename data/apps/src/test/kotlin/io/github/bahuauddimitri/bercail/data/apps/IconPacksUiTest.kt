@@ -20,9 +20,11 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import assertk.assertions.isSameInstanceAs
 import io.github.bahuauddimitri.bercail.core.domain.Picture
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.PackIcon
 import java.io.StringReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -193,16 +195,116 @@ class IconPacksUiTest {
         assertThat(files.filterReads).isEqualTo(2)
     }
 
+    private val drawableList = """
+        <resources>
+            <version>20260808</version>
+            <category title="New" />
+            <item drawable="google_maps" />
+            <item drawable="coffee_cup" />
+            <category title="Tout" />
+            <item drawable="alarm" />
+            <item drawable="google_maps" />
+            <item drawable="" />
+        </resources>
+    """.trimIndent()
+
+    @Test
+    fun `le drawable xml compilé dans les ressources du pack donne toutes ses icônes, une fois chacune`() {
+        val compiled = Xml.newPullParser().apply { setInput(StringReader(drawableList)) }
+
+        assertThat(readDrawableList(compiled) { null }).containsExactly("google_maps", "coffee_cup", "alarm")
+    }
+
+    @Test
+    fun `le drawable xml en fichier dans les assets du pack est lu quand ses ressources n'en ont pas`() {
+        assertThat(readDrawableList(null) { drawableList.byteInputStream() })
+            .containsExactly("google_maps", "coffee_cup", "alarm")
+        assertThat(readDrawableList(null) { null }).isEmpty()
+    }
+
+    @Test
+    fun `le catalogue d'un pack donne ses icônes et le dessin de chaque app, par l'id de l'app`() = runBlocking {
+        installPack()
+        files.lists[lines] = listOf("chrome", "coffee_cup")
+
+        val catalog = apps.iconCatalog(IconPack(lines, "Lines Free"))
+
+        assertThat(catalog.icons).containsExactly("chrome", "coffee_cup")
+        assertThat(catalog.apps).isEqualTo(mapOf(chromeId to "chrome"))
+    }
+
+    @Test
+    fun `un pack sans drawable xml offre les dessins de son appfilter`() = runBlocking {
+        installPack()
+        files.filters[lines] = mapOf(chrome to "chrome", camera to "camera", ComponentName("a", "a.B") to "chrome")
+
+        assertThat(apps.iconCatalog(IconPack(lines, "Lines Free")).icons).containsExactly("chrome", "camera")
+    }
+
+    @Test
+    fun `une icône du pack se dessine en blanc, petite, et n'est dessinée qu'une fois`() = runBlocking {
+        installApp(chrome)
+        installPack()
+        val icon = PackIcon(lines, "chrome")
+
+        val glyph = apps.packIconGlyph(icon)!!
+
+        assertThat(glyph.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+        assertThat(glyph.width < apps.glyph(chromeId, lines)?.width ?: Int.MAX_VALUE).isEqualTo(true)
+        assertThat(apps.packIconGlyph(icon)).isSameInstanceAs(glyph)
+        assertThat(apps.packIconGlyph(PackIcon(lines, "absent"))).isNull()
+    }
+
+    @Test
+    fun `une icône choisie pour une app la dessine, quel que soit le pack du dock`() = runBlocking {
+        installApp(camera)
+        installPack()
+
+        val glyph = apps.glyph(camera.flattenToShortString(), iconPack = null, drawing = PackIcon(lines, "chrome"))!!
+
+        // The pack's drawing covers the middle three quarters of the frame; the camera's own, its middle only.
+        assertThat(glyph.at(0.15f, 0.5f)).isEqualTo(Color.WHITE)
+    }
+
+    @Test
+    fun `une icône choisie dont le pack est désinstallé laisse sans rien dire l'app à son dessin`() = runBlocking {
+        installApp(camera)
+        installPack()
+        val chosen = PackIcon(lines, "chrome")
+        apps.glyph(camera.flattenToShortString(), drawing = chosen)
+        shadowOf(phone.packageManager).removePackage(lines)
+
+        val glyph = apps.glyph(camera.flattenToShortString(), drawing = chosen)!!
+
+        assertThat(glyph.at(0.15f, 0.5f) ushr ALPHA_SHIFT).isEqualTo(0)
+        assertThat(glyph.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+    }
+
+    @Test
+    fun `une icône choisie que le pack n'a plus laisse l'app au dessin du pack du dock`() = runBlocking {
+        installApp(chrome)
+        installPack()
+        files.drawings["$lines/chrome"] = InsetDrawable(ColorDrawable(Color.WHITE), LAYER_INSET)
+
+        val glyph = apps.glyph(chromeId, iconPack = lines, drawing = PackIcon(lines, "gone"))!!
+
+        assertThat(glyph.at(0.5f, 0.5f)).isEqualTo(Color.WHITE)
+        assertThat(glyph.at(0.25f, 0.5f) ushr ALPHA_SHIFT).isEqualTo(0)
+    }
+
     /** The files of the packs, as the tests give them; it counts how often an `appfilter` is read. */
     private class PackFiles : IconPackFiles {
         val filters = mutableMapOf<String, Map<ComponentName, String>>()
         val drawings = mutableMapOf<String, Drawable>()
+        val lists = mutableMapOf<String, List<String>>()
         var filterReads = 0
 
         override fun appFilter(pack: String): Map<ComponentName, String>? {
             filterReads++
             return filters[pack]
         }
+
+        override fun drawables(pack: String): List<String>? = lists[pack]
 
         override fun drawing(pack: String, name: String): Drawable? = drawings["$pack/$name"]
     }
