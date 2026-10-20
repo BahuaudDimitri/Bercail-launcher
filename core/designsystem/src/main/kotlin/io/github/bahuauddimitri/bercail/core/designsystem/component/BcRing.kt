@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -30,6 +32,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
@@ -38,6 +41,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcShapes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.LocalBcContentColor
+import kotlin.math.roundToInt
 
 internal const val UNREAD_BADGE = "unread-badge-"
 internal const val RING_TAG = "ring-"
@@ -125,6 +129,29 @@ fun BcRing(
             }
     ) {
         Ring(name, mark, if (on) BcRingTone.Pastel(pastel) else BcRingTone.Off)
+    }
+}
+
+/**
+ * A row of rings across the whole width: the first at the left edge, the last at the right edge, the room left
+ * shared between them. On a narrow screen, each ring gives up some of its 64 dp column, never its 52 dp ring: five
+ * rings fit on a 320 dp phone.
+ */
+@Composable
+fun BcRingRow(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier.fillMaxWidth()) { rings, constraints ->
+        val share = if (rings.isEmpty()) 0 else constraints.maxWidth / rings.size
+        val placed = rings.map { it.measure(Constraints(maxWidth = share, maxHeight = constraints.maxHeight)) }
+        val height = placed.maxOfOrNull { it.height } ?: 0
+        // As Arrangement.SpaceBetween: the same room between each two, each place rounded to the pixel.
+        val room = (constraints.maxWidth - placed.sumOf { it.width }).toFloat() / (placed.size - 1).coerceAtLeast(1)
+        layout(constraints.maxWidth, height) {
+            var x = 0f
+            placed.forEach {
+                it.placeRelative(x.roundToInt(), 0)
+                x += it.width + room
+            }
+        }
     }
 }
 

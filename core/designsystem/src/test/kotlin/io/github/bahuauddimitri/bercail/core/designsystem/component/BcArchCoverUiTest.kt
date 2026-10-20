@@ -56,6 +56,20 @@ class BcArchCoverUiTest {
     }
 
     @Test
+    fun `une arche plus petite garde son bas en demi-cercle aussi large qu'elle`() {
+        // 240 dp wide and 300 dp tall: a bottom half circle of 120 dp, its centre 180 dp under the top.
+        show(image = solid(GREEN, width = 30, height = 44), width = 240.dp, height = 300.dp)
+
+        compose.onNodeWithContentDescription(COVER).assertWidthIsEqualTo(240.dp).assertHeightIsEqualTo(300.dp)
+        val pixels = pixels()
+        assertThat(pixels.at(120.dp, 296.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
+        assertThat(pixels.at(2.dp, 178.dp).distanceTo(GREEN)).isLessThan(TOLERANCE)
+        assertThat(pixels.at(4.dp, 296.dp).green).isLessThan(HALF)
+        assertThat(pixels.at(236.dp, 296.dp).green).isLessThan(HALF)
+        assertThat(bcArchCurveCentre(240.dp, 300.dp)).isEqualTo(180.dp)
+    }
+
+    @Test
     fun `l'arche a le haut plat aux coins carrés et le bas arrondi en demi-cercle`() {
         show(image = solid(GREEN, width = 30, height = 44))
 
@@ -105,11 +119,17 @@ class BcArchCoverUiTest {
         assertThat(between).isLessThan(GREEN.green * BLEND_HIGH)
     }
 
-    private fun show(image: ImageBitmap?) {
+    private fun show(image: ImageBitmap?, width: Dp = BcArchCoverWidth, height: Dp = BcArchCoverHeight) {
         compose.setContent {
             BcTheme {
                 Box(Modifier.background(BcColors.base)) {
-                    BcArchCover(image = image, colors = Color.Red to Color.Blue, contentDescription = COVER)
+                    BcArchCover(
+                        image = image,
+                        colors = Color.Red to Color.Blue,
+                        contentDescription = COVER,
+                        width = width,
+                        height = height
+                    )
                 }
             }
         }

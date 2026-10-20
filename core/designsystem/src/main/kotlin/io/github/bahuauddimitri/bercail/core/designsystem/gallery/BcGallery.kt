@@ -66,6 +66,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingTone
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowSwipe
@@ -205,7 +206,7 @@ private fun Buttons() {
 @Composable
 private fun PeopleAndHome() {
     var unread by remember { mutableIntStateOf(2) }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    BcRingRow(Modifier.fillMaxWidth()) {
         BcRing("Léa", BcRingMark.Initial("L"), {
             unread = 0
         }, tone = BcRingTone.Pastel(BcPastel.Coral), unread = unread)
@@ -221,7 +222,7 @@ private fun PeopleAndHome() {
         Triple("Volets", BcIcons.Shutters, BcPastel.Blue) to ("ouverts" to "fermés"),
         Triple("Chauffage", BcIcons.Flame, BcPastel.Coral) to ("21 °C" to "18 °C")
     )
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    BcRingRow {
         controls.forEachIndexed { index, (control, states) ->
             val (name, icon, pastel) = control
             val state = if (lit[index]) states.first else states.second

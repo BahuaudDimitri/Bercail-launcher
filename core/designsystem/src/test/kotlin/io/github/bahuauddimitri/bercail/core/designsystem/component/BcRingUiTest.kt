@@ -1,9 +1,13 @@
 package io.github.bahuauddimitri.bercail.core.designsystem.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -12,15 +16,19 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThanOrEqualTo
+import assertk.assertions.isLessThanOrEqualTo
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcPastel
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
@@ -134,5 +142,47 @@ class BcRingUiTest {
         compose.onNodeWithText("Salon · 60 %", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("Cinéma", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("prête", substring = true, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    private fun showRow(width: Int) {
+        compose.setContent {
+            BcTheme {
+                Box(Modifier.requiredWidth(width.dp).testTag(ROW)) {
+                    BcRingRow {
+                        NAMES.forEach { BcRing(it, BcRingMark.Initial(it.take(1)), onClick = {}) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun boundsOf(name: String) = compose.onNodeWithContentDescription(name).getUnclippedBoundsInRoot()
+
+    @Test
+    fun `sur un écran étroit, cinq anneaux se partagent la largeur et gardent chacun leur rond entier`() {
+        showRow(width = NARROW)
+
+        val boxes = NAMES.map(::boundsOf)
+        boxes.forEach { assertThat(it.width).isGreaterThanOrEqualTo(BcSizes.ring) }
+        boxes.zipWithNext().forEach { (left, right) -> assertThat(left.right).isLessThanOrEqualTo(right.left) }
+        assertThat(boxes.last().right - boxes.first().left).isLessThanOrEqualTo(NARROW.dp)
+    }
+
+    @Test
+    fun `sur un écran large, les anneaux gardent 64 dp, le premier au bord gauche et le dernier au bord droit`() {
+        showRow(width = WIDE)
+
+        NAMES.forEach { assertThat(boundsOf(it).width).isEqualTo(COLUMN) }
+        val row = compose.onNodeWithTag(ROW).getUnclippedBoundsInRoot()
+        assertThat(boundsOf(NAMES.first()).left).isEqualTo(row.left)
+        assertThat(boundsOf(NAMES.last()).right).isEqualTo(row.right)
+    }
+
+    private companion object {
+        val NAMES = listOf("Léa", "Tom", "Équipe", "Maman", "Tous")
+        const val NARROW = 288
+        const val WIDE = 379
+        val COLUMN = 64.dp
+        const val ROW = "row"
     }
 }

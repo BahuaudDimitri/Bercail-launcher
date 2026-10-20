@@ -15,8 +15,10 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -54,6 +56,21 @@ class BcArcProgressUiTest {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val seeks = mutableListOf<Float>()
+
+    @Test
+    fun `un arc plus petit, pour une arche plus petite, garde sa bande de 40 dp et les temps sous son bas`() {
+        show(progress = 0.3f, radius = SMALL_RADIUS)
+
+        // As wide as the half circle and its 40 dp band; the times 16 dp under the bottom of the half circle.
+        compose.onNodeWithTag(ARC).assertWidthIsEqualTo(SMALL_RADIUS * 2 + 40.dp)
+        val times = compose.onNodeWithText("5:24").getUnclippedBoundsInRoot()
+        assertThat(times.top.value).isCloseTo((BcArcProgressCurveCentre + SMALL_RADIUS + 16.dp).value, 1f)
+        // Touching the bottom of the smaller half circle still moves to the middle.
+        compose.onNodeWithTag(ARC).performTouchInput {
+            click(centre() + arcPoint(0.5f, SMALL_RADIUS.toPx()))
+        }
+        assertThat(seeks.single()).isCloseTo(0.5f, 0.02f)
+    }
 
     @Test
     fun `sous l'arc, le temps écoulé puis la durée`() {
@@ -165,7 +182,7 @@ class BcArcProgressUiTest {
         compose.onNodeWithTag(ARC).assert(SemanticsMatcher.keyNotDefined(SemanticsActions.SetProgress))
     }
 
-    private fun show(progress: Float, seekable: Boolean = true, live: Boolean = false) {
+    private fun show(progress: Float, seekable: Boolean = true, live: Boolean = false, radius: Dp = RADIUS) {
         compose.setContent {
             BcTheme {
                 BcMomentScope(BcMoment.Evening) {
@@ -176,6 +193,7 @@ class BcArcProgressUiTest {
                             duration = "18:00",
                             onSeek = if (seekable) ({ seeks += it }) else null,
                             live = live,
+                            radius = radius,
                             modifier = Modifier.testTag(ARC)
                         )
                     }
@@ -207,5 +225,6 @@ class BcArcProgressUiTest {
         const val TOLERANCE = 0.08f
         const val LOOSE_TOLERANCE = 0.12f
         val RADIUS = 164.dp
+        val SMALL_RADIUS = 120.dp
     }
 }

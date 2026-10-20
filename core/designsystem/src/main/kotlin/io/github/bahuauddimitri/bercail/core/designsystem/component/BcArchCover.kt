@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 
@@ -32,14 +33,20 @@ import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
  *
  * The centre of its curve lies [BcArchCoverCurveCentre] below its top edge, halfway across: the progress along its
  * curve is drawn around that point.
+ *
+ * On a smaller screen, it can be made narrower ([width]) and shorter ([height]): its bottom stays a half circle as
+ * wide as the arch, whose centre then lies [bcArchCurveCentre] below the top edge, and its halo shrinks with it.
  */
 @Composable
 fun BcArchCover(
     image: ImageBitmap?,
     colors: Pair<Color, Color>,
     contentDescription: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    width: Dp = BcArchCoverWidth,
+    height: Dp = BcArchCoverHeight
 ) {
+    val shape = RoundedCornerShape(0.dp, 0.dp, width / 2, width / 2)
     val announced = if (contentDescription == null) {
         Modifier
     } else {
@@ -50,17 +57,17 @@ fun BcArchCover(
     }
     Box(
         modifier
-            .size(ARCH_WIDTH, BcArchCoverHeight)
+            .size(width, height)
             .then(announced)
             .drawBehind {
-                val center = Offset(size.width / 2, BcArchCoverCurveCentre.toPx())
-                val radius = HALO_REACH.toPx()
+                val center = Offset(size.width / 2, bcArchCurveCentre(width, height).toPx())
+                val radius = HALO_REACH.toPx() * (width / BcArchCoverWidth)
                 val halo = listOf(colors.first.copy(alpha = HALO_ALPHA), colors.first.copy(alpha = 0f))
                 drawCircle(Brush.radialGradient(halo, center, radius), radius, center)
             }
-            .clip(ARCH_SHAPE)
+            .clip(shape)
             .background(Brush.linearGradient(colors.toList()))
-            .border(EDGE, BcColors.segmentEdge, ARCH_SHAPE)
+            .border(EDGE, BcColors.segmentEdge, shape)
     ) {
         if (image != null) {
             Image(
@@ -76,15 +83,17 @@ fun BcArchCover(
     }
 }
 
-/** How far below the top edge of [BcArchCover] the centre of its curve lies: its height less its bottom radius. */
-val BcArchCoverCurveCentre = 334.dp
+/** How wide [BcArchCover] is on the Pixel 9: its bottom is a half circle of half this width. */
+val BcArchCoverWidth = 300.dp
 
-private val ARCH_WIDTH = 300.dp
-
-/** How far [BcArchCover] hangs from the top edge of the screen. */
+/** How far [BcArchCover] hangs from the top edge of the screen on the Pixel 9. */
 val BcArchCoverHeight = 484.dp
-private val ARCH_RADIUS = BcArchCoverHeight - BcArchCoverCurveCentre
-private val ARCH_SHAPE = RoundedCornerShape(0.dp, 0.dp, ARCH_RADIUS, ARCH_RADIUS)
+
+/** How far below the top edge of an arch of [width] and [height] the centre of its curve lies. */
+fun bcArchCurveCentre(width: Dp, height: Dp): Dp = height - width / 2
+
+/** How far below the top edge of [BcArchCover] the centre of its curve lies: its height less its bottom radius. */
+val BcArchCoverCurveCentre = bcArchCurveCentre(BcArchCoverWidth, BcArchCoverHeight)
 
 // A fine light edge, white 12 %, as on the reference.
 private val EDGE = 1.dp

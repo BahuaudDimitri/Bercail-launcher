@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcMoment
@@ -54,7 +55,9 @@ import kotlin.math.sin
  * instead of the two times; nothing else moves. Drawn once per change: nothing runs at rest.
  *
  * The centre of the curve lies [BcArcProgressCurveCentre] below the top of the component, halfway across: place it on
- * the centre of the arch's curve ([BcArchCoverCurveCentre] below the arch's top).
+ * the centre of the arch's curve ([BcArchCoverCurveCentre] below the arch's top). Around a smaller arch, a smaller
+ * [radius] keeps the arc concentric with its curve; the band, the strokes and the ring keep their sizes, and the
+ * times stay 16 dp under the bottom of the half circle.
  */
 @Composable
 fun BcArcProgress(
@@ -63,7 +66,8 @@ fun BcArcProgress(
     duration: String,
     onSeek: ((Float) -> Unit)?,
     modifier: Modifier = Modifier,
-    live: Boolean = false
+    live: Boolean = false,
+    radius: Dp = BcArcProgressRadius
 ) {
     val value = progress.coerceIn(0f, 1f)
     val seekable = onSeek != null && !live
@@ -71,8 +75,16 @@ fun BcArcProgress(
     val moment = BcTheme.moment
     Box(
         modifier
-            .width(WIDTH)
-            .then(if (seekable) Modifier.pointerInput(Unit) { seekAlongArc { seek?.invoke(it) } } else Modifier)
+            .width((radius + BAND / 2) * 2)
+            .then(
+                if (seekable) {
+                    Modifier.pointerInput(radius) {
+                        seekAlongArc(radius) { seek?.invoke(it) }
+                    }
+                } else {
+                    Modifier
+                }
+            )
             .semantics {
                 if (!live) progressBarRangeInfo = ProgressBarRangeInfo(value, 0f..1f)
                 if (seekable) {
@@ -87,15 +99,18 @@ fun BcArcProgress(
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(ARC_AREA)
-                .drawBehind { drawHalfCircle(if (live) null else value, moment) }
+                .height(BcArcProgressCurveCentre + radius + BAND / 2)
+                .drawBehind { drawHalfCircle(if (live) null else value, moment, radius) }
         )
-        Times(elapsed, duration, live, Modifier.padding(top = TIMES_TOP))
+        Times(elapsed, duration, live, Modifier.padding(top = BcArcProgressCurveCentre + radius + TIMES_UNDER))
     }
 }
 
 /** How far below the top of [BcArcProgress] the centre of its half circle lies, halfway across. */
 val BcArcProgressCurveCentre = 20.dp
+
+/** The radius of the half circle of [BcArcProgress] on the Pixel 9, 164 dp: a little beyond the arch's curve. */
+val BcArcProgressRadius = 164.dp
 
 /** The two times under the arc, or « En direct » in the accent of the moment. */
 @Composable
@@ -125,8 +140,8 @@ private fun Times(elapsed: String, duration: String, live: Boolean, modifier: Mo
 }
 
 /** The half circle; with a [played] fraction, the part played in the accent and the white ring at the position. */
-private fun DrawScope.drawHalfCircle(played: Float?, moment: BcMoment) {
-    val radius = RADIUS.toPx()
+private fun DrawScope.drawHalfCircle(played: Float?, moment: BcMoment, arcRadius: Dp) {
+    val radius = arcRadius.toPx()
     val centre = Offset(size.width / 2, BcArcProgressCurveCentre.toPx())
     val square = Rect(centre - Offset(radius, radius), Size(radius * 2, radius * 2))
     drawArc(
@@ -151,10 +166,10 @@ private fun DrawScope.drawHalfCircle(played: Float?, moment: BcMoment) {
  * Follows one finger put down within the band along the arc, and hands each of its positions to [onSeek], as a
  * fraction of the half circle. A finger put down elsewhere is left untouched, for the screen.
  */
-private suspend fun PointerInputScope.seekAlongArc(onSeek: (Float) -> Unit) = awaitEachGesture {
+private suspend fun PointerInputScope.seekAlongArc(radius: Dp, onSeek: (Float) -> Unit) = awaitEachGesture {
     val down = awaitFirstDown()
     val centre = Offset(size.width / 2f, BcArcProgressCurveCentre.toPx())
-    if (inArcBand(down.position - centre, RADIUS.toPx(), BAND.toPx() / 2)) {
+    if (inArcBand(down.position - centre, radius.toPx(), BAND.toPx() / 2)) {
         down.consume()
         onSeek(arcFraction(down.position - centre))
         var change = down
@@ -193,14 +208,11 @@ internal fun inArcBand(from: Offset, radius: Float, halfBand: Float): Boolean =
 
 private const val LIVE = "En direct"
 private const val HALF_TURN = 180f
-private val RADIUS = 164.dp
 private val BAND = 40.dp
-private val WIDTH = (RADIUS + BAND / 2) * 2
-private val ARC_AREA = BcArcProgressCurveCentre + RADIUS + BAND / 2
 private val REST_STROKE = 1.5.dp
 private val PLAYED_STROKE = 3.dp
 private val RING = 14.dp
 
-// The times sit 180 dp below the centre of the curve, under the bottom of the arc, as on the reference.
-private val TIMES_TOP = BcArcProgressCurveCentre + 180.dp
+// The times sit 16 dp under the bottom of the arc: 180 dp below the centre of the curve on the reference.
+private val TIMES_UNDER = 16.dp
 private val TIMES_GAP = 8.dp
