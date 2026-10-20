@@ -16,7 +16,7 @@ Statuts : `À préciser` → `Précisé` → `En cours` → `Livré` (ou `Abando
 | Lot | Thème | Points | Nature |
 |---|---|---|---|
 | 0 | Réparer d'abord | 0.1 à 0.2 | Correction |
-| 1 | Ménage rapide | 1.1 à 1.7 | Mécanique |
+| 1 | Ménage rapide | 1.1 à 1.8 | Mécanique |
 | 2 | Gestes et transitions | 2.1 à 2.4 | Mécanique + réglage fin |
 | 3 | Accueil : infos | 3.1 à 3.3 | Maquette avant code |
 | 4 | Musique | 4.1 à 4.2 | Investigation sur téléphone |
@@ -108,6 +108,11 @@ Séance de précision du lot 1 : 14 octobre 2026, avec Dimitri.
 - **Décidé (14 octobre) :** Chrome s'ouvre tel qu'il a été laissé, comme en touchant son icône.
 - **Décision (15 octobre, séance 6.1) :** un **dock** de cinq icônes au trait, sans libellé, dans le bandeau replié de l'accueil, juste au-dessus de la barre « Chercher » : les apps favorites des réglages, cinq au plus, dans l'ordre choisi, Chrome en tête. Icône réelle de l'app rendue en monochrome dans un anneau (pas de glyphes dessinés à la main, pour tenir toutes les apps). Présent sur l'accueil seulement, pas dans la feuille ouverte ni sur Écoute. Le réglage « Apps favorites » devient « Dock ». Livré par la vague 3 de 6.1.
 - **Livré le 16 octobre 2026** par la vague 3 de 6.1 (décisions, commits et ce qui reste à voir sur le Pixel : voir 6.1) : Chrome se met dans le dock depuis le réglage « Dock », un toucher l'ouvre tel qu'il a été laissé, un toucher long montre ses raccourcis (« Nouvel onglet »…).
+
+### 1.8 Packs d'icônes pour le dock — `Livré`
+
+- **Décidé (20 octobre) :** nouveau réglage « Pack d'icônes », dans la section « Bandeau » sous « Dock » : « Aucun » (par défaut), puis les packs d'icônes installés, chacun par le nom de son app (une app qui répond à `org.adw.launcher.THEMES`, le standard ADW/Nova). Le pack choisi s'applique au dock seulement : la recherche, la feuille « Écouter » et le menu des raccourcis gardent leurs icônes. Pour chaque app du dock, son activité de lancement est cherchée dans l'`appfilter` du pack (dans `res/xml` ou dans les assets, les deux sont lus) ; le dessin trouvé est rendu en trait blanc, au même cadre et à la même taille que le dessin d'aujourd'hui (environ 28 dp dans sa place de 44 dp). Une app que le pack ne dessine pas garde son dessin d'une seule couleur, inchangé. Un pack désinstallé ramène à « Aucun » sans rien dire. Batterie : l'`appfilter` est lu une fois par choix de pack ou par mise à jour du pack, jamais à chaque image ; les dessins sont gardés comme ceux du dock, refaits quand le pack ou l'app change ; rien ne tourne accueil caché.
+- **Livré le 20 octobre 2026** : `dbacf0d` (lecture des packs dans `:data:apps`, `IconPack` et `packGlyph` dans le domaine : un pack aux traits clairs, comme Lines, garde ses traits blancs et perd son ombre sombre), `16867f1` (le réglage et sa liste), `1099db0` (le dock dessiné par le pack choisi), `5c19f67` (lint). Vu sur le Pixel (version de mise au point, le même dock que la version publiée) : Lines Free dessine 4 des 5 apps du dock (Chrome, Contacts, Transit, Mihon) ; la cinquième, absente de son `appfilter`, garde son dessin d'une seule couleur, plus plein que les traits de Lines.
 
 ## Lot 2 — Gestes et transitions
 
