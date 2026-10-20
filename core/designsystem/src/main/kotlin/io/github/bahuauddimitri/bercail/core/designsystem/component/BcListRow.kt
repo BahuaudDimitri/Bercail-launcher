@@ -54,7 +54,8 @@ enum class BcRowEmphasis { Normal, Dimmed, Accent }
 
 /**
  * One row of a list: apps, search results, events of the day. 50 dp high, with no background, even when it stands
- * out. The letters of the title in [found] (what was typed in the search) are drawn in the accent of the moment.
+ * out. The letters of the title in [found] (what was typed in the search) are drawn in the accent of the moment. The
+ * subtitle holds on [subtitleLines] lines, then is cut; the row grows with it.
  */
 @Composable
 fun BcListRow(
@@ -62,6 +63,7 @@ fun BcListRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    subtitleLines: Int = 1,
     leading: BcLeading? = null,
     emphasis: BcRowEmphasis = BcRowEmphasis.Normal,
     titleStyle: BcTextStyle = BcTextStyle.ListTitle,
@@ -82,7 +84,7 @@ fun BcListRow(
         Column(Modifier.weight(1f)) {
             Title(title, titleStyle, found)
             if (subtitle != null) {
-                BcText(subtitle, style = BcTextStyle.ListSubtitle, color = BcTextColor.Muted, maxLines = 1)
+                BcText(subtitle, style = BcTextStyle.ListSubtitle, color = BcTextColor.Muted, maxLines = subtitleLines)
             }
         }
         trailing?.invoke()

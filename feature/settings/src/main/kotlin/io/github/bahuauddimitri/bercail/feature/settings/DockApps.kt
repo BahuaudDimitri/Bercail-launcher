@@ -52,7 +52,10 @@ fun DockScreen(
     }
 }
 
-/** An app with its switch; in the dock, its place there. Touching the row calls [onClick], or else toggles the app. */
+/**
+ * An app with its switch; in the dock, its place there and that touching it changes its icon, on two lines if the
+ * screen is narrow. Touching the row calls [onClick], or else toggles the app.
+ */
 @Composable
 private fun AppRow(
     app: App,
@@ -66,7 +69,8 @@ private fun AppRow(
         title = app.name,
         onClick = onClick ?: { if (enabled) onToggle(app.id) },
         modifier = modifier,
-        subtitle = place?.let { "Place $it" },
+        subtitle = place?.let { "Place $it · toucher pour changer l'icône" },
+        subtitleLines = 2,
         leading = BcLeading.Initials(app.name.take(1).uppercase()),
         trailing = {
             BcSwitch(

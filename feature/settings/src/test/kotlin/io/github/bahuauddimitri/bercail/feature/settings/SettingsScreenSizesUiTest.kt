@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
@@ -13,10 +14,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.TextLayoutResult
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 import io.github.bahuauddimitri.bercail.core.domain.apps.PackCatalog
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
@@ -25,6 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Every page of Bercail's settings on the Pixel 9 and on smaller screens: no text or control overlaps another, none
@@ -92,6 +99,23 @@ class SettingsScreenSizesUiTest(size: ScreenSize) {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `sous chaque app du dock, « toucher pour changer l'icône » s'écrit en entier`() {
+        show()
+        open("Dock")
+
+        val subtitles = compose.onAllNodes(hasText(PICK_HINT, substring = true), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+        assertThat(subtitles.size).isEqualTo(MAX_DOCK_APPS)
+        subtitles.forEach { subtitle ->
+            val layouts = mutableListOf<TextLayoutResult>()
+            subtitle.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            assertThat((0 until layout.lineCount).none(layout::isLineEllipsized)).isTrue()
+        }
+    }
+
+    @Test
     fun `la page des packs d'icônes tient`() {
         show()
         open("Pack d'icônes")
@@ -133,5 +157,7 @@ class SettingsScreenSizesUiTest(size: ScreenSize) {
 
         /** Enough drawings in each pack to fill the screen. */
         private const val ICONS = 60
+
+        private const val PICK_HINT = "toucher pour changer l'icône"
     }
 }

@@ -507,10 +507,21 @@ class SettingsUiTest {
 
         compose.onNodeWithText("Dock").performScrollTo().performClick()
 
-        compose.onNode(hasText("Chrome") and hasText("Place 1")).assertExists()
-        compose.onNode(hasText("Agenda") and hasText("Place 5")).assertExists()
+        compose.onNode(hasText("Chrome") and hasText("Place 1 · toucher pour changer l'icône")).assertExists()
+        compose.onNode(hasText("Agenda") and hasText("Place 5 · toucher pour changer l'icône")).assertExists()
         compose.onNodeWithText("Autres apps").performScrollTo().assertExists()
         compose.onAllNodesWithText("Beeper").assertCountEquals(1)
+    }
+
+    @Test
+    fun `chaque app du dock dit sous son nom qu'on la touche pour changer son icône, les autres apps non`() {
+        show()
+
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
+
+        compose.onNode(hasText("Beeper") and hasText("Place 3 · toucher pour changer l'icône")).assertExists()
+        compose.onNode(hasText("Spotify") and hasText("toucher pour changer l'icône", substring = true))
+            .assertDoesNotExist()
     }
 
     @Test
@@ -534,7 +545,7 @@ class SettingsUiTest {
         compose.onNodeWithText("Spotify").performScrollTo().performClick()
 
         assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "appareil photo", "agenda", "spotify")
-        compose.onNode(hasText("Spotify") and hasText("Place 5")).assertExists()
+        compose.onNode(hasText("Spotify") and hasText("Place 5 · toucher pour changer l'icône")).assertExists()
     }
 
     @Test
@@ -564,7 +575,7 @@ class SettingsUiTest {
         }
 
         assertThat(stored.dockApps).containsExactly("téléphone", "beeper", "chrome", "appareil photo", "agenda")
-        compose.onNode(hasText("Chrome") and hasText("Place 3")).assertExists()
+        compose.onNode(hasText("Chrome") and hasText("Place 3 · toucher pour changer l'icône")).assertExists()
     }
 
     @Test

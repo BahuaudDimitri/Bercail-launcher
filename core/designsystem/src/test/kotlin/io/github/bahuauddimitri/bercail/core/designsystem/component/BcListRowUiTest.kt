@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isLessThan
@@ -165,6 +166,31 @@ class BcListRowUiTest {
         val layouts = mutableListOf<TextLayoutResult>()
         time.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
         assertThat(layouts.single().isLineEllipsized(0)).isFalse()
+    }
+
+    @Test
+    fun `un sous-titre permis sur deux lignes y passe au lieu d'être coupé, et la ligne grandit`() {
+        val long = "Place 1 · toucher pour changer l'icône"
+        show {
+            Column(Modifier.width(NARROW)) {
+                BcListRow(
+                    "Chrome",
+                    onClick = {},
+                    modifier = Modifier.testTag(ROW),
+                    subtitle = long,
+                    subtitleLines = 2,
+                    leading = BcLeading.Initials("C")
+                )
+            }
+        }
+
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText(long, useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        assertThat(layout.lineCount).isEqualTo(2)
+        assertThat(layout.isLineEllipsized(1)).isFalse()
+        assertThat(compose.onNodeWithTag(ROW).getUnclippedBoundsInRoot().height).isGreaterThan(50.dp)
     }
 
     @Test

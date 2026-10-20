@@ -68,6 +68,15 @@ class BcControlsScreenshotTest {
             )
             BcListRow("Spotify", onClick = {}, subtitle = "Reprendre « Nekketsu »", leading = BcLeading.Initials("S"))
             BcListRow("Léa", onClick = {}, subtitle = "WhatsApp", leading = BcLeading.Initials("L", BcPastel.Coral))
+            // A narrow row whose long subtitle goes on a second line.
+            BcListRow(
+                "Chrome",
+                onClick = {},
+                modifier = Modifier.width(240.dp),
+                subtitle = "Place 1 · toucher pour changer l'icône",
+                subtitleLines = 2,
+                leading = BcLeading.Initials("C")
+            )
             BcListRow(
                 "Café avec Tom",
                 onClick = {},
