@@ -97,6 +97,9 @@ interface SettingsActions {
     fun onIdleBackground(background: IdleBackground)
     fun onDrawerExpandedAtStart(expanded: Boolean)
     fun onToggleDockApp(appId: String)
+
+    /** Puts the app at place [from] of the dock at place [to], the others shifting (places from 0). */
+    fun onMoveDockApp(from: Int, to: Int)
     fun onMainMediaApp(appId: String)
 
     /** The icon pack of the dock, by its package; nothing for « Aucun ». */
@@ -156,6 +159,12 @@ class SettingsViewModel(
     override fun onToggleDockApp(appId: String) {
         val installed = state.value.apps.map { it.id }
         change { it.withDockAppToggled(appId, installed) }
+    }
+
+    override fun onMoveDockApp(from: Int, to: Int) {
+        val app = state.value.dock.getOrNull(from) ?: return
+        val installed = state.value.apps.map { it.id }
+        change { it.withDockAppMoved(app.id, to, installed) }
     }
 
     override fun onMainMediaApp(appId: String) = change { it.copy(mainMediaApp = appId) }

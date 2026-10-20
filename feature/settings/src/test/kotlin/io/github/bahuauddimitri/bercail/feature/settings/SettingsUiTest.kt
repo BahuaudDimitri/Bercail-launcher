@@ -1,6 +1,9 @@
 package io.github.bahuauddimitri.bercail.feature.settings
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -10,10 +13,12 @@ import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -23,6 +28,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BC_REORDER_HANDLE_TAG
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
@@ -527,6 +533,72 @@ class SettingsUiTest {
 
         assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "beeper", "appareil photo", "agenda")
     }
+
+    private fun openDock() = compose.onNodeWithText("Dock").performScrollTo().performClick()
+
+    @Test
+    fun `glisser une app du dock par sa poignée change sa place, enregistrée tout de suite`() {
+        show()
+        openDock()
+        val row = compose.onNodeWithText("Chrome").fetchSemanticsNode().size.height
+
+        compose.onNodeWithTag(BC_REORDER_HANDLE_TAG + "chrome").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, viewConfiguration.touchSlop + 1f))
+            moveBy(Offset(0f, 2f * row))
+            up()
+        }
+
+        assertThat(stored.dockApps).containsExactly("téléphone", "beeper", "chrome", "appareil photo", "agenda")
+        compose.onNode(hasText("Chrome") and hasText("Place 3")).assertExists()
+    }
+
+    @Test
+    fun `le nouvel ordre du dock est celui que sa ligne des réglages nomme, et que l'accueil suit`() {
+        show()
+        openDock()
+
+        compose.runOnIdle { customAction("Agenda", "Monter")() }
+        compose.onNodeWithContentDescription("Retour aux réglages").performClick()
+
+        assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "beeper", "agenda", "appareil photo")
+        compose.onNodeWithText("Chrome, Téléphone, Beeper, Agenda, Appareil photo · cinq au plus")
+            .performScrollTo()
+            .assertExists()
+    }
+
+    @Test
+    fun `chaque app du dock offre « Monter » et « Descendre » au lecteur d'écran, sauf au bord`() {
+        show()
+        openDock()
+
+        assertThat(customActionsOf("Chrome")).containsExactly("Descendre")
+        assertThat(customActionsOf("Beeper")).containsExactly("Monter", "Descendre")
+        assertThat(customActionsOf("Agenda")).containsExactly("Monter")
+
+        compose.runOnIdle { customAction("Beeper", "Descendre")() }
+
+        assertThat(stored.dockApps).containsExactly("chrome", "téléphone", "appareil photo", "beeper", "agenda")
+    }
+
+    @Test
+    fun `les apps hors du dock n'ont ni poignée ni actions pour changer de place`() {
+        world.settings.change { it.copy(dockApps = listOf("chrome")) }
+        show()
+        openDock()
+
+        compose.onNodeWithTag(BC_REORDER_HANDLE_TAG + "chrome").assertExists()
+        compose.onNodeWithText("Spotify").performScrollTo()
+        compose.onNodeWithTag(BC_REORDER_HANDLE_TAG + "spotify").assertDoesNotExist()
+        assertThat(customActionsOf("Spotify")).isEmpty()
+    }
+
+    private fun customActionsOf(name: String): List<String> = compose.onNodeWithText(name).fetchSemanticsNode()
+        .config.getOrNull(SemanticsActions.CustomActions).orEmpty().map { it.label }
+
+    private fun customAction(name: String, label: String): () -> Boolean = compose.onNodeWithText(name)
+        .fetchSemanticsNode().config.getOrNull(SemanticsActions.CustomActions).orEmpty()
+        .first { it.label == label }.action
 
     @Test
     fun `le retour de la liste du dock ramène aux réglages`() {

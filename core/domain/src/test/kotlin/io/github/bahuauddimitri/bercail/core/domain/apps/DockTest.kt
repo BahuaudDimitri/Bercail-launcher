@@ -73,4 +73,32 @@ class DockTest {
         assertThat(full.touching("spotify").dockApps)
             .containsExactly("chrome", "téléphone", "beeper", "agenda", "spotify")
     }
+
+    @Test
+    fun `glisser une app du dock à une autre place change l'ordre, les autres se décalent`() {
+        val settings = Settings().touching("chrome", "téléphone", "beeper", "agenda")
+
+        assertThat(settings.withDockAppMoved("agenda", to = 0, ids).dockApps)
+            .containsExactly("agenda", "chrome", "téléphone", "beeper")
+        assertThat(settings.withDockAppMoved("chrome", to = 2, ids).dockApps)
+            .containsExactly("téléphone", "beeper", "chrome", "agenda")
+    }
+
+    @Test
+    fun `une place hors du dock ramène l'app au bord le plus proche`() {
+        val settings = Settings().touching("chrome", "téléphone", "beeper")
+
+        assertThat(settings.withDockAppMoved("chrome", to = 9, ids).dockApps)
+            .containsExactly("téléphone", "beeper", "chrome")
+        assertThat(settings.withDockAppMoved("beeper", to = -1, ids).dockApps)
+            .containsExactly("beeper", "chrome", "téléphone")
+    }
+
+    @Test
+    fun `déplacer une app absente du dock ne change rien, et les apps désinstallées y perdent leur place`() {
+        val settings = Settings(dockApps = listOf("désinstallée", "chrome", "beeper"))
+
+        assertThat(settings.withDockAppMoved("waze", to = 0, ids).dockApps).containsExactly("chrome", "beeper")
+        assertThat(settings.withDockAppMoved("beeper", to = 0, ids).dockApps).containsExactly("beeper", "chrome")
+    }
 }

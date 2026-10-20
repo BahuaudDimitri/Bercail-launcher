@@ -81,6 +81,17 @@ class HomeDockUiTest {
     }
 
     @Test
+    fun `une app glissée à une autre place dans les réglages la prend aussi dans le dock`() {
+        val world = show()
+
+        world.settings.change { it.withDockAppMoved("agenda", to = 0, installed = dockIds.toList()) }
+
+        val agenda = compose.onNodeWithContentDescription("Agenda").getUnclippedBoundsInRoot().left
+        val chrome = compose.onNodeWithContentDescription("Chrome").getUnclippedBoundsInRoot().left
+        assertThat(agenda).isLessThan(chrome)
+    }
+
+    @Test
     fun `une app désinstallée quitte le dock`() {
         val world = show()
 

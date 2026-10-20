@@ -5,6 +5,8 @@ import androidx.compose.ui.Modifier
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderList
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
@@ -12,17 +14,29 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 
 /**
- * The apps of the dock first, each with its place, then every other app from A to Z, each with a switch. Touching
- * an app of the dock takes it out; touching another one puts it at the end of the dock. Five at most: that is the
- * room the band has. To change the order, take an app out and put it back.
+ * The apps of the dock first, each with its place and a handle, then every other app from A to Z, each with a
+ * switch. Touching an app of the dock takes it out; touching another one puts it at the end of the dock. Five at
+ * most: that is the room the band has. Dragging an app of the dock by its handle puts it at another place; screen
+ * readers move it with « Monter » and « Descendre ». The other apps have no handle.
  */
 @Composable
-fun DockScreen(state: SettingsUiState, onToggle: (String) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun DockScreen(
+    state: SettingsUiState,
+    onToggle: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onMove: (from: Int, to: Int) -> Unit = { _, _ -> }
+) {
     val dock = state.dock
     val full = dock.size >= MAX_DOCK_APPS
     BcPanel("Dock", onBack, backDescription = "Retour aux réglages", modifier = modifier) {
-        BcSectionLabel(if (full) FULL else "Cinq au plus, dans l'ordre où tu les touches")
-        dock.forEachIndexed { index, app -> AppRow(app, onToggle, place = index + 1, enabled = true) }
+        BcSectionLabel(if (full) FULL else "Cinq au plus · glisse une poignée pour changer l'ordre")
+        BcReorderList(
+            rows = dock.mapIndexed { index, app ->
+                BcReorderRow(app.id) { AppRow(app, onToggle, place = index + 1, enabled = true, modifier = it) }
+            },
+            onMove = onMove
+        )
         BcSectionLabel("Autres apps")
         state.apps.filterNot { it in dock }.forEach { app -> AppRow(app, onToggle, place = null, enabled = !full) }
     }
@@ -30,10 +44,11 @@ fun DockScreen(state: SettingsUiState, onToggle: (String) -> Unit, onBack: () ->
 
 /** An app with its switch; in the dock, its place there. */
 @Composable
-private fun AppRow(app: App, onToggle: (String) -> Unit, place: Int?, enabled: Boolean) {
+private fun AppRow(app: App, onToggle: (String) -> Unit, place: Int?, enabled: Boolean, modifier: Modifier = Modifier) {
     BcListRow(
         title = app.name,
         onClick = { if (enabled) onToggle(app.id) },
+        modifier = modifier,
         subtitle = place?.let { "Place $it" },
         leading = BcLeading.Initials(app.name.take(1).uppercase()),
         trailing = {

@@ -42,7 +42,7 @@ fun SettingsRoute(
     var shown by rememberSaveable { mutableStateOf(Shown.Settings) }
     val backToSettings = { shown = Shown.Settings }
     when (shown) {
-        Shown.Dock -> DockScreen(state, viewModel::onToggleDockApp, backToSettings, modifier)
+        Shown.Dock -> DockScreen(state, viewModel::onToggleDockApp, backToSettings, modifier, viewModel::onMoveDockApp)
 
         Shown.People -> FavoritePeopleScreen(state, viewModel::onToggleFavoritePerson, backToSettings, modifier)
 

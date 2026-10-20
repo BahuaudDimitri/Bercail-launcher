@@ -35,6 +35,18 @@ data class Settings(
         }
     }
 
+    /**
+     * Puts an app of the dock at the place [to] (from 0), the others shifting to make room; a place beyond the dock
+     * is its nearest end. An app not in the dock changes nothing. Apps no longer [installed] leave the dock first.
+     */
+    fun withDockAppMoved(appId: String, to: Int, installed: Collection<String>): Settings {
+        val dock = dockApps.filter { it in installed }
+        if (appId !in dock) return copy(dockApps = dock)
+        val others = dock - appId
+        val place = to.coerceIn(0, others.size)
+        return copy(dockApps = others.take(place) + appId + others.drop(place))
+    }
+
     /** Adds the conversation to the favorite people, unless they are already four, or removes it if it is one. */
     fun withFavoritePersonToggled(id: String): Settings = when {
         id in favoritePeople -> copy(favoritePeople = favoritePeople - id)
