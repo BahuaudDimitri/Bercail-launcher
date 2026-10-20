@@ -32,6 +32,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BC_REORDER_H
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
 import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
+import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
@@ -509,6 +510,18 @@ class SettingsUiTest {
         compose.onNode(hasText("Agenda") and hasText("Place 5")).assertExists()
         compose.onNodeWithText("Autres apps").performScrollTo().assertExists()
         compose.onAllNodesWithText("Beeper").assertCountEquals(1)
+    }
+
+    @Test
+    fun `dans la liste du dock, tous les interrupteurs s'alignent, ceux des apps sans poignée aussi`() {
+        show()
+        compose.onNodeWithText("Dock").performScrollTo().performClick()
+
+        val switches = compose.onAllNodes(isToggleable(), useUnmergedTree = true).fetchSemanticsNodes()
+        val rightEdges = switches.map { it.positionInRoot.x + it.size.width }.distinct()
+        // The five apps of the dock and at least one other app.
+        assertThat(switches.size > MAX_DOCK_APPS).isTrue()
+        assertThat(rightEdges.size).isEqualTo(1)
     }
 
     @Test

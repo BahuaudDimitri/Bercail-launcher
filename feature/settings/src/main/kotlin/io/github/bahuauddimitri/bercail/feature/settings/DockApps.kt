@@ -1,5 +1,6 @@
 package io.github.bahuauddimitri.bercail.feature.settings
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
@@ -10,6 +11,7 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
+import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcSizes
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
 
@@ -17,7 +19,8 @@ import io.github.bahuauddimitri.bercail.core.domain.apps.MAX_DOCK_APPS
  * The apps of the dock first, each with its place and a handle, then every other app from A to Z, each with a
  * switch. Touching an app of the dock takes it out; touching another one puts it at the end of the dock. Five at
  * most: that is the room the band has. Dragging an app of the dock by its handle puts it at another place; screen
- * readers move it with « Monter » and « Descendre ». The other apps have no handle.
+ * readers move it with « Monter » and « Descendre ». The other apps have no handle, only its room: every switch
+ * stands in the same column.
  */
 @Composable
 fun DockScreen(
@@ -38,7 +41,11 @@ fun DockScreen(
             onMove = onMove
         )
         BcSectionLabel("Autres apps")
-        state.apps.filterNot { it in dock }.forEach { app -> AppRow(app, onToggle, place = null, enabled = !full) }
+        // An empty room as wide as the handle of the dock's rows: every switch stands in the same column.
+        val besideNoHandle = Modifier.padding(end = BcSizes.minTouch)
+        state.apps.filterNot { it in dock }.forEach { app ->
+            AppRow(app, onToggle, place = null, enabled = !full, modifier = besideNoHandle)
+        }
     }
 }
 
