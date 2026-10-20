@@ -61,6 +61,8 @@ import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanelHeader
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPill
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcProgress
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderList
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReorderRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcReplyField
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRing
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRingMark
@@ -275,6 +277,22 @@ private fun Lists() {
         onOpen = {},
         // The list scrolls by itself: within the scrolling gallery, it needs a height.
         modifier = Modifier.height(DAY_LIST_HEIGHT)
+    )
+    ReorderList()
+}
+
+/** The dock's apps put in order by hand: drag a handle, or use « Monter » and « Descendre ». */
+@Composable
+private fun ReorderList() {
+    val order = remember { mutableStateListOf("Chrome", "Téléphone", "Beeper") }
+    BcReorderList(
+        rows = order.mapIndexed { index, name ->
+            BcReorderRow(name) {
+                BcListRow(name, onClick = {
+                }, modifier = it, subtitle = "Place ${index + 1}", leading = BcLeading.Initials(name.take(1)))
+            }
+        },
+        onMove = { from, to -> order.add(to, order.removeAt(from)) }
     )
 }
 
