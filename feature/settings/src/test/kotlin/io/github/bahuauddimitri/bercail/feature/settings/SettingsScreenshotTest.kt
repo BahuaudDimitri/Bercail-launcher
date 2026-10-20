@@ -18,6 +18,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcColors
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
 import io.github.bahuauddimitri.bercail.core.domain.update.Version
 import io.github.bahuauddimitri.bercail.core.testing.FakeWorld
@@ -35,10 +36,19 @@ class SettingsScreenshotTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun show(update: UpdateStatus = UpdateStatus.UpToDate(), refused: Set<Access> = emptySet()) {
+    private val packs =
+        listOf(IconPack("com.arcticons.dark", "Arcticons"), IconPack("com.natewren.linesfree", "Lines Free"))
+
+    private fun show(
+        update: UpdateStatus = UpdateStatus.UpToDate(),
+        refused: Set<Access> = emptySet(),
+        iconPack: String? = null
+    ) {
         val world = FakeWorld()
         world.updates.status.value = update
         refused.forEach(world.access::refuse)
+        world.apps.iconPacks.value = packs
+        world.settings.change { it.copy(iconPack = iconPack) }
         val settings =
             SettingsViewModel(
                 world.settings,
@@ -90,6 +100,22 @@ class SettingsScreenshotTest {
         compose.onNodeWithText("Dock").performScrollTo().performClick()
 
         capture("settings_dock")
+    }
+
+    @Test
+    fun `la ligne du pack d'icônes, sous celle du dock, un pack choisi, correspond à sa capture`() {
+        show(iconPack = "com.natewren.linesfree")
+        compose.onNodeWithText("Pack d'icônes").performScrollTo()
+
+        capture("settings_icon_pack_row")
+    }
+
+    @Test
+    fun `la liste des packs d'icônes, « Aucun » puis les packs installés, correspond à sa capture`() {
+        show(iconPack = "com.natewren.linesfree")
+        compose.onNodeWithText("Pack d'icônes").performScrollTo().performClick()
+
+        capture("settings_icon_packs")
     }
 
     @Test

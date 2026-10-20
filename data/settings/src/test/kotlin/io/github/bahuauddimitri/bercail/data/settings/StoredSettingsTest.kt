@@ -100,6 +100,18 @@ class StoredSettingsTest {
     }
 
     @Test
+    fun `sans choix, le dock n'a pas de pack d'icônes, et celui qui est choisi est gardé puis retiré`() {
+        assertThat(withSettings { it.settings.first() }.iconPack).isNull()
+
+        withSettings { it.update { current -> current.copy(iconPack = "com.natewren.linesfree") } }
+        assertThat(withSettings { it.settings.first() }.iconPack).isEqualTo("com.natewren.linesfree")
+
+        withSettings { it.update { current -> current.copy(iconPack = null) } }
+
+        assertThat(withSettings { it.settings.first() }.iconPack).isNull()
+    }
+
+    @Test
     fun `l'ordre du dock est conservé`() {
         withSettings { it.update { current -> current.copy(dockApps = listOf("c", "a", "b")) } }
 

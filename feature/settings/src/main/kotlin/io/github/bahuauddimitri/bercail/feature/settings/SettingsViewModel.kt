@@ -11,8 +11,10 @@ import io.github.bahuauddimitri.bercail.core.domain.access.messagesSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.access.weatherSourceLine
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
 import io.github.bahuauddimitri.bercail.core.domain.apps.AppsSource
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.apps.Phone
 import io.github.bahuauddimitri.bercail.core.domain.apps.dockOf
+import io.github.bahuauddimitri.bercail.core.domain.apps.iconPackShown
 import io.github.bahuauddimitri.bercail.core.domain.media.MediaAppsSource
 import io.github.bahuauddimitri.bercail.core.domain.media.mainMediaApp
 import io.github.bahuauddimitri.bercail.core.domain.messages.Conversation
@@ -55,8 +57,18 @@ data class SettingsUiState(
     val messagesAllowed: Boolean = false,
 
     /** The conversations to choose the favorite people from, the most recent first; none until Beeper is linked. */
-    val people: List<Conversation> = emptyList()
+    val people: List<Conversation> = emptyList(),
+
+    /** The icon packs installed, from A to Z. */
+    val iconPacks: List<IconPack> = emptyList()
 ) {
+    /** The icon pack the dock draws with: the chosen one while it is installed, otherwise none, « Aucun ». */
+    val iconPack: IconPack? get() = iconPackShown(settings.iconPack, iconPacks)
+
+    /** The icon pack of the dock, as its row names it. */
+    val iconPackLine: String
+        get() = iconPack?.let { "${it.name} · pour les apps du dock" } ?: "Aucun · le dock garde ses dessins"
+
     /** The favorite people by name, as their row lists them. */
     val favoritePeopleNames: String
         get() = when {
@@ -86,6 +98,9 @@ interface SettingsActions {
     fun onDrawerExpandedAtStart(expanded: Boolean)
     fun onToggleDockApp(appId: String)
     fun onMainMediaApp(appId: String)
+
+    /** The icon pack of the dock, by its package; nothing for « Aucun ». */
+    fun onIconPack(packId: String?)
     fun onToggleFavoritePerson(id: String)
 
     /** Looks for a newer version, fetches it, or installs a ready one: whatever the update row or its button offers. */
@@ -115,11 +130,12 @@ class SettingsViewModel(
             apps.apps,
             updates.status,
             access.granted,
-            combine(mediaApps.apps, messages.conversations, ::Pair)
-        ) { current, installed, update, granted, (players, conversations) ->
+            combine(mediaApps.apps, messages.conversations, apps.iconPacks, ::Triple)
+        ) { current, installed, update, granted, (players, conversations, packs) ->
             val messagesAllowed = Access.Messages in granted
             SettingsUiState(
                 mediaApps = players,
+                iconPacks = packs,
                 messages = messagesSourceLine(messagesAllowed, toldOfArrivals = Access.Notifications in granted),
                 messagesAllowed = messagesAllowed,
                 people = if (messagesAllowed) conversations else emptyList(),
@@ -143,6 +159,8 @@ class SettingsViewModel(
     }
 
     override fun onMainMediaApp(appId: String) = change { it.copy(mainMediaApp = appId) }
+
+    override fun onIconPack(packId: String?) = change { it.copy(iconPack = packId) }
 
     override fun onToggleFavoritePerson(id: String) = change { it.withFavoritePersonToggled(id) }
 

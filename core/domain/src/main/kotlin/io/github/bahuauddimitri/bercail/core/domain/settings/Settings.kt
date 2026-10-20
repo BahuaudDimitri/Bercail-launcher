@@ -18,7 +18,9 @@ data class Settings(
     /** The city whose weather is shown, or nothing for the place where the phone is. */
     val weatherCity: City? = null,
     /** The media app shown first in the « Écouter » sheet; without a choice, Spotify if it is there. */
-    val mainMediaApp: String? = null
+    val mainMediaApp: String? = null,
+    /** The icon pack the dock draws its apps with, by its package; nothing for « Aucun », the dock's own glyphs. */
+    val iconPack: String? = null
 ) {
     /**
      * Adds the app at the end of the dock, unless it is full, or takes it out if it is in. Apps no longer

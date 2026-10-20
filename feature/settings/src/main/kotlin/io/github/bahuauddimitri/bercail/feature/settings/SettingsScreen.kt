@@ -25,7 +25,7 @@ import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateLine
 
 /**
- * « Réglages de Bercail » plugged into the stored settings, with the two lists it opens: the dock and the
+ * « Réglages de Bercail » plugged into the stored settings, with the lists it opens: the dock, its icon pack and the
  * place of the weather.
  */
 @Composable
@@ -45,6 +45,16 @@ fun SettingsRoute(
         Shown.Dock -> DockScreen(state, viewModel::onToggleDockApp, backToSettings, modifier)
 
         Shown.People -> FavoritePeopleScreen(state, viewModel::onToggleFavoritePerson, backToSettings, modifier)
+
+        Shown.IconPack -> IconPackScreen(
+            state = state,
+            onChoose = {
+                viewModel.onIconPack(it)
+                backToSettings()
+            },
+            onBack = backToSettings,
+            modifier = modifier
+        )
 
         Shown.MediaApp -> MediaAppScreen(
             state = state,
@@ -75,13 +85,14 @@ fun SettingsRoute(
             access = access,
             onPickPlace = { shown = Shown.Place },
             onPickMediaApp = { shown = Shown.MediaApp },
-            onPickPeople = { shown = Shown.People }
+            onPickPeople = { shown = Shown.People },
+            onPickIconPack = { shown = Shown.IconPack }
         )
     }
 }
 
 /** What the settings panel shows: itself, or one of the lists it opens. */
-private enum class Shown { Settings, Dock, Place, MediaApp, People }
+private enum class Shown { Settings, Dock, IconPack, Place, MediaApp, People }
 
 /** What the settings ask of Android about an access: the question while it is missing, its page once given. */
 class AccessLinks(val ask: (Access) -> Unit = {}, val openPage: (Access) -> Unit = {})
@@ -126,7 +137,8 @@ fun SettingsScreen(
     access: AccessLinks = AccessLinks(),
     onPickPlace: () -> Unit = {},
     onPickMediaApp: () -> Unit = {},
-    onPickPeople: () -> Unit = {}
+    onPickPeople: () -> Unit = {},
+    onPickIconPack: () -> Unit = {}
 ) {
     val settings = state.settings
     BcPanel("Réglages de Bercail", onBack, backDescription = "Retour à la recherche", modifier = modifier) {
@@ -150,6 +162,7 @@ fun SettingsScreen(
         )
         BcSectionLabel("Bandeau")
         BcSettingRow("Dock", subtitle = state.dockNames, onClick = onPickDock)
+        BcSettingRow("Pack d'icônes", subtitle = state.iconPackLine, onClick = onPickIconPack)
         BcSectionLabel("Feuille")
         // A short choice stands on the right of its row.
         BcSettingRow(

@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcLeading
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcListRow
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcPanel
+import io.github.bahuauddimitri.bercail.core.designsystem.component.BcRowEmphasis
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSectionLabel
 import io.github.bahuauddimitri.bercail.core.designsystem.component.BcSwitch
 import io.github.bahuauddimitri.bercail.core.domain.apps.App
@@ -47,3 +48,34 @@ private fun AppRow(app: App, onToggle: (String) -> Unit, place: Int?, enabled: B
 }
 
 private const val FULL = "Cinq au plus : retire une app pour en ajouter une autre"
+
+/**
+ * « Aucun », then the icon packs installed, each by the name of its app; the one the dock draws with stands out.
+ * Touching one chooses it for the dock only: the search, the « Écouter » sheet and the shortcuts keep their icons.
+ */
+@Composable
+fun IconPackScreen(
+    state: SettingsUiState,
+    onChoose: (String?) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val chosen = state.iconPack
+    BcPanel("Pack d'icônes", onBack, backDescription = "Retour aux réglages", modifier = modifier) {
+        BcSectionLabel("Pour les apps du dock")
+        PackRow(NO_PACK, chosen == null) { onChoose(null) }
+        state.iconPacks.forEach { pack -> PackRow(pack.name, pack == chosen) { onChoose(pack.id) } }
+    }
+}
+
+@Composable
+private fun PackRow(name: String, chosen: Boolean, onClick: () -> Unit) {
+    BcListRow(
+        title = name,
+        onClick = onClick,
+        leading = BcLeading.Initials(name.take(1).uppercase()),
+        emphasis = if (chosen) BcRowEmphasis.Accent else BcRowEmphasis.Normal
+    )
+}
+
+private const val NO_PACK = "Aucun"

@@ -25,6 +25,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import io.github.bahuauddimitri.bercail.core.designsystem.theme.BcTheme
 import io.github.bahuauddimitri.bercail.core.domain.access.Access
+import io.github.bahuauddimitri.bercail.core.domain.apps.IconPack
 import io.github.bahuauddimitri.bercail.core.domain.settings.IdleBackground
 import io.github.bahuauddimitri.bercail.core.domain.settings.Settings
 import io.github.bahuauddimitri.bercail.core.domain.update.UpdateStatus
@@ -283,6 +284,69 @@ class SettingsUiTest {
 
         compose.onNodeWithText("Aucune app de musique ou de vidéo installée").assertExists()
         compose.onNodeWithText("App média principale").performScrollTo().assertHasNoClickAction()
+    }
+
+    // ---------- the icon pack of the dock ----------
+
+    private val lines = IconPack("com.natewren.linesfree", "Lines Free")
+    private val whicons = IconPack("com.whicons.iconpack", "Whicons")
+
+    private fun openIconPacks() {
+        compose.onNodeWithText("Pack d'icônes").performScrollTo().performClick()
+    }
+
+    @Test
+    fun `la ligne « Pack d'icônes » dit « Aucun » tant qu'aucun pack n'est choisi`() {
+        world.apps.iconPacks.value = listOf(lines, whicons)
+        show()
+
+        compose.onNodeWithText("Pack d'icônes").performScrollTo().assertExists()
+        compose.onNodeWithText("Aucun · le dock garde ses dessins").assertExists()
+    }
+
+    @Test
+    fun `la liste des packs propose « Aucun » puis chaque pack installé, par son nom`() {
+        world.apps.iconPacks.value = listOf(lines, whicons)
+        show()
+
+        openIconPacks()
+
+        listOf("Aucun", "Lines Free", "Whicons").forEach { compose.onNodeWithText(it).assertExists() }
+    }
+
+    @Test
+    fun `choisir un pack l'enregistre et ramène aux réglages, qui le nomment`() {
+        world.apps.iconPacks.value = listOf(lines, whicons)
+        show()
+        openIconPacks()
+
+        compose.onNodeWithText("Lines Free").performClick()
+
+        assertThat(stored.iconPack).isEqualTo("com.natewren.linesfree")
+        compose.onNodeWithText("Lines Free · pour les apps du dock").assertExists()
+    }
+
+    @Test
+    fun `choisir « Aucun » rend au dock ses propres dessins`() {
+        world.apps.iconPacks.value = listOf(lines)
+        world.settings.change { it.copy(iconPack = lines.id) }
+        show()
+        openIconPacks()
+
+        compose.onNodeWithText("Aucun").performClick()
+
+        assertThat(stored.iconPack).isNull()
+        compose.onNodeWithText("Aucun · le dock garde ses dessins").assertExists()
+    }
+
+    @Test
+    fun `un pack choisi puis désinstallé laisse la ligne sur « Aucun »`() {
+        world.apps.iconPacks.value = listOf(whicons)
+        world.settings.change { it.copy(iconPack = lines.id) }
+        show()
+
+        compose.onNodeWithText("Pack d'icônes").performScrollTo()
+        compose.onNodeWithText("Aucun · le dock garde ses dessins").assertExists()
     }
 
     // ---------- the place of the weather ----------

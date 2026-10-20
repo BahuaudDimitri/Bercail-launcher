@@ -41,6 +41,7 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
             saved[IDLE_BACKGROUND] = wanted.idleBackground.name
             saved.keep(wanted.weatherCity)
             wanted.mainMediaApp?.let { saved[MAIN_MEDIA_APP] = it } ?: saved.remove(MAIN_MEDIA_APP)
+            wanted.iconPack?.let { saved[ICON_PACK] = it } ?: saved.remove(ICON_PACK)
         }
     }
 
@@ -54,7 +55,8 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
             idleBackground = IdleBackground.entries.firstOrNull { it.name == this[IDLE_BACKGROUND] }
                 ?: defaults.idleBackground,
             weatherCity = city(),
-            mainMediaApp = this[MAIN_MEDIA_APP]
+            mainMediaApp = this[MAIN_MEDIA_APP],
+            iconPack = this[ICON_PACK]
         )
     }
 
@@ -92,6 +94,7 @@ class StoredSettings(private val store: DataStore<Preferences>) : SettingsSource
         val CITY_LATITUDE = doublePreferencesKey("weather_city_latitude")
         val CITY_LONGITUDE = doublePreferencesKey("weather_city_longitude")
         val MAIN_MEDIA_APP = stringPreferencesKey("main_media_app")
+        val ICON_PACK = stringPreferencesKey("icon_pack")
 
         /** Kept as one ordered line per id: a set would lose the order of the favorites. */
         const val SEPARATOR = "\n"
